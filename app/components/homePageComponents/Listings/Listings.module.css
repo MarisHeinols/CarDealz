@@ -1,0 +1,11 @@
+.listingsContainer {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 1rem;
+}
+
+.footer {
+    align-self: flex-end;
+    padding: 1rem;
+}

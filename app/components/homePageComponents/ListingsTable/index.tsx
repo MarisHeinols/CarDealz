@@ -1,0 +1,131 @@
+import {
+  Avatar,
+  Chip,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TableSortLabel,
+  Paper,
+} from "@mui/material";
+
+import type { CarListing, SortDir, SortKey } from "~/types/types";
+import DealIndicator from "../DealIndicator";
+import styles from "./Listings.module.css";
+
+const conditionColor: Record<
+  CarListing["condition"],
+  "success" | "info" | "default"
+> = {
+  new: "success",
+  certified: "info",
+  used: "default",
+};
+
+const ListingsTable = ({
+  rows,
+  sortKey,
+  sortDir,
+  onSort,
+}: {
+  rows: CarListing[];
+  sortKey: SortKey;
+  sortDir: SortDir;
+  onSort: (key: SortKey) => void;
+}) => {
+  const sortLabel = (key: SortKey, label: string) => (
+    <TableSortLabel
+      active={sortKey === key}
+      direction={sortKey === key ? sortDir : "asc"}
+      onClick={() => onSort(key)}
+    >
+      {label}
+    </TableSortLabel>
+  );
+
+  return (
+    <TableContainer
+      component={Paper}
+      className={styles.listingsContainer}
+      sx={{
+        overflowX: "hidden", // 🔑 prevent horizontal scroll
+      }}
+    >
+      <Table
+        sx={{
+          tableLayout: "fixed",
+          width: "100%",
+        }}
+      >
+        <TableHead>
+          <TableRow>
+            <TableCell sx={{ width: 120 }}>Image</TableCell>
+            <TableCell sx={{ width: 120 }}>
+              {sortLabel("make", "Make")}
+            </TableCell>
+            <TableCell sx={{ width: 120 }}>
+              {sortLabel("model", "Model")}
+            </TableCell>
+            <TableCell sx={{ width: 80 }}>
+              {sortLabel("year", "Year")}
+            </TableCell>
+            <TableCell sx={{ width: 120 }}>
+              {sortLabel("condition", "Condition")}
+            </TableCell>
+            <TableCell sx={{ width: 120 }}>
+              {sortLabel("price", "Price")}
+            </TableCell>
+            <TableCell sx={{ width: 140 }}>Deal</TableCell>
+            <TableCell>{sortLabel("location", "Location")}</TableCell>
+          </TableRow>
+        </TableHead>
+
+        <TableBody>
+          {rows.map((l) => (
+            <TableRow key={l.id}>
+              <TableCell>
+                <Avatar
+                  variant="rounded"
+                  src={l.imageUrl}
+                  sx={{ width: 96, height: 64 }}
+                />
+              </TableCell>
+
+              <TableCell>{l.make}</TableCell>
+              <TableCell>{l.model}</TableCell>
+              <TableCell>{l.year}</TableCell>
+
+              <TableCell>
+                <Chip
+                  label={l.condition}
+                  size="small"
+                  color={conditionColor[l.condition]}
+                />
+              </TableCell>
+
+              <TableCell>${l.price.toLocaleString()}</TableCell>
+
+              <TableCell>
+                <DealIndicator price={l.price} marketRange={l.marketRange} />
+              </TableCell>
+
+              <TableCell
+                sx={{
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {l.location}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+};
+
+export default ListingsTable;
