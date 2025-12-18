@@ -12,6 +12,7 @@ import carListingsJson from "../../../data/mockData/carListings.json";
 import { parseCarListings } from "~/data/mockData/parsers/carListingParser";
 import type { ListingsFiltersState } from "~/types/types";
 import ListingsFilters from "../ListingFilter";
+import TopListings from "../TopListings";
 
 const Listings = () => {
   const listings = parseCarListings(carListingsJson);
@@ -27,7 +28,7 @@ const Listings = () => {
         onChange={setFilters}
         onReset={() => setFilters(defaultFilters)}
       />
-
+      <TopListings carListings={table.rows} />
       <ListingsTable
         rows={table.rows}
         sortKey={table.sortKey}
