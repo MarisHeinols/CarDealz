@@ -11,12 +11,13 @@ import {
   Paper,
 } from "@mui/material";
 
-import type { CarListing, SortDir, SortKey } from "~/types/types";
+import type { CarListingSummary, SortDir, SortKey } from "~/types/types";
 import DealIndicator from "../DealIndicator";
 import styles from "./Listings.module.css";
+import { Link as RouterLink, useNavigate } from "react-router";
 
 const conditionColor: Record<
-  CarListing["condition"],
+  CarListingSummary["condition"],
   "success" | "info" | "default"
 > = {
   new: "success",
@@ -30,11 +31,12 @@ const ListingsTable = ({
   sortDir,
   onSort,
 }: {
-  rows: CarListing[];
+  rows: CarListingSummary[];
   sortKey: SortKey;
   sortDir: SortDir;
   onSort: (key: SortKey) => void;
 }) => {
+  const navigate = useNavigate();
   const sortLabel = (key: SortKey, label: string) => (
     <TableSortLabel
       active={sortKey === key}
@@ -50,7 +52,7 @@ const ListingsTable = ({
       component={Paper}
       className={styles.listingsContainer}
       sx={{
-        overflowX: "hidden", // 🔑 prevent horizontal scroll
+        overflowX: "hidden",
       }}
     >
       <Table
@@ -77,6 +79,9 @@ const ListingsTable = ({
             <TableCell sx={{ width: 120 }}>
               {sortLabel("price", "Price")}
             </TableCell>
+            <TableCell sx={{ width: 120 }}>
+              {sortLabel("mileage", "Mileage")}
+            </TableCell>
             <TableCell sx={{ width: 140 }}>Deal</TableCell>
             <TableCell>{sortLabel("location", "Location")}</TableCell>
           </TableRow>
@@ -84,11 +89,16 @@ const ListingsTable = ({
 
         <TableBody>
           {rows.map((l) => (
-            <TableRow key={l.id}>
+            <TableRow
+              key={l.id}
+              hover
+              sx={{ cursor: "pointer" }}
+              onClick={() => navigate(`/listing/${l.id}`)}
+            >
               <TableCell>
                 <Avatar
                   variant="rounded"
-                  src={l.imageUrl}
+                  src={l.thumbnailUrl}
                   sx={{ width: 96, height: 64 }}
                 />
               </TableCell>
@@ -105,7 +115,9 @@ const ListingsTable = ({
                 />
               </TableCell>
 
-              <TableCell>${l.price.toLocaleString()}</TableCell>
+              <TableCell>${l.price.toLocaleString("en-US")}</TableCell>
+
+              <TableCell>{l.mileage} km</TableCell>
 
               <TableCell>
                 <DealIndicator price={l.price} marketRange={l.marketRange} />

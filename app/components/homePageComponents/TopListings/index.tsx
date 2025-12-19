@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import type { CarListing } from "~/types/types";
+import type { CarListingSummary } from "~/types/types";
 import styles from "./TopListings.module.css";
 import {
   Card,
@@ -8,7 +8,7 @@ import {
   CardContent,
   Typography,
 } from "@mui/material";
-const TopListings = ({ carListings }: { carListings: CarListing[] }) => {
+const TopListings = ({ carListings }: { carListings: CarListingSummary[] }) => {
   const topListings = [...carListings]
     .sort((a, b) => b.viewCount - a.viewCount)
     .slice(0, 5);
@@ -39,7 +39,7 @@ const TopListings = ({ carListings }: { carListings: CarListing[] }) => {
               <CardActionArea>
                 <CardMedia
                   component="img"
-                  image={carListing.imageUrl}
+                  image={carListing.thumbnailUrl}
                   alt={`${carListing.make} ${carListing.model}`}
                   sx={{
                     height: 100,
@@ -61,11 +61,11 @@ const TopListings = ({ carListings }: { carListings: CarListing[] }) => {
                   </Typography>
 
                   <Typography variant="h6" color="primary">
-                    ${carListing.price.toLocaleString()}
+                    ${carListing.price.toLocaleString("en-US")}
                   </Typography>
 
                   <Typography variant="body2" color="text.secondary">
-                    {carListing.mileage.toLocaleString()} km •{" "}
+                    {carListing.mileage.toLocaleString("en-US")} km •{" "}
                     {carListing.location} • {carListing.year}
                   </Typography>
                 </CardContent>

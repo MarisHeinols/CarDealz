@@ -9,7 +9,7 @@ import {
 
 import styles from "./Listings.module.css";
 import carListingsJson from "../../../data/mockData/carListings.json";
-import { parseCarListings } from "~/data/mockData/parsers/carListingParser";
+import { parseCarListings } from "~/data/mockData/parsers/carListingSummaryParser";
 import type { ListingsFiltersState } from "~/types/types";
 import ListingsFilters from "../ListingFilter";
 import TopListings from "../TopListings";

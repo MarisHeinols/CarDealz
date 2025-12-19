@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { CarListing, ListingsFiltersState  } from "~/types/types";
+import type { CarListingSummary, ListingsFiltersState  } from "~/types/types";
 
 export const defaultFilters: ListingsFiltersState  = {
   search: "",
@@ -28,7 +28,7 @@ export type SortDir = "asc" | "desc";
 const PAGE_SIZE = 10;
 
 export function useListingsTable(
-  data: CarListing[],
+  data: CarListingSummary[],
   filters: ListingsFiltersState 
 ) {
   const [sortKey, setSortKey] = useState<SortKey>("year");
@@ -38,18 +38,26 @@ export function useListingsTable(
   const filtered = useMemo(() => {
     return data.filter((l) => {
       // 🔍 search
-      const searchMatch =
-        !filters.search ||
+    const searchTokens = filters.search
+      .toLowerCase()
+      .trim()
+      .split(/\s+/);
+
+    const searchMatch =
+      searchTokens.length === 0 ||
+      searchTokens.every((token) =>
         [
           l.make,
           l.model,
+          l.year,
           l.color,
+          l.condition,
           l.location,
         ]
           .join(" ")
           .toLowerCase()
-          .includes(filters.search.toLowerCase());
-
+          .includes(token)
+      );
       if (!searchMatch) return false;
 
       if (filters.brand !== "all" && l.make !== filters.brand)
