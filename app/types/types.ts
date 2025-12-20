@@ -69,28 +69,52 @@ export interface ListingImage {
 export interface CarListingDetails {
   id: string;
 
+  // Vehicle identity
+  vin: number;
+  ta: Date;
+
   make: string;
   model: string;
   year: number;
-  mileage: number;
-  price: number;
-  condition: "new" | "used" | "certified";
-  color: string;
-  location: string;
 
+  // Usage & condition
+  mileage: number;
+  condition: "new" | "used" | "certified";
+
+  // Powertrain
+  fuelType: "diesel" | "petrol" | "hybrid" | "electric";
+  displacement: number;
+  transmission: "automatic" | "manual";
+  drivetrain: "fwd" | "rwd" | "awd" | "4wd";
+  horsepower: number;
+
+  // Pricing
+  price: number;
   marketRange: {
     min: number;
     max: number;
   };
 
+  // Appearance
+  color: string;
+  interiorColor: string;
+
+  // Location
+  location: string;
+
+  // Media
   images: ListingImage[];
 
+  // Features
   features: CarFeature[];
 
+  // Description
   description: string;
 
+  // Seller
   seller: SellerInfo;
 
+  // Analytics & timestamps
   viewCount: number;
   lastViewed: Date;
   createdAt: Date;
@@ -98,11 +122,19 @@ export interface CarListingDetails {
 
 export type CarListingDetailsJson = {
   id: string;
+  vin:number;
+  ta:Date;
   make: string;
   model: string;
   year: number;
   mileage: number;
+  fuelType:"diesel"|"petrol"|"hybrid"|"electric";
+  displacement:number;
+  transmission: "automatic"|"manual";
+  drivetrain: "fwd" | "rwd" | "awd" | "4wd";
+  horsepower:number;
   price: number;
+  interiorColor: string;
   condition: "new" | "used" | "certified";
   color: string;
   location: string;

@@ -1,13 +1,21 @@
 [
   {
     "id": "1",
+    "vin": 12345678901234567,
+    "ta": "2023-09-14T00:00:00Z",
     "make": "Toyota",
     "model": "Camry",
     "year": 2023,
     "mileage": 15000,
     "price": 28500,
+    "fuelType": "petrol",
+    "displacment": 2.0,
+    "transmission": "automatic",
+    "drivetrain": "fwd",
+    "horsepower": 203,
     "condition": "used",
     "color": "Silver",
+    "interiorColor": "Black",
     "location": "Los Angeles, CA",
     "marketRange": { "min": 26000, "max": 32000 },
     "images": [
@@ -35,13 +43,21 @@
 
   {
     "id": "2",
+    "vin": 22345678901234567,
+    "ta": "2023-09-19T00:00:00Z",
     "make": "Honda",
     "model": "Accord",
     "year": 2024,
     "mileage": 200,
     "price": 32000,
+    "fuelType": "petrol",
+    "displacment": 1.5,
+    "transmission": "automatic",
+    "drivetrain": "fwd",
+    "horsepower": 192,
     "condition": "new",
     "color": "Black",
+    "interiorColor": "Black",
     "location": "Miami, FL",
     "marketRange": { "min": 30000, "max": 36000 },
     "images": [
@@ -69,13 +85,21 @@
 
   {
     "id": "3",
+    "vin": 32345678901234567,
+    "ta": "2023-09-09T00:00:00Z",
     "make": "Tesla",
     "model": "Model 3",
     "year": 2023,
     "mileage": 8000,
     "price": 42000,
+    "fuelType": "electric",
+    "displacment": 0,
+    "transmission": "automatic",
+    "drivetrain": "rwd",
+    "horsepower": 283,
     "condition": "certified",
     "color": "White",
+    "interiorColor": "White",
     "location": "Austin, TX",
     "marketRange": { "min": 38000, "max": 48000 },
     "images": [
@@ -102,13 +126,21 @@
 
   {
     "id": "4",
+    "vin": 42345678901234567,
+    "ta": "2023-08-24T00:00:00Z",
     "make": "Ford",
     "model": "F-150",
     "year": 2022,
     "mileage": 32000,
     "price": 38500,
+    "fuelType": "disel",
+    "displacment": 3.0,
+    "transmission": "automatic",
+    "drivetrain": "4wd",
+    "horsepower": 290,
     "condition": "used",
     "color": "Blue",
+    "interiorColor": "Gray",
     "location": "Dallas, TX",
     "marketRange": { "min": 35000, "max": 45000 },
     "images": [
@@ -134,13 +166,21 @@
 
   {
     "id": "5",
+    "vin": 52345678901234567,
+    "ta": "2023-09-27T00:00:00Z",
     "make": "BMW",
     "model": "X5",
     "year": 2024,
     "mileage": 0,
     "price": 68000,
+    "fuelType": "disel",
+    "displacment": 2.0,
+    "transmission": "automatic",
+    "drivetrain": "awd",
+    "horsepower": 335,
     "condition": "new",
     "color": "Gray",
+    "interiorColor": "Beige",
     "location": "New York, NY",
     "marketRange": { "min": 62000, "max": 75000 },
     "images": [
@@ -164,98 +204,5 @@
     "viewCount": 250,
     "lastViewed": "2023-10-05T20:00:00Z",
     "createdAt": "2023-09-28T08:00:00Z"
-  },
-
-  {
-    "id": "6",
-    "make": "Chevrolet",
-    "model": "Silverado",
-    "year": 2023,
-    "mileage": 18500,
-    "price": 45000,
-    "condition": "certified",
-    "color": "Red",
-    "location": "Denver, CO",
-    "marketRange": { "min": 42000, "max": 52000 },
-    "images": [
-      { "id": "6-1", "url": "https://images.unsplash.com/photo-1715929723301-f0ac175e0772", "isPrimary": true }
-    ],
-    "features": [
-      "power_steering",
-      "parking_sensors",
-      "rear_camera",
-      "bluetooth"
-    ],
-    "description": "Certified Chevrolet Silverado with excellent towing capacity.",
-    "seller": {
-      "name": "Rocky Mountain Trucks",
-      "phone": "+1 555 333 8888",
-      "isDealer": true
-    },
-    "viewCount": 170,
-    "lastViewed": "2023-10-06T22:00:00Z",
-    "createdAt": "2023-09-01T13:45:00Z"
-  },
-
-  {
-    "id": "7",
-    "make": "Mercedes-Benz",
-    "model": "C-Class",
-    "year": 2022,
-    "mileage": 25000,
-    "price": 38000,
-    "condition": "used",
-    "color": "Black",
-    "location": "Seattle, WA",
-    "marketRange": { "min": 36000, "max": 44000 },
-    "images": [
-      { "id": "7-1", "url": "https://images.unsplash.com/photo-1681170368080-f240d1216904", "isPrimary": true }
-    ],
-    "features": [
-      "leather_seats",
-      "heated_seats",
-      "adaptive_lights",
-      "blind_spot_monitor"
-    ],
-    "description": "Elegant Mercedes-Benz C-Class with premium interior and smooth ride.",
-    "seller": {
-      "name": "Private Seller",
-      "email": "seller@example.com",
-      "isDealer": false
-    },
-    "viewCount": 130,
-    "lastViewed": "2023-10-07T00:00:00Z",
-    "createdAt": "2023-08-18T17:30:00Z"
-  },
-
-  {
-    "id": "8",
-    "make": "Mazda",
-    "model": "CX-5",
-    "year": 2024,
-    "mileage": 0,
-    "price": 35000,
-    "condition": "new",
-    "color": "Blue",
-    "location": "Portland, OR",
-    "marketRange": { "min": 32000, "max": 40000 },
-    "images": [
-      { "id": "8-1", "url": "https://images.unsplash.com/photo-1632459250842-6a402ccce818", "isPrimary": true }
-    ],
-    "features": [
-      "apple_carplay",
-      "android_auto",
-      "lane_assist",
-      "rear_camera"
-    ],
-    "description": "New Mazda CX-5 with modern safety tech and stylish design.",
-    "seller": {
-      "name": "Northwest Mazda",
-      "phone": "+1 555 666 4444",
-      "isDealer": true
-    },
-    "viewCount": 190,
-    "lastViewed": "2023-10-08T02:00:00Z",
-    "createdAt": "2023-09-22T09:00:00Z"
   }
 ]

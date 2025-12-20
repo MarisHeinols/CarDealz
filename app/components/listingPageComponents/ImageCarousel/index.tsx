@@ -23,7 +23,7 @@ const ImageCarousel = ({ images }: { images: string[] }) => {
         alt="Car"
         sx={{
           width: "100%",
-          height: 360,
+          height: 450,
           objectFit: "cover",
           borderRadius: 2,
           boxShadow: 3,

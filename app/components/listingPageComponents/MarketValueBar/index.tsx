@@ -58,10 +58,6 @@ const MarketValueBar = ({ price, marketRange }: Props) => {
           ${marketRange.max.toLocaleString("en-US")}
         </Typography>
       </Box>
-
-      <Typography variant="body2">
-        This car is listed at <strong>${price.toLocaleString("en-US")}</strong>
-      </Typography>
     </Stack>
   );
 };
