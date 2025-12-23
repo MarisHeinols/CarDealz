@@ -66,6 +66,8 @@ export interface ListingImage {
   isPrimary?: boolean;
 }
 
+export type SpecLevel = "low" | "normal" | "high";
+
 export interface CarListingDetails {
   id: string;
 
@@ -155,25 +157,107 @@ export type CarListingDetailsJson = {
 
 
 export type CarFeature =
+  // Comfort & Convenience
   | "power_windows"
   | "power_steering"
   | "air_conditioning"
   | "climate_control"
+  | "dual_zone_climate"
+  | "tri_zone_climate"
   | "heated_seats"
   | "ventilated_seats"
+  | "heated_steering_wheel"
   | "leather_seats"
+  | "memory_seats"
+  | "power_adjustable_seats"
+  | "auto_dimming_mirrors"
+  | "rain_sensing_wipers"
+  | "ambient_lighting"
+  | "rear_window_sunshade"
+
+  // Infotainment & Connectivity
+  | "navigation"
+  | "bluetooth"
+  | "usb_ports"
+  | "wireless_charging"
+  | "apple_carplay"
+  | "android_auto"
+  | "touchscreen_display"
+  | "voice_control"
+  | "premium_sound_system"
+  | "rear_seat_entertainment"
+  | "digital_instrument_cluster"
+  | "head_up_display"
+
+  // Driver Assistance & Safety
   | "cruise_control"
   | "adaptive_cruise_control"
   | "lane_assist"
+  | "lane_keep_assist"
+  | "lane_departure_warning"
   | "blind_spot_monitor"
+  | "forward_collision_warning"
+  | "automatic_emergency_braking"
+  | "pedestrian_detection"
+  | "traffic_sign_recognition"
+  | "driver_attention_monitor"
   | "parking_sensors"
   | "rear_camera"
   | "360_camera"
+  | "night_vision"
+  | "cross_traffic_alert"
+
+  // Lighting & Visibility
   | "led_headlights"
+  | "matrix_led_headlights"
   | "adaptive_lights"
+  | "automatic_headlights"
+  | "fog_lights"
+  | "daytime_running_lights"
+  | "cornering_lights"
+
+  // Security & Access
   | "keyless_entry"
+  | "keyless_start"
   | "remote_start"
-  | "navigation"
-  | "bluetooth"
-  | "apple_carplay"
-  | "android_auto";
+  | "digital_key"
+  | "alarm_system"
+  | "engine_immobilizer"
+  | "gps_tracking"
+
+  // Performance & Driving
+  | "drive_modes"
+  | "sport_mode"
+  | "eco_mode"
+  | "adaptive_suspension"
+  | "air_suspension"
+  | "limited_slip_differential"
+  | "paddle_shifters"
+  | "launch_control"
+  | "start_stop_system"
+
+  // Exterior & Utility
+  | "sunroof"
+  | "panoramic_roof"
+  | "power_tailgate"
+  | "hands_free_tailgate"
+  | "roof_rails"
+  | "tow_package"
+  | "trailer_assist"
+  | "running_boards"
+
+  // Wheels & Tires
+  | "alloy_wheels"
+  | "performance_tires"
+  | "all_season_tires"
+  | "run_flat_tires"
+  | "spare_tire"
+  | "tire_pressure_monitoring"
+
+  // Electric & Hybrid Specific
+  | "regenerative_braking"
+  | "battery_preconditioning"
+  | "fast_charging"
+  | "home_charging_cable"
+  | "range_estimator"
+  | "energy_consumption_display";

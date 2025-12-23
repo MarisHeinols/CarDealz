@@ -31,7 +31,7 @@ const MarketValueBar = ({ price, marketRange }: Props) => {
   const label = getLabel(value);
 
   return (
-    <Stack spacing={1}>
+    <Stack spacing={1} mt={3}>
       <Stack direction="row" justifyContent="space-between">
         <Typography variant="subtitle2">Market Value</Typography>
         <Typography

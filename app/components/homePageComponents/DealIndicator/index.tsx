@@ -22,7 +22,7 @@ const DealIndicator = ({
       variant="determinate"
       value={value}
       color={color}
-      sx={{ width: 110 }}
+      sx={{ width: 30 }}
     />
   );
 };

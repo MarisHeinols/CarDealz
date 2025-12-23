@@ -13,7 +13,6 @@ import {
 
 import type { CarListingSummary, SortDir, SortKey } from "~/types/types";
 import DealIndicator from "../DealIndicator";
-import styles from "./Listings.module.css";
 import { Link as RouterLink, useNavigate } from "react-router";
 
 const conditionColor: Record<
@@ -50,26 +49,23 @@ const ListingsTable = ({
   return (
     <TableContainer
       component={Paper}
-      className={styles.listingsContainer}
       sx={{
-        overflowX: "hidden",
+        width: "100%",
+        overflowX: "auto",
+        marginTop: "1rem",
       }}
     >
       <Table
         sx={{
-          tableLayout: "fixed",
+          minWidth: 900,
           width: "100%",
         }}
       >
         <TableHead>
           <TableRow>
             <TableCell sx={{ width: 120 }}>Image</TableCell>
-            <TableCell sx={{ width: 120 }}>
-              {sortLabel("make", "Make")}
-            </TableCell>
-            <TableCell sx={{ width: 120 }}>
-              {sortLabel("model", "Model")}
-            </TableCell>
+            <TableCell>{sortLabel("make", "Make")}</TableCell>
+            <TableCell>{sortLabel("model", "Model")}</TableCell>
             <TableCell sx={{ width: 80 }}>
               {sortLabel("year", "Year")}
             </TableCell>
@@ -82,8 +78,21 @@ const ListingsTable = ({
             <TableCell sx={{ width: 120 }}>
               {sortLabel("mileage", "Mileage")}
             </TableCell>
-            <TableCell sx={{ width: 140 }}>Deal</TableCell>
-            <TableCell>{sortLabel("location", "Location")}</TableCell>
+            <TableCell
+              sx={{
+                width: { xs: 80, md: 140 },
+                textAlign: "center",
+              }}
+            >
+              Deal
+            </TableCell>
+            <TableCell
+              sx={{
+                display: { md: "none", lg: "table-cell" },
+              }}
+            >
+              {sortLabel("location", "Location")}
+            </TableCell>
           </TableRow>
         </TableHead>
 
@@ -119,12 +128,18 @@ const ListingsTable = ({
 
               <TableCell>{l.mileage} km</TableCell>
 
-              <TableCell>
+              <TableCell
+                sx={{
+                  width: { xs: 80, md: 140 },
+                  textAlign: "center",
+                }}
+              >
                 <DealIndicator price={l.price} marketRange={l.marketRange} />
               </TableCell>
 
               <TableCell
                 sx={{
+                  display: { xs: "none", md: "table-cell" },
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",

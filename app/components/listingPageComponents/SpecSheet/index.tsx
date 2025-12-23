@@ -1,42 +1,56 @@
-import { Chip, Grid, Paper, Typography } from "@mui/material";
+import { Box, Chip, Grid, Paper, Stack, Typography } from "@mui/material";
 import React from "react";
 import type { CarFeature } from "~/types/types";
-
-const featureLabels: Record<CarFeature, string> = {
-  power_windows: "Power Windows",
-  power_steering: "Power Steering",
-  air_conditioning: "Air Conditioning",
-  climate_control: "Climate Control",
-  heated_seats: "Heated Seats",
-  ventilated_seats: "Ventilated Seats",
-  leather_seats: "Leather Seats",
-  cruise_control: "Cruise Control",
-  adaptive_cruise_control: "Adaptive Cruise Control",
-  lane_assist: "Lane Assist",
-  blind_spot_monitor: "Blind Spot Monitor",
-  parking_sensors: "Parking Sensors",
-  rear_camera: "Rear Camera",
-  "360_camera": "360° Camera",
-  led_headlights: "LED Headlights",
-  adaptive_lights: "Adaptive Headlights",
-  keyless_entry: "Keyless Entry",
-  remote_start: "Remote Start",
-  navigation: "Navigation",
-  bluetooth: "Bluetooth",
-  apple_carplay: "Apple CarPlay",
-  android_auto: "Android Auto",
-};
+import { groupFeatures } from "./helper/helper";
+import { featureDefinitions } from "./featureLabels";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 
 const SpecSheet = ({ features }: { features: CarFeature[] }) => {
+  const grouped = groupFeatures();
+  const featureSet = new Set(features);
+
   return (
     <Paper variant="outlined" sx={{ p: 3 }}>
-      <Grid container spacing={1}>
-        {features.map((f) => (
-          <Grid size={{ xs: 6, md: 3 }} key={f}>
-            <Chip label={featureLabels[f]} size="small" />
+      {Object.entries(grouped).map(([category, featureKeys]) => (
+        <Box key={category} sx={{ mb: 3 }}>
+          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+            {category.toUpperCase()}
+          </Typography>
+
+          <Grid container spacing={1}>
+            {featureKeys.map((f) => {
+              const enabled = featureSet.has(f);
+
+              return (
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={f}>
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    alignItems="center"
+                    sx={{
+                      opacity: enabled ? 1 : 0.45,
+                    }}
+                  >
+                    {enabled ? (
+                      <CheckCircleIcon fontSize="small" color="success" />
+                    ) : (
+                      <RadioButtonUncheckedIcon
+                        fontSize="small"
+                        color="disabled"
+                      />
+                    )}
+
+                    <Typography variant="body2">
+                      {featureDefinitions[f].label}
+                    </Typography>
+                  </Stack>
+                </Grid>
+              );
+            })}
           </Grid>
-        ))}
-      </Grid>
+        </Box>
+      ))}
     </Paper>
   );
 };
