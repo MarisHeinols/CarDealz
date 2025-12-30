@@ -6,12 +6,12 @@ import EmailIcon from "@mui/icons-material/Email";
 
 const SellerCard = ({ seller }: { seller: SellerInfo }) => {
   return (
-    <Paper variant="outlined" sx={{ p: 3 }}>
+    <Paper sx={{ p: 3 }}>
       <Stack spacing={1}>
         <Stack direction="row" spacing={1} alignItems="center">
           <Typography variant="h6">{seller.name}</Typography>
           {seller.isDealer && (
-            <Chip label="Dealer" size="small" color="primary" />
+            <Chip label="Dealer" size="small" variant="levelHigh" />
           )}
         </Stack>
 

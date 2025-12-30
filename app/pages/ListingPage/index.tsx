@@ -42,7 +42,7 @@ const ListingPage = ({ id }: Props) => {
       <Grid container spacing={4}>
         <Grid size={{ xs: 12, md: 6 }}>
           <Stack spacing={2}>
-            <Paper variant="outlined" sx={{ p: 3, height: 450 }}>
+            <Paper sx={{ p: 3, minHeight: 450 }}>
               <Stack
                 direction={"row"}
                 alignItems={"center"}
@@ -63,9 +63,29 @@ const ListingPage = ({ id }: Props) => {
               </Typography>
 
               <Stack direction="row" spacing={1}>
-                <Chip label={car.condition} />
-                <Chip label={car.location} />
-                <Chip label={car.seller.isDealer ? "Dealer" : "Private"} />
+                <Chip
+                  label={car.condition}
+                  size="small"
+                  variant={
+                    car.condition === "new"
+                      ? "levelHigh"
+                      : car.condition === "certified"
+                        ? "levelMedium"
+                        : "levelLow"
+                  }
+                />
+
+                <Chip
+                  label={car.location}
+                  size="small"
+                  variant="levelNeutral"
+                />
+
+                <Chip
+                  label={car.seller.isDealer ? "Dealer" : "Private"}
+                  size="small"
+                  variant={car.seller.isDealer ? "levelHigh" : "levelLow"}
+                />
               </Stack>
 
               <MarketValueBar price={car.price} marketRange={car.marketRange} />
@@ -83,7 +103,7 @@ const ListingPage = ({ id }: Props) => {
         <Typography variant="h6" mb={1}>
           Description
         </Typography>
-        <Paper variant="outlined" sx={{ p: 3, width: "100%", height: 300 }}>
+        <Paper sx={{ p: 3, width: "100%", height: 300 }}>
           <Typography variant="body2" color="text.secondary">
             {car.description}
           </Typography>

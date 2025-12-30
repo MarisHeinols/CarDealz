@@ -11,14 +11,14 @@ const SpecSheet = ({ features }: { features: CarFeature[] }) => {
   const featureSet = new Set(features);
 
   return (
-    <Paper variant="outlined" sx={{ p: 3 }}>
+    <Paper sx={{ p: 3 }}>
       {Object.entries(grouped).map(([category, featureKeys]) => (
         <Box key={category} sx={{ mb: 3 }}>
           <Typography variant="subtitle1" fontWeight={600} gutterBottom>
             {category.toUpperCase()}
           </Typography>
 
-          <Grid container spacing={1}>
+          <Grid container spacing={2}>
             {featureKeys.map((f) => {
               const enabled = featureSet.has(f);
 
@@ -29,7 +29,7 @@ const SpecSheet = ({ features }: { features: CarFeature[] }) => {
                     spacing={1}
                     alignItems="center"
                     sx={{
-                      opacity: enabled ? 1 : 0.45,
+                      opacity: enabled ? 1 : 0.6,
                     }}
                   >
                     {enabled ? (
@@ -37,7 +37,7 @@ const SpecSheet = ({ features }: { features: CarFeature[] }) => {
                     ) : (
                       <RadioButtonUncheckedIcon
                         fontSize="small"
-                        color="disabled"
+                        sx={{ color: "rgba(0,0,0,0.3)" }}
                       />
                     )}
 

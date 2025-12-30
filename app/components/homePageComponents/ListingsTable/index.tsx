@@ -15,15 +15,6 @@ import type { CarListingSummary, SortDir, SortKey } from "~/types/types";
 import DealIndicator from "../DealIndicator";
 import { Link as RouterLink, useNavigate } from "react-router";
 
-const conditionColor: Record<
-  CarListingSummary["condition"],
-  "success" | "info" | "default"
-> = {
-  new: "success",
-  certified: "info",
-  used: "default",
-};
-
 const ListingsTable = ({
   rows,
   sortKey,
@@ -120,7 +111,13 @@ const ListingsTable = ({
                 <Chip
                   label={l.condition}
                   size="small"
-                  color={conditionColor[l.condition]}
+                  variant={
+                    l.condition === "new"
+                      ? "levelHigh"
+                      : l.condition === "certified"
+                        ? "levelMedium"
+                        : "levelLow"
+                  }
                 />
               </TableCell>
 

@@ -21,21 +21,7 @@ const TopListings = ({ carListings }: { carListings: CarListingSummary[] }) => {
       <div className={styles.cardsContainer}>
         {topListings.map((carListing, index) => {
           return (
-            <Card
-              key={carListing.id}
-              sx={{
-                width: "100%",
-                display: "flex",
-                flexDirection: "column",
-                border: "1px solid rgba(122, 0, 129, 0.4)",
-                boxShadow: "0 0 15px rgba(122, 0, 129, 0.35)",
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  boxShadow: "0 0 25px rgba(122, 0, 129, 0.8)",
-                  transform: "translateY(-4px)",
-                },
-              }}
-            >
+            <Card key={carListing.id}>
               <CardActionArea>
                 <CardMedia
                   component="img"

@@ -2,18 +2,29 @@ import { Chip } from "@mui/material";
 import React from "react";
 import type { SpecLevel } from "~/types/types";
 
-const specConfig: Record<
+const specVariantMap: Record<
   SpecLevel,
-  { label: string; color: "success" | "warning" | "default" }
+  "levelLow" | "levelMedium" | "levelHigh"
 > = {
-  high: { label: "High Spec", color: "success" },
-  normal: { label: "Normal Spec", color: "warning" },
-  low: { label: "Low Spec", color: "default" },
+  low: "levelLow",
+  normal: "levelMedium",
+  high: "levelHigh",
+};
+
+const specLabelMap: Record<SpecLevel, string> = {
+  low: "Low Spec",
+  normal: "Normal Spec",
+  high: "High Spec",
 };
 
 const SpecLevelChip = ({ level }: { level: SpecLevel }) => {
-  const cfg = specConfig[level];
-  return <Chip label={cfg.label} color={cfg.color} size="small" />;
+  return (
+    <Chip
+      label={specLabelMap[level]}
+      size="small"
+      variant={specVariantMap[level]}
+    />
+  );
 };
 
 export default SpecLevelChip;
