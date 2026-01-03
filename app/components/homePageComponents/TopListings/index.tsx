@@ -1,66 +1,27 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import type { CarListingSummary } from "~/types/types";
-import styles from "./TopListings.module.css";
-import {
-  Card,
-  CardActionArea,
-  CardMedia,
-  CardContent,
-  Typography,
-} from "@mui/material";
+import { Typography, Grid } from "@mui/material";
+
+import ListingCard from "~/components/shared/ListingCard";
 const TopListings = ({ carListings }: { carListings: CarListingSummary[] }) => {
   const topListings = [...carListings]
     .sort((a, b) => b.viewCount - a.viewCount)
     .slice(0, 5);
 
   return (
-    <div className={styles.topListingContainer}>
-      <Typography gutterBottom variant="h6" className={styles.topListingHeader}>
+    <>
+      <Typography gutterBottom variant="h6">
         Top Listings Last 7 days
       </Typography>
-      <div className={styles.cardsContainer}>
-        {topListings.map((carListing, index) => {
-          return (
-            <Card key={carListing.id}>
-              <CardActionArea>
-                <CardMedia
-                  component="img"
-                  image={carListing.thumbnailUrl}
-                  alt={`${carListing.make} ${carListing.model}`}
-                  sx={{
-                    height: 100,
-                    objectFit: "cover",
-                  }}
-                />
 
-                <CardContent>
-                  <Typography variant="caption" color="text.secondary">
-                    #{index + 1}
-                  </Typography>
-
-                  <Typography
-                    gutterBottom
-                    variant="h6"
-                    className={styles.topListingHeader}
-                  >
-                    {carListing.make} {carListing.model}
-                  </Typography>
-
-                  <Typography variant="h6" color="primary">
-                    ${carListing.price.toLocaleString("en-US")}
-                  </Typography>
-
-                  <Typography variant="body2" color="text.secondary">
-                    {carListing.mileage.toLocaleString("en-US")} km •{" "}
-                    {carListing.location} • {carListing.year}
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-            </Card>
-          );
-        })}
-      </div>
-    </div>
+      <Grid container spacing={2}>
+        {topListings.map((listing) => (
+          <Grid key={listing.id} size={{ xs: 12, sm: 2.4 }}>
+            <ListingCard listing={listing} />
+          </Grid>
+        ))}
+      </Grid>
+    </>
   );
 };
 

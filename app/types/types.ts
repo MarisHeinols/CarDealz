@@ -13,6 +13,30 @@ export type CarListingJson = {
   viewCount: number;
 };
 
+export type StoreThemeConfig = {
+  mode: "light" | "dark";
+
+  colors: {
+    background: string;        // page background
+    surface: string;           // cards, panels
+    banner: string;            // store header bg
+    accent: string;            // primary action color
+    textPrimary: string;
+    textSecondary: string;
+  };
+
+  banner: {
+    type: "color" | "gradient" | "image";
+    value: string;             // hex | css gradient | image URL
+    overlayOpacity?: number;   // for images
+  };
+
+  accents: {
+    buttonRadius: number;
+    cardRadius: number;
+  };
+};
+
 export interface CarListingSummary {
   id: string;
   make: string;

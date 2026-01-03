@@ -189,7 +189,14 @@ const Header = () => {
               onClose={handleCloseUserMenu}
             >
               {settings.map((setting) => (
-                <MenuItem key={setting} onClick={handleCloseUserMenu}>
+                <MenuItem
+                  key={setting}
+                  onClick={
+                    setting == "Profile"
+                      ? () => navigate("/user")
+                      : handleCloseUserMenu
+                  }
+                >
                   <Typography sx={{ textAlign: "center" }}>
                     {setting}
                   </Typography>
