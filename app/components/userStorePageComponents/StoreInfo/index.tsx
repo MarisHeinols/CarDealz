@@ -2,8 +2,12 @@ import { Button, Paper, Typography, Stack, Divider } from "@mui/material";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import PhoneIcon from "@mui/icons-material/Phone";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
-
-const StoreInfo = () => {
+import type { StoreTheme } from "~/redux/slices/storeSettingsSlice";
+interface StoreInfoProps {
+  theme: StoreTheme;
+  isPreview: boolean;
+}
+const StoreInfo = ({ theme, isPreview = false }: StoreInfoProps) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Stack spacing={2}>
@@ -20,7 +24,11 @@ const StoreInfo = () => {
           </Typography>
         </Stack>
 
-        <Button variant="contained" fullWidth>
+        <Button
+          variant="contained"
+          fullWidth
+          sx={{ bg: isPreview ? theme.primary : "" }}
+        >
           Contact Seller
         </Button>
 

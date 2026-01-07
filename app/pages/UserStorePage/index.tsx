@@ -22,6 +22,8 @@ import ListingsFilters, {
   defaultFilters,
 } from "~/components/homePageComponents/ListingFilter";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import StoreReviewsPreview from "~/components/userStorePageComponents/StoreReviewsPreview";
+import reviewJson from "../../data/mockData/reviews.json";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -92,6 +94,10 @@ const UserStorePage = () => {
           />
         </Box>
       )}
+
+      <Box sx={{ mt: 6 }}>
+        <StoreReviewsPreview reviews={reviewJson} />
+      </Box>
     </Container>
   );
 };

@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "name": "John Doe",
+    "avatar": "/static/images/avatar/1.jpg",
+    "rating": 5,
+    "date": "2024-01-10",
+    "text": "Fantastic dealership! The staff was friendly, answered all my questions and made the buying process easy."
+  },
+  {
+    "id": 2,
+    "name": "Sarah Williams",
+    "avatar": "/static/images/avatar/2.jpg",
+    "rating": 4,
+    "date": "2024-01-04",
+    "text": "Great experience overall. The car was exactly as described. Would definitely recommend!"
+  },
+  {
+    "id": 3,
+    "name": "Alex Carter",
+    "avatar": "/static/images/avatar/3.jpg",
+    "rating": 5,
+    "date": "2023-12-29",
+    "text": "Amazing service! They helped me find the perfect car and the price was very fair."
+  },
+  {
+    "id": 4,
+    "name": "Mike Johnson",
+    "avatar": "/static/images/avatar/4.jpg",
+    "rating": 3,
+    "date": "2023-12-18",
+    "text": "Decent dealership but the pickup process took longer than expected. Still happy with my car."
+  },
+  {
+    "id": 5,
+    "name": "Emily Chen",
+    "avatar": "/static/images/avatar/5.jpg",
+    "rating": 4,
+    "date": "2023-12-10",
+    "text": "Good communication, easy appointment setup. The car had a small scratch but they fixed it quickly."
+  },
+  {
+    "id": 6,
+    "name": "David Thompson",
+    "avatar": "/static/images/avatar/6.jpg",
+    "rating": 5,
+    "date": "2023-11-22",
+    "text": "Excellent selection of cars and very knowledgeable staff. Would definitely buy again."
+  },
+  {
+    "id": 7,
+    "name": "Laura Perez",
+    "avatar": "/static/images/avatar/7.jpg",
+    "rating": 4,
+    "date": "2023-11-10",
+    "text": "Smooth buying process. The salesperson was very patient and helped me compare several models."
+  },
+  {
+    "id": 8,
+    "name": "James Miller",
+    "avatar": "/static/images/avatar/8.jpg",
+    "rating": 2,
+    "date": "2023-10-25",
+    "text": "Car was fine but communication wasn’t great. Felt a bit rushed during the negotiation process."
+  },
+  {
+    "id": 9,
+    "name": "Maria Rodriguez",
+    "avatar": "/static/images/avatar/9.jpg",
+    "rating": 5,
+    "date": "2023-10-15",
+    "text": "Five stars all the way! Super professional, honest, and transparent dealership."
+  },
+  {
+    "id": 10,
+    "name": "Chris Evans",
+    "avatar": "/static/images/avatar/10.jpg",
+    "rating": 4,
+    "date": "2023-09-29",
+    "text": "Good prices and fast service. The test drive experience was great and helped me decide."
+  }
+]

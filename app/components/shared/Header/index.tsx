@@ -44,7 +44,7 @@ const Header = () => {
     setAnchorElUser(null);
   };
   return (
-    <AppBar position="static">
+    <AppBar position="static" sx={{ zIndex: 1200 }}>
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           <Typography
@@ -194,7 +194,9 @@ const Header = () => {
                   onClick={
                     setting == "Profile"
                       ? () => navigate("/user")
-                      : handleCloseUserMenu
+                      : setting == "Dashboard"
+                        ? () => navigate("/admin")
+                        : handleCloseUserMenu
                   }
                 >
                   <Typography sx={{ textAlign: "center" }}>

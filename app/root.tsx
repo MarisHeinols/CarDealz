@@ -13,6 +13,8 @@ import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import theme from "./mui/theme";
 import Header from "./components/shared/Header";
+import { store } from "./redux/store";
+import { Provider } from "react-redux";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -48,9 +50,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Header />
-      <Outlet />
+      <Provider store={store}>
+        <CssBaseline />
+        <Header />
+        <Outlet />
+      </Provider>
     </ThemeProvider>
   );
 }

@@ -1,4 +1,5 @@
 import { Box, Avatar, Typography, Stack } from "@mui/material";
+import type { StoreTheme } from "~/redux/slices/storeSettingsSlice";
 
 const StoreHeader = () => {
   const coverImage = "/store-cover.jpg"; // optional / user-uploaded

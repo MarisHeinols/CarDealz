@@ -13,6 +13,8 @@ export type CarListingJson = {
   viewCount: number;
 };
 
+export type StoreAdminSection = "appearance" | "branding" | "info" | "location";
+
 export type StoreThemeConfig = {
   mode: "light" | "dark";
 
