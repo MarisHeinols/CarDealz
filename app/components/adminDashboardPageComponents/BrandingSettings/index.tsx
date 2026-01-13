@@ -28,8 +28,6 @@ const BrandingSettings = () => {
           value={bannerImage ?? ""}
           onChange={(e) => dispatch(setBannerImage(e.target.value || null))}
         />
-
-        {/* Later: replace with real upload controls */}
       </Stack>
     </Box>
   );

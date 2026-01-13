@@ -1,5 +1,13 @@
 // src/components/admin/store/settings/AppearanceSettings.tsx
-import { Box, TextField, Typography, Stack } from "@mui/material";
+import {
+  Box,
+  TextField,
+  Typography,
+  Stack,
+  Checkbox,
+  FormControlLabel,
+} from "@mui/material";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updateTheme } from "~/redux/slices/storeSettingsSlice";
 import type { RootState } from "~/redux/store";
@@ -12,32 +20,41 @@ const ColorField = ({
   label: string;
   value: string;
   onChange: (v: string) => void;
-}) => (
-  <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
-    <Box sx={{ minWidth: 140 }}>
-      <Typography>{label}</Typography>
-    </Box>
-    <TextField
-      type="color"
-      size="small"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      sx={{ width: 80 }}
-    />
-    <TextField
-      size="small"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      sx={{ flex: 1 }}
-    />
-  </Stack>
-);
+}) => {
+  const [draft, setDraft] = useState(value);
+  useEffect(() => setDraft(value), [value]);
+  return (
+    <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+      <Box sx={{ minWidth: 100 }}>
+        <Typography>{label}</Typography>
+      </Box>
+
+      <TextField
+        type="color"
+        size="small"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={() => onChange(draft)}
+        sx={{ width: 60 }}
+      />
+
+      <TextField
+        size="small"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={() => onChange(draft)}
+        sx={{ flex: 1 }}
+      />
+    </Stack>
+  );
+};
 
 const AppearanceSettings = () => {
   const theme = useSelector((s: RootState) => s.storeSettings.theme);
+
   const dispatch = useDispatch();
 
-  const handleChange = (key: keyof typeof theme, value: string) => {
+  const handleChange = (key: keyof typeof theme, value: string | boolean) => {
     dispatch(updateTheme({ [key]: value }));
   };
 
@@ -66,6 +83,17 @@ const AppearanceSettings = () => {
         label="Background"
         value={theme.background}
         onChange={(v) => handleChange("background", v)}
+      />
+      <FormControlLabel
+        control={
+          <Checkbox
+            checked={theme.isTextLight}
+            onChange={() => {
+              handleChange("isTextLight", !theme.isTextLight);
+            }}
+          />
+        }
+        label="Light text"
       />
     </Box>
   );

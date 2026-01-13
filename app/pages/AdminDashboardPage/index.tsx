@@ -15,24 +15,11 @@ const AdminDashboardPage = () => {
     <Box
       sx={{
         height: "100vh",
-        width: "85%",
+        width: "100%",
         display: "flex",
         flexDirection: "column",
       }}
     >
-      <Box
-        sx={{
-          px: 3,
-          py: 1,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexShrink: 0,
-        }}
-      >
-        <Typography variant="h5">Store Customization</Typography>
-      </Box>
-
       {/* MAIN AREA */}
       <Box sx={{ flex: 1, position: "relative", display: "flex" }}>
         {/* LEFT — CENTERED PREVIEW (INSIDE 85% CONTAINER) */}
@@ -46,27 +33,20 @@ const AdminDashboardPage = () => {
             mr: collapsed ? `${COLLAPSED_WIDTH}px` : `${PANEL_WIDTH}px`,
           }}
         >
-          {" "}
           <Box
             sx={{
               width: collapsed ? "90%" : "80%",
-              mx: "auto",
-              maxWidth: "1100px",
               transition: "width 0.2s ease",
             }}
           >
-            {" "}
-            <StorePreview />{" "}
-          </Box>{" "}
+            <StorePreview />
+          </Box>
         </Box>
 
         {/* RIGHT — SETTINGS PANEL (OUTSIDE 85% WRAPPER!) */}
         <Box
           sx={{
-            position: "fixed",
-            top: 0,
             height: "100vh",
-            right: 0,
             width: collapsed ? COLLAPSED_WIDTH : PANEL_WIDTH,
             borderLeft: "1px solid",
             borderColor: "divider",
@@ -77,7 +57,7 @@ const AdminDashboardPage = () => {
             flexDirection: "column",
             zIndex: 1,
             boxShadow: "-4px 0 10px rgba(0,0,0,0.05)",
-            pt: "5rem",
+            pt: "1rem",
           }}
         >
           {/* COLLAPSE BUTTON */}
@@ -86,7 +66,6 @@ const AdminDashboardPage = () => {
               display: "flex",
               justifyContent: collapsed ? "center" : "flex-start",
               alignItems: "center",
-              p: 1,
             }}
           >
             <Button
@@ -102,8 +81,7 @@ const AdminDashboardPage = () => {
                 },
               }}
             >
-              {" "}
-              {!collapsed && "Settings"}{" "}
+              {!collapsed && "Settings"}
             </Button>
           </Box>
 

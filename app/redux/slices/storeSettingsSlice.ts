@@ -5,6 +5,7 @@ export interface StoreTheme {
   secondary: string;
   background: string;
   accent: string;
+  isTextLight:boolean
 }
 
 export interface StoreLocation {
@@ -40,10 +41,11 @@ const initialState: StoreSettingsState = {
     lng: null,
   },
   theme: {
-    primary: "#1976d2",
-    secondary: "#ff9800",
+    primary: "rgb(122, 0, 129)",
+    secondary: "#ffffff",
     background: "#ffffff",
     accent: "#4caf50",
+    isTextLight:false
   },
   isEditMode: false,
 };

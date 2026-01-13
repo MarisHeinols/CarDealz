@@ -1,9 +1,19 @@
 import { Box, Avatar, Typography, Stack } from "@mui/material";
 import type { StoreTheme } from "~/redux/slices/storeSettingsSlice";
 
-const StoreHeader = () => {
-  const coverImage = "/store-cover.jpg"; // optional / user-uploaded
+interface StoreHeaderProps {
+  coverImage: string;
+  logoImage: string;
+  storeName: string;
+  description: string;
+}
 
+const StoreHeader = ({
+  coverImage,
+  logoImage,
+  storeName,
+  description,
+}: StoreHeaderProps) => {
   return (
     <Box
       sx={{
@@ -43,7 +53,7 @@ const StoreHeader = () => {
               height: 56,
               border: "2px solid rgba(255,255,255,0.8)",
             }}
-            src="/store-avatar.jpg"
+            src={logoImage ? logoImage : "/store-avatar.jpg"}
           />
 
           <Stack spacing={0}>
@@ -52,14 +62,14 @@ const StoreHeader = () => {
               fontWeight={600}
               sx={{ color: "white" }}
             >
-              John’s Auto Store
+              {storeName}
             </Typography>
 
             <Typography
               variant="caption"
               sx={{ color: "rgba(255,255,255,0.85)" }}
             >
-              Trusted dealer • Since 2018
+              {description}
             </Typography>
           </Stack>
         </Stack>
