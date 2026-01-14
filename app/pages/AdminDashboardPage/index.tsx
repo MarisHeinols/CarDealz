@@ -30,7 +30,6 @@ const AdminDashboardPage = () => {
             justifyContent: "center",
             overflowY: "auto",
             transition: "margin-right 0.2s ease",
-            mr: collapsed ? `${COLLAPSED_WIDTH}px` : `${PANEL_WIDTH}px`,
           }}
         >
           <Box

@@ -8,6 +8,7 @@ import {
   Chip,
   Box,
 } from "@mui/material";
+import { useAppSelector } from "~/redux/hooks";
 import type { CarListingSummary } from "~/types/types";
 
 const conditionVariantMap = {
@@ -17,8 +18,12 @@ const conditionVariantMap = {
 } as const;
 
 const ListingCard = ({ listing }: { listing: CarListingSummary }) => {
+  const theme = useAppSelector((state) => state.storeSettings.theme);
+  const color = theme.isTextLight ? "white" : "black";
   return (
-    <Card sx={{ height: "100%" }}>
+    <Card
+      sx={{ height: "100%", bgcolor: theme.secondary ? theme.secondary : "" }}
+    >
       <CardActionArea sx={{ height: "100%" }}>
         {/* Image */}
         <Box sx={{ position: "relative" }}>
@@ -61,12 +66,13 @@ const ListingCard = ({ listing }: { listing: CarListingSummary }) => {
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
+                color: color,
               }}
             >
               {listing.year} {listing.make} {listing.model}
             </Typography>
 
-            <Typography variant="h6" color="primary" fontWeight={600}>
+            <Typography variant="h6" color={theme.primary} fontWeight={600}>
               ${listing.price.toLocaleString("en-US")}
             </Typography>
 
@@ -77,6 +83,7 @@ const ListingCard = ({ listing }: { listing: CarListingSummary }) => {
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
+                color: color,
               }}
             >
               {listing.mileage.toLocaleString("en-US")} km • {listing.location}

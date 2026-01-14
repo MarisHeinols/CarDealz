@@ -24,6 +24,7 @@ import ListingsFilters, {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import StoreReviewsPreview from "~/components/userStorePageComponents/StoreReviewsPreview";
 import reviewJson from "../../data/mockData/reviews.json";
+import { useAppSelector } from "~/redux/hooks";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -34,6 +35,7 @@ const UserStorePage = () => {
   const [page, setPage] = useState(1);
 
   const filtered = useFilteredListings(listings, filters);
+  const theme = useAppSelector((state) => state.storeSettings.theme);
 
   const pageCount = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const visibleListings = filtered.slice(
@@ -42,11 +44,12 @@ const UserStorePage = () => {
   );
   const hasActiveFilters =
     JSON.stringify(filters) !== JSON.stringify(defaultFilters);
-
   return (
-    <Container maxWidth="xl" sx={{ my: 4 }}>
+    <Container
+      maxWidth="xl"
+      sx={{ py: 4, bgcolor: theme ? theme.background : "" }}
+    >
       <StoreHeader />
-
       <Grid container spacing={3} sx={{ mt: 1 }}>
         <Grid size={{ xs: 12, md: 5 }}>
           <StoreInfo />

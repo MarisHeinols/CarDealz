@@ -1,19 +1,10 @@
 import { Box, Avatar, Typography, Stack } from "@mui/material";
+import { useAppSelector } from "~/redux/hooks";
 import type { StoreTheme } from "~/redux/slices/storeSettingsSlice";
 
-interface StoreHeaderProps {
-  coverImage: string;
-  logoImage: string;
-  storeName: string;
-  description: string;
-}
+const StoreHeader = () => {
+  const storeSettings = useAppSelector((state) => state.storeSettings);
 
-const StoreHeader = ({
-  coverImage,
-  logoImage,
-  storeName,
-  description,
-}: StoreHeaderProps) => {
   return (
     <Box
       sx={{
@@ -22,11 +13,11 @@ const StoreHeader = ({
         borderRadius: 2,
         overflow: "hidden",
         position: "relative",
-        backgroundImage: coverImage
+        backgroundImage: storeSettings.bannerImage
           ? `linear-gradient(
               rgba(0,0,0,0.35),
               rgba(0,0,0,0.35)
-            ), url(${coverImage})`
+            ), url(${storeSettings.bannerImage})`
           : "linear-gradient(135deg, #7a0081, #a855f7)",
         backgroundSize: "cover",
         backgroundPosition: "center",
@@ -53,7 +44,7 @@ const StoreHeader = ({
               height: 56,
               border: "2px solid rgba(255,255,255,0.8)",
             }}
-            src={logoImage ? logoImage : "/store-avatar.jpg"}
+            src={storeSettings.logo ? storeSettings.logo : "/store-avatar.jpg"}
           />
 
           <Stack spacing={0}>
@@ -62,14 +53,14 @@ const StoreHeader = ({
               fontWeight={600}
               sx={{ color: "white" }}
             >
-              {storeName}
+              {storeSettings.name}
             </Typography>
 
             <Typography
               variant="caption"
               sx={{ color: "rgba(255,255,255,0.85)" }}
             >
-              {description}
+              {storeSettings.description}
             </Typography>
           </Stack>
         </Stack>

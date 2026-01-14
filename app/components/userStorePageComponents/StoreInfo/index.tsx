@@ -3,29 +3,42 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 import PhoneIcon from "@mui/icons-material/Phone";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import EmailIcon from "@mui/icons-material/Email";
-import type { StoreTheme } from "~/redux/slices/storeSettingsSlice";
-interface StoreInfoProps {
-  theme: StoreTheme;
-  phoneNr: string | undefined;
-  email: string | undefined;
-}
-const StoreInfo = ({ theme, phoneNr, email }: StoreInfoProps) => {
-  const textColor = theme.isTextLight ? "white" : "black";
+import { useAppSelector } from "~/redux/hooks";
+
+const StoreInfo = () => {
+  const theme = useAppSelector((state) => state.storeSettings.theme);
+  const contact = useAppSelector((state) => state.storeSettings.contact);
+
   return (
     <Paper sx={{ p: 3, bgcolor: theme.secondary }}>
       <Stack spacing={2}>
         <Stack spacing={1}>
-          <Typography variant="body2" sx={{ color: textColor }}>
+          <Typography
+            variant="body2"
+            sx={{ color: theme.isTextLight ? "white" : "black" }}
+          >
             <LocationOnIcon /> 123 Main Street, Berlin, Germany
           </Typography>
-          <Typography variant="body2" sx={{ color: textColor }}>
+
+          <Typography
+            variant="body2"
+            sx={{ color: theme.isTextLight ? "white" : "black" }}
+          >
             <AccessTimeIcon /> Mon–Fri 09:00 – 18:00
           </Typography>
-          <Typography variant="body2" sx={{ color: textColor }}>
-            <PhoneIcon /> {phoneNr}
+
+          <Typography
+            variant="body2"
+            sx={{ color: theme.isTextLight ? "white" : "black" }}
+          >
+            <PhoneIcon /> {contact.phone || "No phone"}
           </Typography>
-          <Typography variant="body2" sx={{ color: textColor }}>
-            <EmailIcon /> {email}
+
+          <Typography
+            variant="body2"
+            sx={{ color: theme.isTextLight ? "white" : "black" }}
+          >
+            <EmailIcon /> {contact.email || "No email"}
           </Typography>
         </Stack>
 
@@ -36,13 +49,22 @@ const StoreInfo = ({ theme, phoneNr, email }: StoreInfoProps) => {
         <Divider />
 
         <Stack direction="row" spacing={3}>
-          <Typography variant="body2" sx={{ color: textColor }}>
+          <Typography
+            variant="body2"
+            sx={{ color: theme.isTextLight ? "white" : "black" }}
+          >
             <strong>42</strong> listings
           </Typography>
-          <Typography variant="body2" sx={{ color: textColor }}>
+          <Typography
+            variant="body2"
+            sx={{ color: theme.isTextLight ? "white" : "black" }}
+          >
             <strong>120k</strong> views
           </Typography>
-          <Typography variant="body2" sx={{ color: textColor }}>
+          <Typography
+            variant="body2"
+            sx={{ color: theme.isTextLight ? "white" : "black" }}
+          >
             <strong>4.8★</strong> rating
           </Typography>
         </Stack>
