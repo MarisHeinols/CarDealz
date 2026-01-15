@@ -61,7 +61,13 @@ const UserStorePage = () => {
 
       {/* Filters */}
       <Box sx={{ mt: 4 }}>
-        <Accordion defaultExpanded={hasActiveFilters}>
+        <Accordion
+          defaultExpanded={hasActiveFilters}
+          sx={{
+            bgcolor: theme.secondary ? theme.secondary : "",
+            color: theme.isTextLight ? "white" : "black",
+          }}
+        >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography fontWeight={600}>Search & Filters</Typography>
           </AccordionSummary>
@@ -98,7 +104,7 @@ const UserStorePage = () => {
         </Box>
       )}
 
-      <Box sx={{ mt: 6 }}>
+      <Box>
         <StoreReviewsPreview reviews={reviewJson} />
       </Box>
     </Container>

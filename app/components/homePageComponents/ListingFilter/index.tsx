@@ -6,6 +6,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { useAppSelector } from "~/redux/hooks";
 
 import type { ListingsFiltersState } from "~/types/types";
 

@@ -10,21 +10,34 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import StoreReviewsModal from "../StoreReviewModal";
+import { useAppSelector } from "~/redux/hooks";
 
 const StoreReviewsPreview = ({ reviews }: { reviews: any[] }) => {
   const [open, setOpen] = useState(false);
 
   const preview = reviews.slice(0, 3); // show only first 3 reviews
+  const theme = useAppSelector((state) => state.storeSettings.theme);
 
   return (
     <Box>
-      <Typography variant="h5" fontWeight={700} sx={{ mb: 2 }}>
+      <Typography
+        variant="h5"
+        fontWeight={700}
+        sx={{ my: 2, color: theme.isTextLight ? "white" : "black" }}
+      >
         Customer Reviews
       </Typography>
 
       <Stack spacing={2}>
         {preview.map((r) => (
-          <Card key={r.id} variant="outlined">
+          <Card
+            key={r.id}
+            variant="outlined"
+            sx={{
+              bgcolor: theme.secondary || "",
+              color: theme.isTextLight ? "white" : "black",
+            }}
+          >
             <CardContent>
               <Stack direction="row" spacing={2}>
                 <Avatar src={r.avatar} />
@@ -44,7 +57,11 @@ const StoreReviewsPreview = ({ reviews }: { reviews: any[] }) => {
       </Stack>
 
       <Box sx={{ mt: 2 }}>
-        <Button variant="outlined" onClick={() => setOpen(true)}>
+        <Button
+          variant="outlined"
+          onClick={() => setOpen(true)}
+          sx={{ borderColor: theme.primary || "", color: theme.primary || "" }}
+        >
           View All Reviews ({reviews.length})
         </Button>
       </Box>
