@@ -8,6 +8,7 @@ import { useAppSelector } from "~/redux/hooks";
 const StoreInfo = () => {
   const theme = useAppSelector((state) => state.storeSettings.theme);
   const contact = useAppSelector((state) => state.storeSettings.contact);
+  const location = useAppSelector((state) => state.storeSettings.location);
 
   return (
     <Paper sx={{ p: 3, bgcolor: theme.secondary }}>
@@ -17,7 +18,7 @@ const StoreInfo = () => {
             variant="body2"
             sx={{ color: theme.isTextLight ? "white" : "black" }}
           >
-            <LocationOnIcon /> 123 Main Street, Berlin, Germany
+            <LocationOnIcon /> {location.adress || "No adress"}
           </Typography>
 
           <Typography

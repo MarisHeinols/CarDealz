@@ -4,8 +4,12 @@ import { Box, Paper } from "@mui/material";
 import { useEffect, useState } from "react";
 import type React from "react";
 import { renderToString } from "react-dom/server";
+import { useSelector } from "react-redux";
+import type { RootState } from "~/redux/store";
 
 export default function StoreMap() {
+  const location = useSelector((s: RootState) => s.storeSettings.location);
+
   const [components, setComponents] = useState<null | {
     MapContainer: React.ComponentType<any>;
     TileLayer: React.ComponentType<any>;
@@ -57,13 +61,13 @@ export default function StoreMap() {
 
   if (!components) return null;
 
-  const { MapContainer, TileLayer, Marker, Popup, customIcon } = components;
+  const { MapContainer, TileLayer, Marker, customIcon } = components;
 
   return (
     <Paper sx={{ height: 240, overflow: "hidden" }}>
       <Box sx={{ height: "100%" }}>
         <MapContainer
-          center={[40.7128, -74.006]}
+          center={[location.cords.lat || 0, location.cords.lng || 0]}
           zoom={13}
           style={{ height: "100%", width: "100%" }}
         >
@@ -71,8 +75,12 @@ export default function StoreMap() {
             attribution="&copy; OpenStreetMap contributors"
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-
-          <Marker position={[40.7128, -74.006]} icon={customIcon}></Marker>
+          {location && (
+            <Marker
+              position={[location.cords.lat, location.cords.lng]}
+              icon={customIcon}
+            ></Marker>
+          )}
         </MapContainer>
       </Box>
     </Paper>

@@ -9,8 +9,12 @@ export interface StoreTheme {
 }
 
 export interface StoreLocation {
+  adress:string;
+  cords: {
   lat: number | null;
   lng: number | null;
+  }
+
 }
 
 export interface StoreSettingsState {
@@ -37,8 +41,11 @@ const initialState: StoreSettingsState = {
   bannerImage: null,
   logo: null,
   location: {
+    adress:"",
+    cords:{
     lat: null,
     lng: null,
+    }
   },
   theme: {
     primary: "rgb(122, 0, 129)",
@@ -74,7 +81,7 @@ export const storeSettingsSlice = createSlice({
     },
     setLocation: (
       state,
-      action: PayloadAction<{ lat: number; lng: number }>
+      action: PayloadAction<StoreLocation>
     ) => {
       state.location = action.payload;
     },

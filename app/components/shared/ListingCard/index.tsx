@@ -8,6 +8,7 @@ import {
   Chip,
   Box,
 } from "@mui/material";
+import { useNavigate } from "react-router";
 import { useAppSelector } from "~/redux/hooks";
 import type { CarListingSummary } from "~/types/types";
 
@@ -18,11 +19,14 @@ const conditionVariantMap = {
 } as const;
 
 const ListingCard = ({ listing }: { listing: CarListingSummary }) => {
+  const navigate = useNavigate();
+
   const theme = useAppSelector((state) => state.storeSettings.theme);
   const color = theme.isTextLight ? "white" : "black";
   return (
     <Card
       sx={{ height: "100%", bgcolor: theme.secondary ? theme.secondary : "" }}
+      onClick={() => navigate(`/listing/${listing.id}`)}
     >
       <CardActionArea sx={{ height: "100%" }}>
         {/* Image */}

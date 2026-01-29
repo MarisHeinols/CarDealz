@@ -1,56 +1,65 @@
-// src/components/admin/store/settings/LocationSettings.tsx
 import { Box, TextField, Typography, Stack, Button } from "@mui/material";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setLocation } from "~/redux/slices/storeSettingsSlice";
 import type { RootState } from "~/redux/store";
 
 const LocationSettings = () => {
   const location = useSelector((s: RootState) => s.storeSettings.location);
+
+  const [adress, setAdress] = useState(location.adress);
+  const [lat, setLat] = useState(location.cords.lat);
+  const [lng, setLng] = useState(location.cords.lng);
+
   const dispatch = useDispatch();
 
-  const handleChange = (key: "lat" | "lng", value: string) => {
-    const num = value === "" ? null : Number(value);
-    dispatch(
-      setLocation({
-        ...location,
-        [key]: num,
-      } as { lat: number; lng: number })
-    );
+  const handleSubmit = () => {
+    if (verifyValues()) {
+      dispatch(
+        setLocation({
+          adress: adress,
+          cords: {
+            lat: lat,
+            lng: lng,
+          },
+        }),
+      );
+    }
+  };
+
+  const verifyValues = () => {
+    return adress && lat && lng;
   };
 
   return (
     <Box>
-      <Typography variant="body1" sx={{ mb: 2 }}>
-        Set the location of your store. These coordinates will be used on the
-        map.
-      </Typography>
-
       <Stack spacing={2}>
         <TextField
-          label="Latitude"
-          value={location.lat ?? ""}
-          onChange={(e) => handleChange("lat", e.target.value)}
+          label="Adress"
+          value={adress}
+          onChange={(e) => setAdress(e.target.value)}
+          placeholder="Street, City, Country"
         />
         <TextField
-          label="Longitude"
-          value={location.lng ?? ""}
-          onChange={(e) => handleChange("lng", e.target.value)}
+          label="Latitude"
+          value={lat}
+          onChange={(e) => setLat(parseFloat(e.target.value) || null)}
+          placeholder="56.9730"
         />
 
-        {/* Later: integrate an editable map where user can click to set location */}
+        <TextField
+          label="Longitude"
+          value={lng}
+          onChange={(e) => setLng(parseFloat(e.target.value) || null)}
+          placeholder="24.3336"
+        />
 
         <Button
           variant="outlined"
-          onClick={() =>
-            dispatch(
-              setLocation({
-                lat: 40.7128,
-                lng: -74.006,
-              })
-            )
-          }
+          onClick={handleSubmit}
+          disabled={!verifyValues()}
         >
-          Set to sample location (NYC)
+          Confirm
         </Button>
       </Stack>
     </Box>

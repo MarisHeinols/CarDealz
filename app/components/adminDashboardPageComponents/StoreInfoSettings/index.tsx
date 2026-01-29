@@ -10,16 +10,12 @@ import type { RootState } from "~/redux/store";
 
 const StoreInfoSettings = () => {
   const { name, description, contact } = useSelector(
-    (s: RootState) => s.storeSettings
+    (s: RootState) => s.storeSettings,
   );
   const dispatch = useDispatch();
 
   return (
     <Box>
-      <Typography variant="body1" sx={{ mb: 2 }}>
-        Basic information about your store.
-      </Typography>
-
       <Stack spacing={3}>
         <TextField
           label="Store name"
@@ -46,7 +42,7 @@ const StoreInfoSettings = () => {
               setContactInfo({
                 ...contact,
                 phone: e.target.value,
-              })
+              }),
             )
           }
         />
@@ -60,7 +56,7 @@ const StoreInfoSettings = () => {
               setContactInfo({
                 ...contact,
                 email: e.target.value,
-              })
+              }),
             )
           }
         />
