@@ -24,6 +24,7 @@ export interface StoreSettingsState {
     phone: string;
     email: string;
   };
+  workTime:string;
   bannerImage: string | null;
   logo: string | null;
   location: StoreLocation;
@@ -38,6 +39,7 @@ const initialState: StoreSettingsState = {
     phone: "",
     email: "",
   },
+  workTime:"Mon-Fri 9:00 - 18:00",
   bannerImage: null,
   logo: null,
   location: {
@@ -85,6 +87,9 @@ export const storeSettingsSlice = createSlice({
     ) => {
       state.location = action.payload;
     },
+    setWorkTime: (state, action: PayloadAction<string>) => {
+      state.workTime   = action.payload;
+    },
     updateTheme: (state, action: PayloadAction<Partial<StoreTheme>>) => {
       state.theme = { ...state.theme, ...action.payload };
     },
@@ -103,6 +108,7 @@ export const {
   setContactInfo,
   setBannerImage,
   setLogo,
+  setWorkTime,
   setLocation,
   updateTheme,
   toggleEditMode,

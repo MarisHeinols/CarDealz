@@ -5,11 +5,12 @@ import {
   setStoreName,
   setDescription,
   setContactInfo,
+  setWorkTime,
 } from "~/redux/slices/storeSettingsSlice";
 import type { RootState } from "~/redux/store";
 
 const StoreInfoSettings = () => {
-  const { name, description, contact } = useSelector(
+  const { name, description, contact, workTime } = useSelector(
     (s: RootState) => s.storeSettings,
   );
   const dispatch = useDispatch();
@@ -59,6 +60,13 @@ const StoreInfoSettings = () => {
               }),
             )
           }
+        />
+
+        <TextField
+          label="Work Time"
+          fullWidth
+          value={workTime}
+          onChange={(e) => dispatch(setWorkTime(e.target.value))}
         />
       </Stack>
     </Box>

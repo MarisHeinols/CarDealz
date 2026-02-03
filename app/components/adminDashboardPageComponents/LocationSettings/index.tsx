@@ -7,9 +7,9 @@ import type { RootState } from "~/redux/store";
 const LocationSettings = () => {
   const location = useSelector((s: RootState) => s.storeSettings.location);
 
-  const [adress, setAdress] = useState(location.adress);
-  const [lat, setLat] = useState(location.cords.lat);
-  const [lng, setLng] = useState(location.cords.lng);
+  const [adress, setAdress] = useState(location.adress || "");
+  const [lat, setLat] = useState(location.cords.lat || 0);
+  const [lng, setLng] = useState(location.cords.lng || 0);
 
   const dispatch = useDispatch();
 
@@ -43,14 +43,14 @@ const LocationSettings = () => {
         <TextField
           label="Latitude"
           value={lat}
-          onChange={(e) => setLat(parseFloat(e.target.value) || null)}
+          onChange={(e) => setLat(parseFloat(e.target.value) || 0)}
           placeholder="56.9730"
         />
 
         <TextField
           label="Longitude"
           value={lng}
-          onChange={(e) => setLng(parseFloat(e.target.value) || null)}
+          onChange={(e) => setLng(parseFloat(e.target.value) || 0)}
           placeholder="24.3336"
         />
 

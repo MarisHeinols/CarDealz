@@ -9,6 +9,7 @@ const StoreInfo = () => {
   const theme = useAppSelector((state) => state.storeSettings.theme);
   const contact = useAppSelector((state) => state.storeSettings.contact);
   const location = useAppSelector((state) => state.storeSettings.location);
+  const workTime = useAppSelector((state) => state.storeSettings.workTime);
 
   return (
     <Paper sx={{ p: 3, bgcolor: theme.secondary }}>
@@ -25,7 +26,7 @@ const StoreInfo = () => {
             variant="body2"
             sx={{ color: theme.isTextLight ? "white" : "black" }}
           >
-            <AccessTimeIcon /> Mon–Fri 09:00 – 18:00
+            <AccessTimeIcon /> {workTime}
           </Typography>
 
           <Typography

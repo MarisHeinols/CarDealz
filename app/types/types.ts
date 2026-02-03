@@ -86,6 +86,30 @@ export interface SellerInfo {
   isDealer: boolean;
 }
 
+export interface IndividualRegisterData {
+  name: string;
+  surname: string;
+  email: string;
+  phone: string;
+  password: string;
+  confirmPassword: string;
+}
+
+export interface BusinessRegisterData {
+  ownerName: string;
+  ownerSurname: string;
+  ownerEmail: string;
+  ownerPhone: string;
+  password: string;
+  confirmPassword: string;
+  storeName: string;
+  businessEmail: string;
+  businessPhone: string;
+  address: string;
+  lat: string;
+  lng: string;
+}
+
 export interface ListingImage {
   id: string;
   url: string;

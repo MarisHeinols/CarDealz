@@ -77,7 +77,7 @@ export default function StoreMap() {
           />
           {location && (
             <Marker
-              position={[location.cords.lat, location.cords.lng]}
+              position={[location.cords.lat || 0, location.cords.lng || 0]}
               icon={customIcon}
             ></Marker>
           )}

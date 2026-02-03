@@ -22,10 +22,10 @@ const settings = ["Profile", "Account", "Dashboard", "Logout"];
 
 const Header = () => {
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(
-    null
+    null,
   );
   const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
-    null
+    null,
   );
   const navigate = useNavigate();
 
@@ -196,7 +196,7 @@ const Header = () => {
                       ? () => navigate("/user")
                       : setting == "Dashboard"
                         ? () => navigate("/admin")
-                        : handleCloseUserMenu
+                        : () => navigate("/login")
                   }
                 >
                   <Typography sx={{ textAlign: "center" }}>
