@@ -17,7 +17,7 @@ const IndividualRegisterForm = () => {
   };
 
   return (
-    <Box component="form">
+    <Box component="form" sx={{ height: "33rem" }}>
       {Object.entries(formData).map(([key, value]) => (
         <TextField
           key={key}

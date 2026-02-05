@@ -23,7 +23,7 @@ const BusinessRegisterForm = () => {
   };
 
   return (
-    <Box component="form" p={2}>
+    <Box component="form" p={2} sx={{ height: "33rem" }}>
       <Grid container spacing={2}>
         {Object.entries(formData).map(([key, value]) => (
           <Grid size={{ xs: 12, sm: 6 }} key={key}>
@@ -38,7 +38,7 @@ const BusinessRegisterForm = () => {
         ))}
       </Grid>
 
-      <Button fullWidth variant="contained" sx={{ mt: 3 }}>
+      <Button fullWidth variant="contained" sx={{ mt: 3, alignSelf: "end" }}>
         Register Business
       </Button>
     </Box>

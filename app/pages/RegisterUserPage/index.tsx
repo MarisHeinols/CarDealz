@@ -1,9 +1,12 @@
 import React, { useState } from "react";
-import { Box, Paper, Tabs, Tab, Typography } from "@mui/material";
+import { Box, Paper, Tabs, Tab, Typography, Button } from "@mui/material";
 import IndividualRegisterForm from "~/components/registerUserPageComponents/IndividualRegisterForm";
 import BusinessRegisterForm from "~/components/registerUserPageComponents/BusinessRegisterForm";
+import { useNavigate } from "react-router";
 
-const RegisterUserPage: React.FC = () => {
+const RegisterUserPage = () => {
+  const navigate = useNavigate();
+
   const [tab, setTab] = useState(0);
 
   return (
@@ -28,6 +31,14 @@ const RegisterUserPage: React.FC = () => {
 
         {tab === 0 && <IndividualRegisterForm />}
         {tab === 1 && <BusinessRegisterForm />}
+        <Button
+          sx={{ width: "100%", my: "1rem" }}
+          onClick={() => {
+            navigate("/login");
+          }}
+        >
+          Cancel
+        </Button>
       </Paper>
     </Box>
   );
