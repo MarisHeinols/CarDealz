@@ -64,7 +64,7 @@ export default function StoreMap() {
   const { MapContainer, TileLayer, Marker, customIcon } = components;
 
   return (
-    <Paper sx={{ height: 240, overflow: "hidden" }}>
+    <Paper sx={{ height: "100%", overflow: "hidden" }}>
       <Box sx={{ height: "100%" }}>
         <MapContainer
           center={[location.cords.lat || 0, location.cords.lng || 0]}

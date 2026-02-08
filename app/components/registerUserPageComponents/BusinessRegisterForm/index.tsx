@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Box, TextField, Button, Grid } from "@mui/material";
 import type { BusinessRegisterData } from "~/types/types";
+import { registerUser } from "../../../services/auth";
 
 const BusinessRegisterForm = () => {
   const [formData, setFormData] = useState<BusinessRegisterData>({
@@ -22,6 +23,28 @@ const BusinessRegisterForm = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleRegister = async () => {
+    if (formData.password !== formData.confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+
+    try {
+      await registerUser(
+        formData.ownerEmail,
+        formData.password,
+        {
+          ...formData,
+        },
+        "business",
+      );
+
+      alert("Business registered!");
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
   return (
     <Box component="form" p={2} sx={{ height: "33rem" }}>
       <Grid container spacing={2}>
@@ -38,7 +61,12 @@ const BusinessRegisterForm = () => {
         ))}
       </Grid>
 
-      <Button fullWidth variant="contained" sx={{ mt: 3, alignSelf: "end" }}>
+      <Button
+        fullWidth
+        variant="contained"
+        sx={{ mt: 3, alignSelf: "end" }}
+        onClick={handleRegister}
+      >
         Register Business
       </Button>
     </Box>
