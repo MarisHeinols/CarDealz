@@ -2,8 +2,11 @@ import React, { useState } from "react";
 import { Box, TextField, Button } from "@mui/material";
 import type { IndividualRegisterData } from "~/types/types";
 import { registerUser } from "../../../services/auth";
+import { useNavigate } from "react-router";
 
 const IndividualRegisterForm = () => {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState<IndividualRegisterData>({
     name: "",
     surname: "",
@@ -35,7 +38,7 @@ const IndividualRegisterForm = () => {
         "individual",
       );
 
-      alert("Registered successfully!");
+      navigate("/login");
     } catch (err: any) {
       alert(err.message);
     }

@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { Box, TextField, Button, Grid } from "@mui/material";
 import type { BusinessRegisterData } from "~/types/types";
 import { registerUser } from "../../../services/auth";
+import { useNavigate } from "react-router";
 
 const BusinessRegisterForm = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<BusinessRegisterData>({
     ownerName: "",
     ownerSurname: "",
@@ -39,7 +41,7 @@ const BusinessRegisterForm = () => {
         "business",
       );
 
-      alert("Business registered!");
+      navigate("/login");
     } catch (err: any) {
       alert(err.message);
     }

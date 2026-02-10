@@ -22,7 +22,7 @@ const LoginPage = () => {
   const handleLogin = async () => {
     try {
       await loginUser(email, password);
-      navigate("/dashboard");
+      navigate("/");
     } catch (err: any) {
       alert(err.message);
     }
