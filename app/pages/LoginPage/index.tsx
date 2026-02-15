@@ -11,22 +11,13 @@ import {
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
-import { loginUser } from "../../services/auth";
+import { login } from "~/services/auth";
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  const handleLogin = async () => {
-    try {
-      await loginUser(email, password);
-      navigate("/");
-    } catch (err: any) {
-      alert(err.message);
-    }
-  };
 
   return (
     <Box
@@ -73,7 +64,7 @@ const LoginPage = () => {
           fullWidth
           variant="contained"
           sx={{ mt: 2 }}
-          onClick={handleLogin}
+          onClick={() => login(email, password)}
         >
           Sign In
         </Button>

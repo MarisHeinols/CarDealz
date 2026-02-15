@@ -16,11 +16,38 @@ import MenuIcon from "@mui/icons-material/Menu";
 import AdbIcon from "@mui/icons-material/Adb";
 import AddIcon from "@mui/icons-material/Add";
 import { useNavigate } from "react-router";
+import { useAuth } from "~/hooks/userStore/useAuth";
+import { logout } from "~/services/auth";
 
-const pages = ["Products", "Pricing", "Blog"];
-const settings = ["Profile", "Account", "Dashboard", "Logout"];
+const pages = [
+  {
+    pageName: "Listings",
+    url: "/",
+    businessPageOnly: false,
+  },
+  {
+    pageName: "Profile",
+    url: "/user",
+    businessPageOnly: true,
+  },
+  {
+    pageName: "Admin",
+    url: "/admin",
+    businessPageOnly: true,
+  },
+];
+
+const dropDownSeetings = [
+  {
+    optionName: "Login",
+    link: "/login",
+    businessPage: false,
+  },
+];
 
 const Header = () => {
+  const { user } = useAuth();
+
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(
     null,
   );
@@ -43,6 +70,7 @@ const Header = () => {
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
   };
+
   return (
     <AppBar position="static" sx={{ zIndex: 1200 }}>
       <Container maxWidth="xl">
@@ -92,24 +120,23 @@ const Header = () => {
               onClose={handleCloseNavMenu}
               sx={{ display: { xs: "block", md: "none" } }}
             >
-              {pages.map((page) => (
-                <Button
-                  key={page}
-                  onClick={handleCloseNavMenu}
-                  sx={{
-                    my: 2,
-                    mx: 1,
-                    color: "text.primary",
-                    fontWeight: 500,
-                    "&:hover": {
-                      backgroundColor: "rgba(122, 0, 129, 0.08)",
-                      boxShadow: "0 0 10px rgba(122, 0, 129, 0.3)",
-                    },
-                  }}
-                >
-                  {page}
-                </Button>
-              ))}
+              {pages
+                .filter(
+                  (page) =>
+                    !page.businessPageOnly || (page.businessPageOnly && user),
+                )
+                .map((page) => (
+                  <Button
+                    key={page.pageName}
+                    onClick={() => {
+                      navigate(page.url);
+                      handleCloseNavMenu();
+                    }}
+                    sx={{ my: 2, display: "block" }}
+                  >
+                    {page.pageName}
+                  </Button>
+                ))}
             </Menu>
           </Box>
           <AdbIcon sx={{ display: { xs: "flex", md: "none" }, mr: 1 }} />
@@ -139,15 +166,23 @@ const Header = () => {
               gap: 2,
             }}
           >
-            {pages.map((page) => (
-              <Button
-                key={page}
-                onClick={handleCloseNavMenu}
-                sx={{ my: 2, display: "block" }}
-              >
-                {page}
-              </Button>
-            ))}
+            {pages
+              .filter(
+                (page) =>
+                  !page.businessPageOnly || (page.businessPageOnly && user),
+              )
+              .map((page) => (
+                <Button
+                  key={page.pageName}
+                  onClick={() => {
+                    navigate(page.url);
+                    handleCloseNavMenu();
+                  }}
+                  sx={{ my: 2, display: "block" }}
+                >
+                  {page.pageName}
+                </Button>
+              ))}
           </Box>
           <Box
             sx={{
@@ -188,22 +223,30 @@ const Header = () => {
               open={Boolean(anchorElUser)}
               onClose={handleCloseUserMenu}
             >
-              {settings.map((setting) => (
+              {user ? (
                 <MenuItem
-                  key={setting}
-                  onClick={
-                    setting == "Profile"
-                      ? () => navigate("/user")
-                      : setting == "Dashboard"
-                        ? () => navigate("/admin")
-                        : () => navigate("/login")
-                  }
+                  onClick={() => {
+                    logout();
+                    handleCloseUserMenu();
+                  }}
                 >
-                  <Typography sx={{ textAlign: "center" }}>
-                    {setting}
-                  </Typography>
+                  <Typography sx={{ textAlign: "center" }}>Log Out</Typography>
                 </MenuItem>
-              ))}
+              ) : (
+                dropDownSeetings.map((setting) => (
+                  <MenuItem
+                    key={setting.link}
+                    onClick={() => {
+                      navigate(setting.link);
+                      handleCloseUserMenu();
+                    }}
+                  >
+                    <Typography sx={{ textAlign: "center" }}>
+                      {setting.optionName}
+                    </Typography>
+                  </MenuItem>
+                ))
+              )}
             </Menu>
           </Box>
         </Toolbar>

@@ -15,6 +15,7 @@ import theme from "./mui/theme";
 import Header from "./components/shared/Header";
 import { store } from "./redux/store";
 import { Provider } from "react-redux";
+import { FirebaseAuthProvider } from "./provider/FirebaseAuthProvider";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -50,11 +51,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <ThemeProvider theme={theme}>
-      <Provider store={store}>
-        <CssBaseline />
-        <Header />
-        <Outlet />
-      </Provider>
+      <FirebaseAuthProvider>
+        <Provider store={store}>
+          <CssBaseline />
+          <Header />
+          <Outlet />
+        </Provider>
+      </FirebaseAuthProvider>
     </ThemeProvider>
   );
 }
