@@ -95,7 +95,7 @@ const ListingPage = ({ id }: Props) => {
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
-          <ImageCarousel images={car.images.map((img) => img.url)} />{" "}
+          <ImageCarousel images={car.images.map((img) => img.url)} />
         </Grid>
       </Grid>
 

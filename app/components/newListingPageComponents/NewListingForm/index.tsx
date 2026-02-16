@@ -12,7 +12,7 @@ import {
   AccordionDetails,
   AccordionSummary,
 } from "@mui/material";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   CAR_FEATURE_GROUPS,
   CAR_FEATURE_LABELS,
@@ -20,6 +20,8 @@ import {
 import type { CarFeature, CarListingDetailsJson } from "~/types/types";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useNavigate } from "react-router";
+import ImageUpload from "~/components/shared/ImageUpload";
+import ImageCarousel from "~/components/listingPageComponents/ImageCarousel";
 
 const emptyListing: CarListingDetailsJson = {
   id: "",
@@ -54,29 +56,20 @@ const emptyListing: CarListingDetailsJson = {
 
 const NewListingForm = () => {
   const [listing, setListing] = useState<CarListingDetailsJson>(emptyListing);
-  const navigate = useNavigate();
+  const [carImages, setCarImages] = useState<File[]>([]);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const handleBack = () => {
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      navigate("/");
-    }
+  const imageUrls = React.useMemo(
+    () => carImages.map((file) => URL.createObjectURL(file)),
+    [carImages],
+  );
+
+  const handleImageUpload = (files: File[]) => {
+    setCarImages((prev) => [...prev, ...files]);
   };
 
-  const handleChange =
-    (field: keyof CarListingDetailsJson) =>
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setListing({ ...listing, [field]: e.target.value });
-    };
-
-  const toggleFeature = (feature: CarFeature) => {
-    setListing((prev) => ({
-      ...prev,
-      features: prev.features.includes(feature)
-        ? prev.features.filter((f) => f !== feature)
-        : [...prev.features, feature],
-    }));
+  const handleDeleteImage = (idx: number) => {
+    setCarImages((prev) => prev.filter((_, i) => i !== idx));
   };
 
   const handleSubmit = () => {
@@ -85,127 +78,131 @@ const NewListingForm = () => {
   };
   return (
     <Box component="form" sx={{ py: 4 }}>
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 6 }}>
-          <TextField
-            label="Make"
-            fullWidth
-            value={listing.make}
-            onChange={handleChange("make")}
-          />
-        </Grid>
-        <Grid size={{ xs: 6 }}>
-          <TextField
-            label="Model"
-            fullWidth
-            value={listing.model}
-            onChange={handleChange("model")}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 4 }}>
-          <TextField
-            label="Year"
-            type="number"
-            fullWidth
-            value={listing.year}
-            onChange={handleChange("year")}
-          />
-        </Grid>
-        <Grid size={{ xs: 4 }}>
-          <TextField
-            label="Mileage"
-            type="number"
-            fullWidth
-            value={listing.mileage}
-            onChange={handleChange("mileage")}
-          />
-        </Grid>
-        <Grid size={{ xs: 4 }}>
-          <TextField
-            label="Price"
-            type="number"
-            fullWidth
-            value={listing.price}
-            onChange={handleChange("price")}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 6 }}>
-          <TextField
-            select
-            label="Condition"
-            fullWidth
-            value={listing.condition}
-            onChange={handleChange("condition")}
+      <Grid container spacing={3}>
+        {/* LEFT SIDE — 70% */}
+        <Grid size={{ xs: 12, md: 8 }}>
+          {/* IMAGE AREA */}
+          <Box
+            sx={{
+              width: "100%",
+              aspectRatio: "16 / 9",
+              bgcolor: "#e3e1e1",
+              borderRadius: 2,
+              p: 2,
+              mb: 3,
+              overflow: "hidden",
+            }}
           >
-            <MenuItem value="new">New</MenuItem>
-            <MenuItem value="used">Used</MenuItem>
-            <MenuItem value="certified">Certified</MenuItem>
-          </TextField>
+            {carImages.length > 0 ? (
+              <ImageCarousel
+                images={imageUrls}
+                onDelete={handleDeleteImage}
+                onUploadMore={() => fileInputRef.current?.click()}
+              />
+            ) : (
+              <Box
+                sx={{
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  gap: 2,
+                }}
+              >
+                <Typography>Upload Images</Typography>
+                <ImageUpload
+                  uploadFunction={handleImageUpload}
+                  fileInputRef={fileInputRef}
+                />
+              </Box>
+            )}
+          </Box>
+
+          {/* MAIN INFO */}
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 6 }}>
+              <TextField label="Make" fullWidth />
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+              <TextField label="Model" fullWidth />
+            </Grid>
+
+            <Grid size={{ xs: 4 }}>
+              <TextField label="Year" type="number" fullWidth />
+            </Grid>
+            <Grid size={{ xs: 4 }}>
+              <TextField label="Mileage" type="number" fullWidth />
+            </Grid>
+            <Grid size={{ xs: 4 }}>
+              <TextField label="Price" type="number" fullWidth />
+            </Grid>
+
+            <Grid size={{ xs: 6 }}>
+              <TextField select label="Condition" fullWidth>
+                <MenuItem value="new">New</MenuItem>
+                <MenuItem value="used">Used</MenuItem>
+                <MenuItem value="certified">Certified</MenuItem>
+              </TextField>
+            </Grid>
+
+            <Grid size={{ xs: 6 }}>
+              <TextField label="Location" fullWidth />
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <TextField multiline rows={4} label="Description" fullWidth />
+            </Grid>
+          </Grid>
         </Grid>
 
-        <Grid size={{ xs: 6 }}>
-          <TextField
-            label="Location"
-            fullWidth
-            value={listing.location}
-            onChange={handleChange("location")}
-          />
-        </Grid>
+        {/* RIGHT SIDE — 30% */}
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Box
+            sx={{
+              position: "sticky",
+              top: 20,
+              bgcolor: "#fafafa",
+              borderRadius: 2,
+              p: 2,
+              boxShadow: 1,
+              maxHeight: "calc(100vh - 40px)",
+              overflowY: "auto",
+            }}
+          >
+            <Typography variant="h6" gutterBottom>
+              Features
+            </Typography>
 
-        <Grid size={{ xs: 12 }}>
-          <TextField
-            label="Description"
-            fullWidth
-            multiline
-            rows={4}
-            value={listing.description}
-            onChange={handleChange("description")}
-          />
+            {Object.values(CAR_FEATURE_GROUPS).map((group) => (
+              <Accordion key={group.title}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography fontWeight={600}>{group.title}</Typography>
+                </AccordionSummary>
+
+                <AccordionDetails>
+                  <Grid container spacing={1}>
+                    {group.features.map((feature) => (
+                      <Grid key={feature} size={{ xs: 12 }}>
+                        <FormControlLabel
+                          control={<Checkbox />}
+                          label={CAR_FEATURE_LABELS[feature]}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                </AccordionDetails>
+              </Accordion>
+            ))}
+          </Box>
         </Grid>
       </Grid>
 
       <Divider sx={{ my: 4 }} />
 
-      <Typography variant="h6" gutterBottom>
-        Features
-      </Typography>
-
-      {Object.values(CAR_FEATURE_GROUPS).map((group) => (
-        <Accordion key={group.title} defaultExpanded={false}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography fontWeight={600}>{group.title}</Typography>
-          </AccordionSummary>
-
-          <AccordionDetails>
-            <Grid container spacing={1}>
-              {group.features.map((feature) => (
-                <Grid key={feature} size={{ xs: 12, sm: 6, md: 4 }}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={listing.features.includes(feature)}
-                        onChange={() => toggleFeature(feature)}
-                      />
-                    }
-                    label={CAR_FEATURE_LABELS[feature]}
-                  />
-                </Grid>
-              ))}
-            </Grid>
-          </AccordionDetails>
-        </Accordion>
-      ))}
-
-      <Divider sx={{ my: 4 }} />
-      <Box sx={{ display: "flex", gap: "1rem" }}>
-        <Button variant="outlined" size="large" onClick={handleBack}>
-          Back
-        </Button>
-        <Button variant="contained" size="large" onClick={handleSubmit}>
-          Create Listing
-        </Button>
+      <Box sx={{ display: "flex", gap: 2 }}>
+        <Button variant="outlined">Back</Button>
+        <Button variant="contained">Create Listing</Button>
       </Box>
     </Box>
   );

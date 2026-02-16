@@ -39,7 +39,7 @@ const pages = [
 
 const dropDownSeetings = [
   {
-    optionName: "Login",
+    optionName: "Log In",
     link: "/login",
     businessPage: false,
   },

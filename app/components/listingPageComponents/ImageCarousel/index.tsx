@@ -1,106 +1,110 @@
-import { Box, Button, MobileStepper, IconButton } from "@mui/material";
+import { Box, IconButton } from "@mui/material";
 import React from "react";
 import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
+import CloseIcon from "@mui/icons-material/Close";
+import AddIcon from "@mui/icons-material/Add";
 
-const ImageCarousel = ({ images }: { images: string[] }) => {
+type ImageCarouselProps = {
+  images: string[];
+  onDelete?: (index: number) => void;
+  onUploadMore?: () => void;
+};
+
+const ImageCarousel = ({
+  images,
+  onDelete,
+  onUploadMore,
+}: ImageCarouselProps) => {
   const [activeStep, setActiveStep] = React.useState(0);
-  const maxSteps = images.length;
 
-  const handleNext = () => {
-    setActiveStep((prev) => (prev + 1) % maxSteps);
-  };
-
-  const handleBack = () => {
-    setActiveStep((prev) => (prev - 1 + maxSteps) % maxSteps);
-  };
-
-  const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const { left, width } = e.currentTarget.getBoundingClientRect();
-    const clickX = e.clientX - left;
-
-    if (clickX < width * 0.3) {
-      handleBack();
-    } else if (clickX > width * 0.7) {
-      handleNext();
+  React.useEffect(() => {
+    if (activeStep >= images.length) {
+      setActiveStep(Math.max(images.length - 1, 0));
     }
-  };
+  }, [images, activeStep]);
+
+  if (!images.length) return null;
 
   return (
-    <Box sx={{ maxWidth: "100%" }}>
+    <Box sx={{ width: "100%", height: "100%" }}>
       <Box
-        onClick={handleImageClick}
         sx={{
           position: "relative",
-          cursor: "pointer",
-          "&:hover .carousel-arrow": {
-            opacity: 1,
-          },
+          height: "85%",
+          borderRadius: 2,
+          overflow: "hidden",
+          mb: 1,
         }}
       >
         <Box
           component="img"
           src={images[activeStep]}
-          alt="Car"
           sx={{
             width: "100%",
-            height: 450,
+            height: "100%",
             objectFit: "cover",
-            borderRadius: 2,
-            boxShadow: 3,
-            userSelect: "none",
           }}
         />
-        {maxSteps > 1 && (
-          <>
-            {" "}
-            {/* Left Arrow */}
-            <IconButton
-              className="carousel-arrow"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleBack();
-              }}
+      </Box>
+
+      <Box sx={{ display: "flex", gap: 1, overflowX: "auto" }}>
+        {images.map((img, idx) => (
+          <Box key={idx} sx={{ position: "relative", flexShrink: 0 }}>
+            <Box
+              component="img"
+              src={img}
+              onClick={() => setActiveStep(idx)}
               sx={{
-                position: "absolute",
-                left: 12,
-                top: "50%",
-                transform: "translateY(-50%)",
-                backgroundColor: "rgba(0,0,0,0.5)",
-                color: "#fff",
-                opacity: 0,
-                transition: "opacity 0.2s",
-                "&:hover": {
-                  backgroundColor: "rgba(0,0,0,0.7)",
-                },
+                width: 90,
+                height: 60,
+                objectFit: "cover",
+                borderRadius: 1,
+                cursor: "pointer",
+                border:
+                  idx === activeStep
+                    ? "2px solid #7b1fa2"
+                    : "2px solid transparent",
               }}
-            >
-              <KeyboardArrowLeft />
-            </IconButton>
-            {/* Right Arrow */}
-            <IconButton
-              className="carousel-arrow"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleNext();
-              }}
-              sx={{
-                position: "absolute",
-                right: 12,
-                top: "50%",
-                transform: "translateY(-50%)",
-                backgroundColor: "rgba(0,0,0,0.5)",
-                color: "#fff",
-                opacity: 0,
-                transition: "opacity 0.2s",
-                "&:hover": {
-                  backgroundColor: "rgba(0,0,0,0.7)",
-                },
-              }}
-            >
-              <KeyboardArrowRight />
-            </IconButton>
-          </>
+            />
+
+            {onDelete && (
+              <IconButton
+                size="small"
+                onClick={() => onDelete(idx)}
+                sx={{
+                  position: "absolute",
+                  top: -8,
+                  right: -8,
+                  bgcolor: "rgba(0,0,0,0.6)",
+                  color: "#fff",
+                  width: 20,
+                  height: 20,
+                }}
+              >
+                ✕
+              </IconButton>
+            )}
+          </Box>
+        ))}
+
+        {onUploadMore && (
+          <Box
+            onClick={onUploadMore}
+            sx={{
+              width: 90,
+              height: 60,
+              borderRadius: 1,
+              border: "2px dashed #aaa",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+          >
+            +
+          </Box>
         )}
       </Box>
     </Box>
