@@ -64,7 +64,11 @@ const LoginPage = () => {
           fullWidth
           variant="contained"
           sx={{ mt: 2 }}
-          onClick={() => login(email, password)}
+          onClick={() =>
+            login(email, password).then(() => {
+              navigate("/");
+            })
+          }
         >
           Sign In
         </Button>

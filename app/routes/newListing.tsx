@@ -1,3 +1,5 @@
+import PleaseLogin from "~/components/shared/PleaseLogin";
+import { useAuth } from "~/hooks/userStore/useAuth";
 import NewListingPage from "~/pages/NewListingPage";
 
 export function meta() {
@@ -8,5 +10,9 @@ export function meta() {
 }
 
 export default function NewListingRoute() {
+  const { user } = useAuth();
+  if (!user) {
+    return <PleaseLogin />;
+  }
   return <NewListingPage />;
 }

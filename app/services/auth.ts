@@ -5,8 +5,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
-import { useNavigate } from "react-router";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 
 export const registerUser = async (
   email: string,
@@ -21,7 +20,7 @@ export const registerUser = async (
     email,
     role,
     ...userData,
-    createdAt: new Date(),
+    createdAt: serverTimestamp(),
   });
 
   return cred;
@@ -38,10 +37,8 @@ export const logout = async () => {
 };
 
 export const login = async (email:string,password:string) => {
-    const navigate = useNavigate();
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate("/");
     } catch (err: any) {
       alert(err.message);
     }
