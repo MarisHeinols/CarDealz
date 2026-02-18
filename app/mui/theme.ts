@@ -88,6 +88,19 @@ const theme = createTheme({
       },
     },
 
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          transition: "all 0.2s ease",
+          "&:hover": {
+            backgroundColor: PURPLE,
+            boxShadow: "0 6px 18px rgba(122, 0, 129, 0.35)",
+            color: "#fff",
+          },
+        },
+      },
+    },
+
     /* ───────────────── Inputs (Clean + Focus Glow) ───────────────── */
     MuiTextField: {
       styleOverrides: {

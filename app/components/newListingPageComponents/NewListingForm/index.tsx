@@ -79,9 +79,7 @@ const NewListingForm = () => {
   return (
     <Box component="form" sx={{ py: 4 }}>
       <Grid container spacing={3}>
-        {/* LEFT SIDE — 70% */}
         <Grid size={{ xs: 12, md: 8 }}>
-          {/* IMAGE AREA */}
           <Box
             sx={{
               width: "100%",
@@ -119,7 +117,6 @@ const NewListingForm = () => {
             )}
           </Box>
 
-          {/* MAIN INFO */}
           <Grid container spacing={2}>
             <Grid size={{ xs: 6 }}>
               <TextField label="Make" fullWidth />
@@ -155,8 +152,6 @@ const NewListingForm = () => {
             </Grid>
           </Grid>
         </Grid>
-
-        {/* RIGHT SIDE — 30% */}
         <Grid size={{ xs: 12, md: 4 }}>
           <Box
             sx={{
