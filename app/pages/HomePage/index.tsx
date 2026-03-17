@@ -1,11 +1,11 @@
 import React from "react";
 import Listings from "~/components/homePageComponents/Listings";
-import styles from "./HomePage.module.css";
+import AppContainer from "~/components/shared/AppContainer";
 const HomePage = () => {
   return (
-    <div className={styles.content}>
+    <AppContainer sx={{ py: 4 }}>
       <Listings />
-    </div>
+    </AppContainer>
   );
 };
 

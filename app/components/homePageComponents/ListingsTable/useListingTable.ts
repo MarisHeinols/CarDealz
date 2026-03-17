@@ -11,6 +11,8 @@ export const defaultFilters: ListingsFiltersState  = {
   priceTo: "",
   mileageFrom: "",
   mileageTo: "",
+  country: "all",
+  city: "",
 };
 
 export type SortKey =
@@ -60,7 +62,11 @@ export function useListingsTable(
       );
       if (!searchMatch) return false;
 
-      if (filters.brand !== "all" && l.make !== filters.brand)
+      if (
+        filters.brand && 
+        filters.brand.toLowerCase() !== "all" && 
+        l.make.toLowerCase() !== filters.brand.toLowerCase()
+      )
         return false;
 
       if (filters.year !== "all" && l.year !== Number(filters.year))
@@ -92,6 +98,20 @@ export function useListingsTable(
         l.mileage > Number(filters.mileageTo)
       )
         return false;
+
+      // Country filter: location is stored as "City, Country"
+      if (filters.country && filters.country !== "all") {
+        const locationLower = (l.location || "").toLowerCase();
+        const countryLower = filters.country.toLowerCase();
+        if (!locationLower.includes(countryLower)) return false;
+      }
+
+      // City filter
+      if (filters.city) {
+        const locationLower = (l.location || "").toLowerCase();
+        const cityLower = filters.city.toLowerCase();
+        if (!locationLower.includes(cityLower)) return false;
+      }
 
       return true;
     });

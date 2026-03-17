@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Accordion,
   AccordionDetails,
@@ -8,6 +8,10 @@ import {
   Grid,
   Pagination,
   Typography,
+  Select,
+  MenuItem,
+  FormControl,
+  LinearProgress,
 } from "@mui/material";
 
 import StoreHeader from "~/components/userStorePageComponents/StoreHeader";
@@ -15,9 +19,9 @@ import StoreInfo from "~/components/userStorePageComponents/StoreInfo";
 import StoreMap from "~/components/userStorePageComponents/StoreMap";
 import StoreListingsGrid from "~/components/userStorePageComponents/StoreListingsGrid";
 
-import carListingsJson from "~/data/mockData/carListings.json";
-import { parseCarListings } from "~/data/mockData/parsers/carListingSummaryParser";
 import { useFilteredListings } from "~/hooks/userStore/useFilteredListings ";
+import { auth } from "~/firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 import ListingsFilters, {
   defaultFilters,
 } from "~/components/homePageComponents/ListingFilter";
@@ -25,20 +29,64 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import StoreReviewsPreview from "~/components/userStorePageComponents/StoreReviewsPreview";
 import reviewJson from "../../data/mockData/reviews.json";
 import { useAppSelector } from "~/redux/hooks";
+import { useAllListingsCached, useOwnerListingsCached } from "~/hooks/useCachedListings";
 
 const ITEMS_PER_PAGE = 8;
 
 const UserStorePage = () => {
-  const listings = parseCarListings(carListingsJson);
-
   const [filters, setFilters] = useState(defaultFilters);
   const [page, setPage] = useState(1);
+  const [sortParam, setSortParam] = useState<string>("newest");
+  const [ownerId, setOwnerId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setOwnerId(user.uid);
+      } else {
+        setOwnerId(null);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const all = useAllListingsCached();
+  const owner = useOwnerListingsCached(ownerId);
+  const listings = ownerId ? owner.listings : all.listings;
+  const loading = ownerId ? owner.loading : all.loading;
+  const refreshing = ownerId ? owner.refreshing : all.refreshing;
 
   const filtered = useFilteredListings(listings, filters);
+  
+  const filteredAndSorted = useMemo(() => {
+    let result = [...filtered];
+    switch (sortParam) {
+      case "price_asc":
+        result.sort((a,b) => (a.salePrice || a.price) - (b.salePrice || b.price));
+        break;
+      case "price_desc":
+        result.sort((a,b) => (b.salePrice || b.price) - (a.salePrice || a.price));
+        break;
+      case "year_desc":
+        result.sort((a,b) => b.year - a.year);
+        break;
+      case "newest":
+      default:
+        result.sort((a, b) => {
+          if (a.createdAt && b.createdAt) {
+             return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          }
+          return 0; // fallback original order
+        });
+        break;
+    }
+    return result;
+  }, [filtered, sortParam]);
+
   const theme = useAppSelector((state) => state.storeSettings.theme);
 
-  const pageCount = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  const visibleListings = filtered.slice(
+  const pageCount = Math.ceil(filteredAndSorted.length / ITEMS_PER_PAGE);
+  const visibleListings = filteredAndSorted.slice(
     (page - 1) * ITEMS_PER_PAGE,
     page * ITEMS_PER_PAGE
   );
@@ -49,6 +97,7 @@ const UserStorePage = () => {
       maxWidth="xl"
       sx={{ py: 4, bgcolor: theme ? theme.background : "" }}
     >
+      {refreshing ? <LinearProgress sx={{ mb: 2 }} /> : null}
       <StoreHeader />
       <Grid container spacing={3} sx={{ mt: 1 }}>
         <Grid size={{ xs: 12, md: 5 }}>
@@ -88,9 +137,37 @@ const UserStorePage = () => {
         </Accordion>
       </Box>
 
+      {/* Header and Sorting */}
+      <Box sx={{ mt: 4, mb: 2, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
+        <Typography
+          variant="h6"
+          fontWeight={700}
+          sx={{ color: theme.isTextLight ? "white" : (theme.heading || "text.primary") }}
+        >
+          Our Inventory
+        </Typography>
+        <FormControl size="small" sx={{ minWidth: 200, bgcolor: theme.secondary || "background.paper", borderRadius: 1 }}>
+          <Select 
+            value={sortParam} 
+            onChange={(e) => {
+              setSortParam(e.target.value);
+              setPage(1);
+            }}
+            displayEmpty
+            sx={{ color: theme.isTextLight ? "white" : "text.primary" }}
+          >
+            <MenuItem value="newest">Sort by: Date Uploaded</MenuItem>
+            <MenuItem value="price_asc">Price: Low to High</MenuItem>
+            <MenuItem value="price_desc">Price: High to Low</MenuItem>
+            <MenuItem value="year_desc">Year: Newest</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
+
       {/* Listings */}
-      <Box sx={{ mt: 3 }}>
-        <StoreListingsGrid listings={visibleListings} />
+      <Box sx={{ mt: 1 }}>
+        {loading && listings.length === 0 ? <LinearProgress /> : null}
+        <StoreListingsGrid listings={visibleListings} isOwner={true} />
       </Box>
 
       {/* Pagination */}

@@ -54,7 +54,13 @@ export interface CarListingSummary {
   marketRange: { min: number; max: number };
   thumbnailUrl: string;
   viewCount: number;
-
+  createdAt?: string;
+  isOnSale?: boolean;
+  salePrice?: number;
+  // Seller info
+  sellerId?: string;
+  sellerName?: string;
+  isDealer?: boolean;
 }
 
 export type SortKey =
@@ -79,6 +85,8 @@ export interface ListingsFiltersState {
   priceTo: string;
   mileageFrom: string;
   mileageTo: string;
+  country: string;
+  city: string;
 }
 
 export interface SellerInfo {
@@ -88,11 +96,23 @@ export interface SellerInfo {
   isDealer: boolean;
 }
 
+export type StoreReview = {
+  id: string;
+  storeUid: string;
+  reviewerUid: string;
+  reviewerName: string;
+  rating: number; // 1-5
+  text: string;
+  createdAt: string; // ISO
+  updatedAt?: string; // ISO
+};
+
 export interface IndividualRegisterData {
   name: string;
   surname: string;
   email: string;
   phone: string;
+  country: string;
   password: string;
   confirmPassword: string;
 }
@@ -108,6 +128,7 @@ export interface BusinessRegisterData {
   businessEmail: string;
   businessPhone: string;
   address: string;
+  country: string;
   lat: string;
   lng: string;
 }
@@ -125,7 +146,8 @@ export interface CarListingDetails {
 
   // Vehicle identity
   vin: number;
-  ta: Date;
+  ta: string;
+  plateNumber?: string;
 
   make: string;
   model: string;
@@ -177,7 +199,8 @@ export interface CarListingDetails {
 export type CarListingDetailsJson = {
   id: string;
   vin:number;
-  ta:Date;
+  ta:string;
+  plateNumber?: string;
   make: string;
   model: string;
   year: number;
@@ -193,6 +216,11 @@ export type CarListingDetailsJson = {
   color: string;
   location: string;
   marketRange: { min: number; max: number };
+  /**
+   * ISO timestamp of the last time we (re)estimated `marketRange`.
+   * Optional for backwards compatibility with older listings.
+   */
+  marketRangeUpdatedAt?: string;
   images: { id: string; url: string; isPrimary?: boolean }[];
   features: string[];          
   description: string;

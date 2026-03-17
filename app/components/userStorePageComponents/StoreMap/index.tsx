@@ -4,11 +4,10 @@ import { Box, Paper } from "@mui/material";
 import { useEffect, useState } from "react";
 import type React from "react";
 import { renderToString } from "react-dom/server";
-import { useSelector } from "react-redux";
-import type { RootState } from "~/redux/store";
+import { useStorefrontSettings } from "~/hooks/useStorefrontSettings";
 
 export default function StoreMap() {
-  const location = useSelector((s: RootState) => s.storeSettings.location);
+  const location = useStorefrontSettings().location;
 
   const [components, setComponents] = useState<null | {
     MapContainer: React.ComponentType<any>;

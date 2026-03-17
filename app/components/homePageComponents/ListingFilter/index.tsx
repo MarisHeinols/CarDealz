@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -5,10 +6,16 @@ import {
   MenuItem,
   TextField,
   Typography,
+  Autocomplete,
+  CircularProgress,
+  Stack,
 } from "@mui/material";
-import { useAppSelector } from "~/redux/hooks";
-
 import type { ListingsFiltersState } from "~/types/types";
+import { COUNTRIES } from "~/constants/countries";
+import { CAR_MAKES } from "~/constants/listingOptions";
+import { useCarModels } from "~/hooks/useCarModels";
+import { useCities } from "~/hooks/useCities";
+import { useTranslation } from "react-i18next";
 
 export const defaultFilters: ListingsFiltersState = {
   search: "",
@@ -20,6 +27,8 @@ export const defaultFilters: ListingsFiltersState = {
   priceTo: "",
   mileageFrom: "",
   mileageTo: "",
+  country: "all",
+  city: "",
 };
 
 interface Props {
@@ -28,9 +37,30 @@ interface Props {
   onReset: () => void;
 }
 
+const YEARS = Array.from({ length: 30 }, (_, i) =>
+  String(new Date().getFullYear() - i)
+);
+
 const ListingsFilters = ({ filters, onChange, onReset }: Props) => {
+  const { t } = useTranslation();
   const set = (key: keyof ListingsFiltersState, value: string) =>
     onChange({ ...filters, [key]: value });
+
+  // Makes (curated local list; no external API, no random/custom entries)
+  const makes = CAR_MAKES as unknown as string[];
+
+  const { models, loading: modelsLoading } = useCarModels(
+    !filters.brand || filters.brand === "all" ? "" : filters.brand
+  );
+  const { cities, loading: citiesLoading } = useCities(
+    !filters.country || filters.country === "all" ? "" : filters.country
+  );
+
+  // Note: the URL uses `searchParams.get("model")` but the state object may not have "model" depending on your types. 
+  // Standard ListingsFiltersState only has `brand` built-in. Assuming standard filters state. If model is needed in future, 
+  // you'd add it to ListingsFiltersState. For now we just implement the city Autocomplete and the brand driven models.
+
+  // models + cities are now handled by shared hooks
 
   return (
     <Box
@@ -43,36 +73,126 @@ const ListingsFilters = ({ filters, onChange, onReset }: Props) => {
       }}
     >
       <Typography fontWeight={600} mb={1}>
-        Search
+        {t("filters.searchTitle")}
       </Typography>
 
       <TextField
         fullWidth
-        placeholder="Search by make, model, color, location..."
+        placeholder={t("filters.searchPlaceholder")}
         value={filters.search}
         onChange={(e) => set("search", e.target.value)}
         sx={{ mb: 3 }}
       />
 
       <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 3 }}>
+        {/* Brand */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Autocomplete
+            options={makes}
+            value={filters.brand === "all" ? "" : filters.brand}
+            onInputChange={(_, newValue) => {
+              set("brand", newValue || "all");
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label={t("filters.brand")}
+                placeholder={t("filters.allBrands")}
+                fullWidth
+              />
+            )}
+          />
+        </Grid>
+
+        {/* Dynamic Model Dropdown (updates the general search text since model isn't an explicit filter field in default setup, or could be used locally) */}
+        {/* To integrate tightly, we just allow selecting a model which appends/sets the search string, or we can just leave it as an informational autocomplete */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+           <Autocomplete
+            freeSolo
+            options={models}
+            loading={modelsLoading}
+            disabled={filters.brand === "all"}
+            value={filters.search.split(" ").find(s => models.includes(s)) || ""}
+            onInputChange={(_, newValue) => {
+              // A simple approach: if user selects a model, we ensure it's in the search box since that handles general queries
+              if (newValue && !filters.search.includes(newValue)) {
+                set("search", `${filters.search} ${newValue}`.trim());
+              }
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label={modelsLoading ? "Loading Models…" : "Model"}
+                placeholder={filters.brand === "all" ? "Select a brand first" : "Search model"}
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: (
+                    <React.Fragment>
+                      {modelsLoading ? (
+                        <CircularProgress color="inherit" size={20} />
+                      ) : null}
+                      {params.InputProps.endAdornment}
+                    </React.Fragment>
+                  ),
+                }}
+              />
+            )}
+          />
+        </Grid>
+
+        {/* Country */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <TextField
             select
             fullWidth
-            label="Brand"
-            value={filters.brand}
-            onChange={(e) => set("brand", e.target.value)}
+            label="Country"
+            value={filters.country}
+            onChange={(e) => {
+              set("country", e.target.value);
+              set("city", ""); // Reset city when country changes
+            }}
           >
-            <MenuItem value="all">All</MenuItem>
-            {["Toyota", "Honda", "Tesla", "Ford", "BMW", "Mazda"].map((b) => (
-              <MenuItem key={b} value={b}>
-                {b}
+            <MenuItem value="all">All Countries</MenuItem>
+            {COUNTRIES.map((c) => (
+              <MenuItem key={c} value={c}>
+                {c}
               </MenuItem>
             ))}
           </TextField>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 3 }}>
+        {/* Dynamic City */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Autocomplete
+            freeSolo
+            options={cities}
+            loading={citiesLoading}
+            disabled={filters.country === "all"}
+            value={filters.city}
+            onInputChange={(_, newValue) => set("city", newValue)}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label={citiesLoading ? "Loading Cities…" : "City / Region"}
+                placeholder={filters.country === "all" ? "Select a country first" : "Search city"}
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: (
+                    <React.Fragment>
+                      {citiesLoading ? (
+                        <CircularProgress color="inherit" size={20} />
+                      ) : null}
+                      {params.InputProps.endAdornment}
+                    </React.Fragment>
+                  ),
+                }}
+              />
+            )}
+          />
+        </Grid>
+
+        {/* Year */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <TextField
             select
             fullWidth
@@ -80,8 +200,8 @@ const ListingsFilters = ({ filters, onChange, onReset }: Props) => {
             value={filters.year}
             onChange={(e) => set("year", e.target.value)}
           >
-            <MenuItem value="all">All</MenuItem>
-            {["2024", "2023", "2022"].map((y) => (
+            <MenuItem value="all">All Years</MenuItem>
+            {YEARS.map((y) => (
               <MenuItem key={y} value={y}>
                 {y}
               </MenuItem>
@@ -89,7 +209,8 @@ const ListingsFilters = ({ filters, onChange, onReset }: Props) => {
           </TextField>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 3 }}>
+        {/* Condition */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <TextField
             select
             fullWidth
@@ -106,7 +227,8 @@ const ListingsFilters = ({ filters, onChange, onReset }: Props) => {
           </TextField>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 3 }}>
+        {/* Color */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <TextField
             select
             fullWidth
@@ -114,8 +236,8 @@ const ListingsFilters = ({ filters, onChange, onReset }: Props) => {
             value={filters.color}
             onChange={(e) => set("color", e.target.value)}
           >
-            <MenuItem value="all">All</MenuItem>
-            {["White", "Black", "Silver", "Blue", "Red"].map((c) => (
+            <MenuItem value="all">All Colors</MenuItem>
+            {["White", "Black", "Silver", "Blue", "Red", "Gray", "Green", "Orange", "Yellow"].map((c) => (
               <MenuItem key={c} value={c}>
                 {c}
               </MenuItem>
@@ -123,44 +245,52 @@ const ListingsFilters = ({ filters, onChange, onReset }: Props) => {
           </TextField>
         </Grid>
 
+        {/* Price Range */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <TextField
-            fullWidth
-            label="Price From"
-            type="number"
-            value={filters.priceFrom}
-            onChange={(e) => set("priceFrom", e.target.value)}
-          />
+          <Stack direction="row" spacing={2} alignItems="center">
+            <TextField
+              fullWidth
+              label="Min Price"
+              type="number"
+              placeholder="$"
+              value={filters.priceFrom}
+              onChange={(e) => set("priceFrom", e.target.value)}
+            />
+            <Typography color="text.secondary" fontWeight={500}>
+              —
+            </Typography>
+            <TextField
+              fullWidth
+              label="Max Price"
+              type="number"
+              placeholder="$"
+              value={filters.priceTo}
+              onChange={(e) => set("priceTo", e.target.value)}
+            />
+          </Stack>
         </Grid>
 
+        {/* Mileage Range */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <TextField
-            fullWidth
-            label="Price To"
-            type="number"
-            value={filters.priceTo}
-            onChange={(e) => set("priceTo", e.target.value)}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <TextField
-            fullWidth
-            label="Mileage From"
-            type="number"
-            value={filters.mileageFrom}
-            onChange={(e) => set("mileageFrom", e.target.value)}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <TextField
-            fullWidth
-            label="Mileage To"
-            type="number"
-            value={filters.mileageTo}
-            onChange={(e) => set("mileageTo", e.target.value)}
-          />
+          <Stack direction="row" spacing={2} alignItems="center">
+            <TextField
+              fullWidth
+              label="Min Mileage"
+              type="number"
+              value={filters.mileageFrom}
+              onChange={(e) => set("mileageFrom", e.target.value)}
+            />
+            <Typography color="text.secondary" fontWeight={500}>
+              —
+            </Typography>
+            <TextField
+              fullWidth
+              label="Max Mileage"
+              type="number"
+              value={filters.mileageTo}
+              onChange={(e) => set("mileageTo", e.target.value)}
+            />
+          </Stack>
         </Grid>
       </Grid>
 

@@ -5,17 +5,26 @@ export interface StoreTheme {
   secondary: string;
   background: string;
   accent: string;
-  isTextLight:boolean
+  heading: string;
+  isTextLight: boolean;
+  layout: "classic" | "modern" | "minimal";
 }
 
 export interface StoreLocation {
-  adress:string;
+  adress: string;
   cords: {
-  lat: number | null;
-  lng: number | null;
-  }
-
+    lat: number | null;
+    lng: number | null;
+  };
 }
+
+export interface WorkDay {
+  open: string;
+  close: string;
+  isClosed: boolean;
+}
+
+export type WorkTime = Record<string, WorkDay>;
 
 export interface StoreSettingsState {
   name: string;
@@ -24,13 +33,15 @@ export interface StoreSettingsState {
     phone: string;
     email: string;
   };
-  workTime:string;
+  workTime: WorkTime;
   bannerImage: string | null;
   logo: string | null;
   location: StoreLocation;
   theme: StoreTheme;
   isEditMode: boolean;
 }
+
+const defaultDay: WorkDay = { open: "09:00", close: "18:00", isClosed: false };
 
 const initialState: StoreSettingsState = {
   name: "My Store",
@@ -39,22 +50,32 @@ const initialState: StoreSettingsState = {
     phone: "",
     email: "",
   },
-  workTime:"Mon-Fri 9:00 - 18:00",
+  workTime: {
+    Monday: { ...defaultDay },
+    Tuesday: { ...defaultDay },
+    Wednesday: { ...defaultDay },
+    Thursday: { ...defaultDay },
+    Friday: { ...defaultDay },
+    Saturday: { ...defaultDay, open: "10:00", close: "16:00" },
+    Sunday: { ...defaultDay, isClosed: true },
+  },
   bannerImage: null,
   logo: null,
   location: {
-    adress:"",
-    cords:{
-    lat: null,
-    lng: null,
-    }
+    adress: "",
+    cords: {
+      lat: null,
+      lng: null,
+    },
   },
   theme: {
     primary: "rgb(122, 0, 129)",
     secondary: "#ffffff",
     background: "#ffffff",
     accent: "#4caf50",
-    isTextLight:false
+    heading: "#111827",
+    isTextLight: false,
+    layout: "classic",
   },
   isEditMode: false,
 };
@@ -87,8 +108,8 @@ export const storeSettingsSlice = createSlice({
     ) => {
       state.location = action.payload;
     },
-    setWorkTime: (state, action: PayloadAction<string>) => {
-      state.workTime   = action.payload;
+    setWorkTime: (state, action: PayloadAction<WorkTime>) => {
+      state.workTime = action.payload;
     },
     updateTheme: (state, action: PayloadAction<Partial<StoreTheme>>) => {
       state.theme = { ...state.theme, ...action.payload };

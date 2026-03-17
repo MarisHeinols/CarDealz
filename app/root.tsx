@@ -9,8 +9,9 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import { ThemeProvider } from "@mui/material/styles";
+import "./i18n";
 import CssBaseline from "@mui/material/CssBaseline";
+import { ThemeProvider } from "@mui/material/styles";
 import theme from "./mui/theme";
 import Header from "./components/shared/Header";
 import { store } from "./redux/store";
@@ -29,6 +30,8 @@ export const links: Route.LinksFunction = () => [
     href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
   },
 ];
+
+import GlobalSnackbar from "./components/shared/GlobalSnackbar";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -50,15 +53,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <FirebaseAuthProvider>
-        <Provider store={store}>
+    <Provider store={store}>
+      <ThemeProvider theme={theme}>
+        <FirebaseAuthProvider>
           <CssBaseline />
           <Header />
           <Outlet />
-        </Provider>
-      </FirebaseAuthProvider>
-    </ThemeProvider>
+          <GlobalSnackbar />
+        </FirebaseAuthProvider>
+      </ThemeProvider>
+    </Provider>
   );
 }
 

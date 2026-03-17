@@ -1,16 +1,16 @@
 import { Typography } from "@mui/material";
 import React from "react";
 import NewListingForm from "~/components/newListingPageComponents/NewListingForm";
-import styles from "./NewListingPage.module.css";
+import AppContainer from "~/components/shared/AppContainer";
 
 const NewListingPage = () => {
   return (
-    <div className={styles.content}>
-      <Typography variant="h5" sx={{ alignSelf: "flex-start" }}>
+    <AppContainer sx={{ py: 4 }}>
+      <Typography variant="h5" sx={{ mb: 2 }}>
         New Listing
       </Typography>
       <NewListingForm />
-    </div>
+    </AppContainer>
   );
 };
 

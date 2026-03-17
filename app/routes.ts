@@ -4,6 +4,7 @@ export default [
   index("routes/home.tsx"),
   route("listing/:id", "routes/listing.$id.tsx"),
   route("new-listing","routes/newListing.tsx"),
+  route("store/:handle","routes/store.$handle.tsx"),
   route("user","routes/userStorePage.tsx"),
   route("admin","routes/admin.tsx"),
   route("login","routes/login.tsx"),

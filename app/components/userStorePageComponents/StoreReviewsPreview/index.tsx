@@ -10,13 +10,13 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import StoreReviewsModal from "../StoreReviewModal";
-import { useAppSelector } from "~/redux/hooks";
+import { useStorefrontSettings } from "~/hooks/useStorefrontSettings";
 
 const StoreReviewsPreview = ({ reviews }: { reviews: any[] }) => {
   const [open, setOpen] = useState(false);
 
   const preview = reviews.slice(0, 3); // show only first 3 reviews
-  const theme = useAppSelector((state) => state.storeSettings.theme);
+  const theme = useStorefrontSettings().theme;
 
   return (
     <Box>
@@ -60,7 +60,10 @@ const StoreReviewsPreview = ({ reviews }: { reviews: any[] }) => {
         <Button
           variant="outlined"
           onClick={() => setOpen(true)}
-          sx={{ borderColor: theme.primary || "", color: theme.primary || "" }}
+          sx={{
+            borderColor: theme.accent || theme.primary || "",
+            color: theme.accent || theme.primary || "",
+          }}
         >
           View All Reviews ({reviews.length})
         </Button>

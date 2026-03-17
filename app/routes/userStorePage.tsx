@@ -1,4 +1,8 @@
-import UserStorePage from "~/pages/UserStorePage";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
+import { Box, CircularProgress, Typography } from "@mui/material";
+import { useAuth } from "~/hooks/userStore/useAuth";
+import { getStoreHandleForUid } from "~/services/storeHandleService";
 
 export function meta() {
   return [
@@ -8,5 +12,42 @@ export function meta() {
 }
 
 export default function NewUserStoreRoute() {
-  return <UserStorePage />;
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    setBusy(true);
+    getStoreHandleForUid(user.uid)
+      .then((handle) => {
+        if (cancelled) return;
+        navigate(`/store/${handle || user.uid}`, { replace: true });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        navigate(`/store/${user.uid}`, { replace: true });
+      })
+      .finally(() => {
+        if (!cancelled) setBusy(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate, user]);
+
+  if (!busy) return null;
+
+  return (
+    <Box display="flex" justifyContent="center" alignItems="center" p={6} flexDirection="column" gap={1.5}>
+      <CircularProgress />
+      <Typography color="text.secondary">Opening your store…</Typography>
+    </Box>
+  );
 }

@@ -28,7 +28,7 @@ const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({
     });
 
     return () => unsubscribe();
-  }, [navigate, location]);
+  }, []);
 
   if (loading) return <div>Loading...</div>;
 

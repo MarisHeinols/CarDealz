@@ -1,6 +1,6 @@
-import type { CarListing, SortDir, SortKey } from "~/types/types";
+import type { CarListingSummary, SortDir, SortKey } from "~/types/types";
 
-export function matchesQuery(listing: CarListing, query: string) {
+export function matchesQuery(listing: CarListingSummary, query: string) {
   if (!query) return true;
 
   const haystack = [
@@ -20,7 +20,7 @@ export function matchesQuery(listing: CarListing, query: string) {
 }
 
 export function sortListings(
-  data: CarListing[],
+  data: CarListingSummary[],
   key: SortKey,
   dir: SortDir
 ) {

@@ -1,14 +1,17 @@
-import { createTheme } from "@mui/material/styles";
+import { alpha, createTheme } from "@mui/material/styles";
 
-const PURPLE = "rgb(122, 0, 129)";
+const FALLBACK_ACCENT = "rgb(122, 0, 129)";
 const GLASS_BG = "rgba(255, 255, 255, 0.72)";
 
-const theme = createTheme({
+export function createAppTheme(accentInput?: string) {
+  const accent = accentInput || FALLBACK_ACCENT;
+
+  return createTheme({
   palette: {
     mode: "light",
 
     primary: {
-      main: PURPLE,
+      main: accent,
     },
 
     background: {
@@ -72,17 +75,17 @@ const theme = createTheme({
           padding: "8px 16px",
         },
         containedPrimary: {
-          backgroundColor: PURPLE,
+          backgroundColor: accent,
           boxShadow: "none",
           "&:hover": {
-            backgroundColor: "rgb(100, 0, 106)",
-            boxShadow: "0 6px 18px rgba(122, 0, 129, 0.35)",
+            filter: "brightness(0.92)",
+            boxShadow: `0 6px 18px ${alpha(accent, 0.35)}`,
           },
         },
         textPrimary: {
-          color: PURPLE,
+          color: accent,
           "&:hover": {
-            backgroundColor: "rgba(122, 0, 129, 0.08)",
+            backgroundColor: alpha(accent, 0.08),
           },
         },
       },
@@ -93,8 +96,8 @@ const theme = createTheme({
         root: {
           transition: "all 0.2s ease",
           "&:hover": {
-            backgroundColor: PURPLE,
-            boxShadow: "0 6px 18px rgba(122, 0, 129, 0.35)",
+            backgroundColor: accent,
+            boxShadow: `0 6px 18px ${alpha(accent, 0.35)}`,
             color: "#fff",
           },
         },
@@ -115,8 +118,8 @@ const theme = createTheme({
               borderColor: "rgba(0,0,0,0.25)",
             },
             "&.Mui-focused fieldset": {
-              borderColor: PURPLE,
-              boxShadow: `0 0 0 3px rgba(122, 0, 129, 0.15)`,
+              borderColor: accent,
+              boxShadow: `0 0 0 3px ${alpha(accent, 0.15)}`,
             },
           },
         },
@@ -179,12 +182,13 @@ const theme = createTheme({
     // HIGH — premium / best (PURPLE)
     props: { variant: "levelHigh" },
     style: {
-      backgroundColor: "rgba(122, 0, 129, 0.18)",
-      color: PURPLE,
+      backgroundColor: alpha(accent, 0.18),
+      color: accent,
     },
   },
 ],}
   },
 });
+}
 
-export default theme;
+export default createAppTheme(FALLBACK_ACCENT);

@@ -6,6 +6,7 @@ import {
   Stack,
   Checkbox,
   FormControlLabel,
+  MenuItem,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -61,8 +62,21 @@ const AppearanceSettings = () => {
   return (
     <Box>
       <Typography variant="body1" sx={{ mb: 2 }}>
-        Customize the colors of your store page.
+        Customize the colors and layout of your store page.
       </Typography>
+
+      <TextField
+        select
+        label="Design Layout"
+        fullWidth
+        value={theme.layout || "classic"}
+        onChange={(e) => handleChange("layout", e.target.value)}
+        sx={{ mb: 3 }}
+      >
+        <MenuItem value="classic">Classic</MenuItem>
+        <MenuItem value="modern">Modern</MenuItem>
+        <MenuItem value="minimal">Minimal</MenuItem>
+      </TextField>
 
       <ColorField
         label="Primary"
@@ -78,6 +92,11 @@ const AppearanceSettings = () => {
         label="Accent"
         value={theme.accent}
         onChange={(v) => handleChange("accent", v)}
+      />
+      <ColorField
+        label="Heading"
+        value={theme.heading}
+        onChange={(v) => handleChange("heading", v)}
       />
       <ColorField
         label="Background"

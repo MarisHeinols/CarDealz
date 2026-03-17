@@ -1,19 +1,22 @@
 import { Box, IconButton } from "@mui/material";
-import React from "react";
+import React, { useState } from "react";
 import RemoveIcon from "@mui/icons-material/Remove";
 
 type ImageCarouselProps = {
   images: string[];
   onDelete?: (index: number) => void;
   onUploadMore?: () => void;
+  onMove?: (fromIndex: number, toIndex: number) => void;
 };
 
 const ImageCarousel = ({
   images,
   onDelete,
   onUploadMore,
+  onMove,
 }: ImageCarouselProps) => {
-  const [activeStep, setActiveStep] = React.useState(0);
+  const [activeStep, setActiveStep] = useState(0);
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
 
   React.useEffect(() => {
     if (activeStep >= images.length) {
@@ -45,9 +48,36 @@ const ImageCarousel = ({
         />
       </Box>
 
-      <Box sx={{ display: "flex", gap: 1, overflowX: "auto" }}>
+      <Box sx={{ display: "flex", gap: 1, overflowX: "auto", pb: 1, alignItems: "center" }}>
         {images.map((img, idx) => (
-          <Box key={idx} sx={{ position: "relative", flexShrink: 0 }}>
+          <Box
+            key={idx}
+            draggable={!!onMove}
+            onDragStart={(e) => {
+              setDraggedIdx(idx);
+              e.dataTransfer.effectAllowed = "move";
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = "move";
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (onMove && draggedIdx !== null && draggedIdx !== idx) {
+                onMove(draggedIdx, idx);
+                if (activeStep === draggedIdx) setActiveStep(idx);
+                else if (activeStep === idx) setActiveStep(draggedIdx);
+              }
+              setDraggedIdx(null);
+            }}
+            onDragEnd={() => setDraggedIdx(null)}
+            sx={{
+              position: "relative",
+              flexShrink: 0,
+              opacity: draggedIdx === idx ? 0.3 : 1,
+              transition: "opacity 0.2s",
+            }}
+          >
             <Box
               component="img"
               src={img}
@@ -57,28 +87,42 @@ const ImageCarousel = ({
                 height: 60,
                 objectFit: "cover",
                 borderRadius: 1,
-                cursor: "pointer",
+                cursor: onMove ? "grab" : "pointer",
                 border:
                   idx === activeStep
                     ? "2px solid #7b1fa2"
                     : "2px solid transparent",
+                "&:active": {
+                  cursor: onMove ? "grabbing" : "pointer",
+                },
               }}
             />
 
             {onDelete && (
-              <IconButton
-                onClick={() => onDelete(idx)}
+              <Box
+                component="div"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(idx);
+                }}
                 sx={{
                   position: "absolute",
-                  top: 0,
-                  right: 0,
+                  top: 4,
+                  right: 4,
                   bgcolor: "rgba(0,0,0,0.8)",
-                  width: 10,
-                  height: 10,
+                  width: 14,
+                  height: 14,
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  zIndex: 2,
+                  "&:hover": { bgcolor: "black" },
                 }}
               >
-                <RemoveIcon sx={{ width: 10, color: "white" }} />
-              </IconButton>
+                <RemoveIcon sx={{ fontSize: 10, color: "white" }} />
+              </Box>
             )}
           </Box>
         ))}
@@ -96,6 +140,7 @@ const ImageCarousel = ({
               justifyContent: "center",
               cursor: "pointer",
               flexShrink: 0,
+              "&:hover": { bgcolor: "rgba(0,0,0,0.05)" },
             }}
           >
             +

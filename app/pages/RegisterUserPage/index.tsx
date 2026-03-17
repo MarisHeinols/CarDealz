@@ -3,9 +3,11 @@ import { Box, Paper, Tabs, Tab, Typography, Button } from "@mui/material";
 import IndividualRegisterForm from "~/components/registerUserPageComponents/IndividualRegisterForm";
 import BusinessRegisterForm from "~/components/registerUserPageComponents/BusinessRegisterForm";
 import { useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
 
 const RegisterUserPage = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [tab, setTab] = useState(0);
 
@@ -21,12 +23,12 @@ const RegisterUserPage = () => {
     >
       <Paper sx={{ p: 4, width: "100%", maxWidth: 700 }}>
         <Typography variant="h5" align="center" mb={2}>
-          Register
+          {t("auth.registerTitle")}
         </Typography>
 
         <Tabs value={tab} onChange={(_, v) => setTab(v)} centered>
-          <Tab label="Individual" />
-          <Tab label="Business" />
+          <Tab label={t("auth.individual")} />
+          <Tab label={t("auth.business")} />
         </Tabs>
 
         {tab === 0 && <IndividualRegisterForm />}
@@ -37,7 +39,7 @@ const RegisterUserPage = () => {
             navigate("/login");
           }}
         >
-          Cancel
+          {t("common.cancel")}
         </Button>
       </Paper>
     </Box>

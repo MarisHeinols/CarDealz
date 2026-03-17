@@ -13,6 +13,8 @@ export function parseCarListings(
       ...l,
       condition: l.condition,
       thumbnailUrl: l.thumbnailUrl,
+      isOnSale: "isOnSale" in l ? (l as any).isOnSale : undefined,
+      salePrice: "salePrice" in l ? (l as any).salePrice : undefined,
     };
   });
 }
