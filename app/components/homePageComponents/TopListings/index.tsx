@@ -1,9 +1,11 @@
 import React from "react";
 import type { CarListingSummary } from "~/types/types";
 import { Typography, Grid } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 import ListingCard from "~/components/shared/ListingCard";
 const TopListings = ({ carListings }: { carListings: CarListingSummary[] }) => {
+  const { t } = useTranslation();
   const topListings = [...carListings]
     .sort((a, b) => b.viewCount - a.viewCount)
     .slice(0, 5);
@@ -11,7 +13,7 @@ const TopListings = ({ carListings }: { carListings: CarListingSummary[] }) => {
   return (
     <>
       <Typography gutterBottom variant="h6">
-        Top Listings Last 7 days
+        {t("nav.top_listings")}
       </Typography>
 
       <Grid container spacing={2}>

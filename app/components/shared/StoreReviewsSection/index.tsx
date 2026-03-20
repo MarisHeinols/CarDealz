@@ -7,13 +7,16 @@ import {
   CardContent,
   Divider,
   LinearProgress,
-  Rating,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
 import type { StoreReview } from "~/types/types";
-import { getMyStoreReview, getStoreReviews, upsertStoreReview } from "~/services/reviewsService";
+import {
+  getMyStoreReview,
+  getStoreReviews,
+  upsertStoreReview,
+} from "~/services/reviewsService";
 import { getUserProfile } from "~/services/usersService";
 import { useAppDispatch } from "~/redux/hooks";
 import { showNotification } from "~/redux/slices/uiSlice";
@@ -44,11 +47,14 @@ export default function StoreReviewsSection({
   const [saving, setSaving] = useState(false);
   const [reviews, setReviews] = useState<StoreReview[]>([]);
   const [myReview, setMyReview] = useState<StoreReview | null>(null);
-  const [viewerRole, setViewerRole] = useState<"individual" | "business" | null>(null);
-  const [rating, setRating] = useState<number | null>(null);
+  const [viewerRole, setViewerRole] = useState<
+    "individual" | "business" | null
+  >(null);
   const [text, setText] = useState("");
 
-  const mayAttemptReview = Boolean(viewerUid && viewerUid !== ownerUid && !myReview);
+  const mayAttemptReview = Boolean(
+    viewerUid && viewerUid !== ownerUid && !myReview,
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -64,7 +70,6 @@ export default function StoreReviewsSection({
         setReviews(all);
         setMyReview(mine);
         setViewerRole(viewerProfile?.role || null);
-        setRating(mine?.rating ?? null);
         setText(mine?.text ?? "");
       })
       .catch((e) => {
@@ -79,26 +84,21 @@ export default function StoreReviewsSection({
     };
   }, [storeUid, viewerUid]);
 
-  const avg = useMemo(() => {
-    if (reviews.length === 0) return 0;
-    return reviews.reduce((s, r) => s + (Number(r.rating) || 0), 0) / reviews.length;
-  }, [reviews]);
-
   useEffect(() => {
-    onStatsChange?.({ avg, count: reviews.length });
-  }, [avg, onStatsChange, reviews.length]);
+    onStatsChange?.({ avg: 0, count: reviews.length });
+  }, [onStatsChange, reviews.length]);
 
   const handleSave = async () => {
     if (!viewerUid) return;
     if (!mayAttemptReview) return;
-    const r = Number(rating || 0);
     const t = String(text || "").trim();
-    if (r < 1 || r > 5) {
-      dispatch(showNotification({ message: "Please select a star rating (1-5).", severity: "warning" }));
-      return;
-    }
     if (t.length < 3) {
-      dispatch(showNotification({ message: "Please write a short review.", severity: "warning" }));
+      dispatch(
+        showNotification({
+          message: "Please write a short review.",
+          severity: "warning",
+        }),
+      );
       return;
     }
 
@@ -106,23 +106,33 @@ export default function StoreReviewsSection({
     try {
       const viewerProfile = await getUserProfile(viewerUid);
       if (viewerProfile?.role && viewerProfile.role !== "individual") {
-        dispatch(showNotification({ message: "Only individual accounts can leave reviews.", severity: "warning" }));
+        dispatch(
+          showNotification({
+            message: "Only individual accounts can leave reviews.",
+            severity: "warning",
+          }),
+        );
         return;
       }
       const reviewerName =
         viewerProfile?.role === "individual"
-          ? `${viewerProfile?.name || ""} ${viewerProfile?.surname || ""}`.trim() || "User"
+          ? `${viewerProfile?.name || ""} ${viewerProfile?.surname || ""}`.trim() ||
+            "User"
           : "User";
 
       await upsertStoreReview({
         storeUid,
         reviewerUid: viewerUid,
         reviewerName,
-        rating: r,
         text: t,
       });
 
-      dispatch(showNotification({ message: myReview ? "Review updated!" : "Review submitted!", severity: "success" }));
+      dispatch(
+        showNotification({
+          message: myReview ? "Review updated!" : "Review submitted!",
+          severity: "success",
+        }),
+      );
 
       const [all, mine] = await Promise.all([
         getStoreReviews(storeUid),
@@ -131,7 +141,12 @@ export default function StoreReviewsSection({
       setReviews(all);
       setMyReview(mine);
     } catch (e: any) {
-      dispatch(showNotification({ message: e?.message || "Failed to save review", severity: "error" }));
+      dispatch(
+        showNotification({
+          message: e?.message || "Failed to save review",
+          severity: "error",
+        }),
+      );
     } finally {
       setSaving(false);
     }
@@ -139,25 +154,29 @@ export default function StoreReviewsSection({
 
   return (
     <Box sx={{ mt: 4 }}>
-      <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" alignItems={{ xs: "flex-start", md: "center" }} spacing={1}>
+      <Stack
+        direction={{ xs: "column", md: "row" }}
+        justifyContent="space-between"
+        alignItems={{ xs: "flex-start", md: "center" }}
+        spacing={1}
+      >
         <Typography
           variant="h6"
           fontWeight={800}
           sx={{
-            color: theme ? (theme.heading || onCard.text) : undefined,
+            color: theme ? theme.heading || onCard.text : undefined,
           }}
         >
           Reviews
         </Typography>
         <Stack direction="row" spacing={1} alignItems="center">
-          <Rating value={avg} readOnly precision={0.1} />
           <Typography
             variant="body2"
             sx={{
               color: theme ? onCard.subtext : undefined,
             }}
           >
-            {reviews.length ? `${avg.toFixed(1)} (${reviews.length})` : "No reviews yet"}
+            {reviews.length ? `(${reviews.length})` : "No reviews yet"}
           </Typography>
         </Stack>
       </Stack>
@@ -189,7 +208,7 @@ export default function StoreReviewsSection({
           variant="outlined"
           sx={{
             mb: 2,
-            bgcolor: theme ? (theme.secondary || "") : undefined,
+            bgcolor: theme ? theme.secondary || "" : undefined,
             color: theme ? onCard.text : undefined,
           }}
         >
@@ -198,15 +217,6 @@ export default function StoreReviewsSection({
               Leave a review
             </Typography>
             <Stack spacing={1.5}>
-              <Box>
-                <Typography
-                  variant="body2"
-                  sx={{ mb: 0.5, color: theme ? onCard.subtext : undefined }}
-                >
-                  Rating
-                </Typography>
-                <Rating value={rating || 0} onChange={(_, v) => setRating(v)} />
-              </Box>
               <TextField
                 label="Review"
                 value={text}
@@ -216,17 +226,27 @@ export default function StoreReviewsSection({
                 placeholder="Share your experience…"
                 sx={{
                   "& .MuiInputBase-root": {
-                    bgcolor: theme ? (theme.background || "rgba(255,255,255,0.08)") : undefined,
+                    bgcolor: theme
+                      ? theme.background || "rgba(255,255,255,0.08)"
+                      : undefined,
                     color: theme ? onCard.text : undefined,
                   },
                   "& .MuiInputLabel-root": {
                     color: theme ? onCard.subtext : undefined,
                   },
                   "& .MuiOutlinedInput-notchedOutline": {
-                    borderColor: theme ? (onCard.isDarkBg ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.2)") : undefined,
+                    borderColor: theme
+                      ? onCard.isDarkBg
+                        ? "rgba(255,255,255,0.25)"
+                        : "rgba(0,0,0,0.2)"
+                      : undefined,
                   },
                   "&:hover .MuiOutlinedInput-notchedOutline": {
-                    borderColor: theme ? (onCard.isDarkBg ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)") : undefined,
+                    borderColor: theme
+                      ? onCard.isDarkBg
+                        ? "rgba(255,255,255,0.35)"
+                        : "rgba(0,0,0,0.35)"
+                      : undefined,
                   },
                 }}
               />
@@ -239,12 +259,19 @@ export default function StoreReviewsSection({
                     theme
                       ? {
                           bgcolor: theme.accent || theme.primary,
-                          "&:hover": { bgcolor: theme.accent || theme.primary, filter: "brightness(0.92)" },
+                          "&:hover": {
+                            bgcolor: theme.accent || theme.primary,
+                            filter: "brightness(0.92)",
+                          },
                         }
                       : undefined
                   }
                 >
-                  {saving ? "Saving…" : myReview ? "Update review" : "Submit review"}
+                  {saving
+                    ? "Saving…"
+                    : myReview
+                      ? "Update review"
+                      : "Submit review"}
                 </Button>
               </Box>
             </Stack>
@@ -258,19 +285,25 @@ export default function StoreReviewsSection({
             key={r.id}
             variant="outlined"
             sx={{
-              bgcolor: theme ? (theme.secondary || "") : undefined,
+              bgcolor: theme ? theme.secondary || "" : undefined,
               color: theme ? onCard.text : undefined,
             }}
           >
             <CardContent>
               <Stack spacing={0.5}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
                   <Typography fontWeight={700}>{r.reviewerName}</Typography>
-                  <Typography variant="caption" sx={{ color: theme ? onCard.subtext : undefined }}>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: theme ? onCard.subtext : undefined }}
+                  >
                     {new Date(r.updatedAt || r.createdAt).toLocaleDateString()}
                   </Typography>
                 </Stack>
-                <Rating value={r.rating} readOnly size="small" />
                 <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
                   {r.text}
                 </Typography>
@@ -282,4 +315,3 @@ export default function StoreReviewsSection({
     </Box>
   );
 }
-

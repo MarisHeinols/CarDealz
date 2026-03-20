@@ -14,6 +14,7 @@ import {
   LinearProgress,
 } from "@mui/material";
 
+import { useTranslation } from "react-i18next";
 import StoreHeader from "~/components/userStorePageComponents/StoreHeader";
 import StoreInfo from "~/components/userStorePageComponents/StoreInfo";
 import StoreMap from "~/components/userStorePageComponents/StoreMap";
@@ -26,14 +27,16 @@ import ListingsFilters, {
   defaultFilters,
 } from "~/components/homePageComponents/ListingFilter";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import StoreReviewsPreview from "~/components/userStorePageComponents/StoreReviewsPreview";
-import reviewJson from "../../data/mockData/reviews.json";
 import { useAppSelector } from "~/redux/hooks";
-import { useAllListingsCached, useOwnerListingsCached } from "~/hooks/useCachedListings";
+import { useOwnerListingsCached } from "~/hooks/useCachedListings";
+import StoreReviewsSection from "~/components/shared/StoreReviewsSection";
+import { useNavigate } from "react-router";
 
 const ITEMS_PER_PAGE = 8;
 
 const UserStorePage = () => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
   const [filters, setFilters] = useState(defaultFilters);
   const [page, setPage] = useState(1);
   const [sortParam, setSortParam] = useState<string>("newest");
@@ -45,36 +48,42 @@ const UserStorePage = () => {
         setOwnerId(user.uid);
       } else {
         setOwnerId(null);
+        navigate("/login");
       }
     });
     return () => unsubscribe();
-  }, []);
+  }, [navigate]);
 
-  const all = useAllListingsCached();
   const owner = useOwnerListingsCached(ownerId);
-  const listings = ownerId ? owner.listings : all.listings;
-  const loading = ownerId ? owner.loading : all.loading;
-  const refreshing = ownerId ? owner.refreshing : all.refreshing;
+  const listings = owner.listings;
+  const loading = owner.loading;
+  const refreshing = owner.refreshing;
 
   const filtered = useFilteredListings(listings, filters);
-  
+
   const filteredAndSorted = useMemo(() => {
     let result = [...filtered];
     switch (sortParam) {
       case "price_asc":
-        result.sort((a,b) => (a.salePrice || a.price) - (b.salePrice || b.price));
+        result.sort(
+          (a, b) => (a.salePrice || a.price) - (b.salePrice || b.price),
+        );
         break;
       case "price_desc":
-        result.sort((a,b) => (b.salePrice || b.price) - (a.salePrice || a.price));
+        result.sort(
+          (a, b) => (b.salePrice || b.price) - (a.salePrice || a.price),
+        );
         break;
       case "year_desc":
-        result.sort((a,b) => b.year - a.year);
+        result.sort((a, b) => b.year - a.year);
         break;
       case "newest":
       default:
         result.sort((a, b) => {
           if (a.createdAt && b.createdAt) {
-             return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            return (
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
           }
           return 0; // fallback original order
         });
@@ -88,7 +97,7 @@ const UserStorePage = () => {
   const pageCount = Math.ceil(filteredAndSorted.length / ITEMS_PER_PAGE);
   const visibleListings = filteredAndSorted.slice(
     (page - 1) * ITEMS_PER_PAGE,
-    page * ITEMS_PER_PAGE
+    page * ITEMS_PER_PAGE,
   );
   const hasActiveFilters =
     JSON.stringify(filters) !== JSON.stringify(defaultFilters);
@@ -118,7 +127,9 @@ const UserStorePage = () => {
           }}
         >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography fontWeight={600}>Search & Filters</Typography>
+            <Typography fontWeight={600}>
+              {t("filters.searchTitle")} & {t("listing.features")}
+            </Typography>
           </AccordionSummary>
 
           <AccordionDetails>
@@ -138,17 +149,38 @@ const UserStorePage = () => {
       </Box>
 
       {/* Header and Sorting */}
-      <Box sx={{ mt: 4, mb: 2, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
+      <Box
+        sx={{
+          mt: 4,
+          mb: 2,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 2,
+        }}
+      >
         <Typography
           variant="h6"
           fontWeight={700}
-          sx={{ color: theme.isTextLight ? "white" : (theme.heading || "text.primary") }}
+          sx={{
+            color: theme.isTextLight
+              ? "white"
+              : theme.heading || "text.primary",
+          }}
         >
-          Our Inventory
+          {t("listing.inventory")}
         </Typography>
-        <FormControl size="small" sx={{ minWidth: 200, bgcolor: theme.secondary || "background.paper", borderRadius: 1 }}>
-          <Select 
-            value={sortParam} 
+        <FormControl
+          size="small"
+          sx={{
+            minWidth: 200,
+            bgcolor: theme.secondary || "background.paper",
+            borderRadius: 1,
+          }}
+        >
+          <Select
+            value={sortParam}
             onChange={(e) => {
               setSortParam(e.target.value);
               setPage(1);
@@ -156,10 +188,10 @@ const UserStorePage = () => {
             displayEmpty
             sx={{ color: theme.isTextLight ? "white" : "text.primary" }}
           >
-            <MenuItem value="newest">Sort by: Date Uploaded</MenuItem>
-            <MenuItem value="price_asc">Price: Low to High</MenuItem>
-            <MenuItem value="price_desc">Price: High to Low</MenuItem>
-            <MenuItem value="year_desc">Year: Newest</MenuItem>
+            <MenuItem value="newest">{t("businesses.sortOptions.newest")}</MenuItem>
+            <MenuItem value="price_asc">{t("businesses.sortOptions.price_asc")}</MenuItem>
+            <MenuItem value="price_desc">{t("businesses.sortOptions.price_desc")}</MenuItem>
+            <MenuItem value="year_desc">{t("businesses.sortOptions.year")}</MenuItem>
           </Select>
         </FormControl>
       </Box>
@@ -182,7 +214,14 @@ const UserStorePage = () => {
       )}
 
       <Box>
-        <StoreReviewsPreview reviews={reviewJson} />
+        {ownerId ? (
+          <StoreReviewsSection
+            storeUid={ownerId}
+            ownerUid={ownerId}
+            viewerUid={ownerId}
+            useStoreTheme
+          />
+        ) : null}
       </Box>
     </Container>
   );

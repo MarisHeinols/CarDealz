@@ -20,7 +20,11 @@ interface Props {
   setListing: React.Dispatch<React.SetStateAction<CarListingDetailsJson>>;
 }
 
-export default function ImagesSection({ images, setImages, setListing }: Props) {
+export default function ImagesSection({
+  images,
+  setImages,
+  setListing,
+}: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [snackbar, setSnackbar] = useState<{
@@ -33,7 +37,7 @@ export default function ImagesSection({ images, setImages, setListing }: Props) 
 
   const imageUrls = useMemo(
     () => images.map((f) => URL.createObjectURL(f)),
-    [images]
+    [images],
   );
 
   const handleUpload = (files: File[]) =>
@@ -65,7 +69,8 @@ export default function ImagesSection({ images, setImages, setListing }: Props) 
         if (aiData.year) updated.year = aiData.year;
         if (aiData.color) updated.color = aiData.color;
         if (aiData.interiorColor) updated.interiorColor = aiData.interiorColor;
-        if (aiData.condition) updated.condition = aiData.condition;
+        if ((aiData as any).conditionTier)
+          updated.conditionTier = (aiData as any).conditionTier;
         if (aiData.fuelType) updated.fuelType = aiData.fuelType;
         if (aiData.transmission) updated.transmission = aiData.transmission;
         if (aiData.drivetrain) updated.drivetrain = aiData.drivetrain;
@@ -75,7 +80,7 @@ export default function ImagesSection({ images, setImages, setListing }: Props) 
         if (aiData.features && aiData.features.length > 0) {
           // Merge with existing features, avoiding duplicates
           const merged = Array.from(
-            new Set([...prev.features, ...aiData.features])
+            new Set([...prev.features, ...aiData.features]),
           );
           updated.features = merged;
         }
@@ -84,7 +89,7 @@ export default function ImagesSection({ images, setImages, setListing }: Props) 
       });
 
       const filledFields = Object.keys(aiData).filter(
-        (k) => aiData[k as keyof typeof aiData] !== undefined
+        (k) => aiData[k as keyof typeof aiData] !== undefined,
       );
       setSnackbar({
         open: true,
@@ -94,7 +99,10 @@ export default function ImagesSection({ images, setImages, setListing }: Props) 
     } catch (err) {
       setSnackbar({
         open: true,
-        message: err instanceof Error ? err.message : "Analysis failed. Please try again.",
+        message:
+          err instanceof Error
+            ? err.message
+            : "Analysis failed. Please try again.",
         severity: "error",
       });
     } finally {

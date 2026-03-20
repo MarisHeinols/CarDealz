@@ -1,11 +1,17 @@
-import { Box, Card, CardContent, Rating, Stack, Typography, Avatar } from "@mui/material";
+import {
+  Box,
+  Card,
+  CardContent,
+  Stack,
+  Typography,
+  Avatar,
+} from "@mui/material";
 import type { StoreTheme } from "~/redux/slices/storeSettingsSlice";
 
 type Review = {
   id: string | number;
   name: string;
   avatar?: string;
-  rating: number;
   date: string;
   text: string;
 };
@@ -23,11 +29,16 @@ export function PreviewReviews({ theme, reviews }: Props) {
         fontWeight={700}
         sx={{
           mb: 2,
-          color: theme.isTextLight ? "white" : (theme.heading || "text.primary"),
+          color: theme.isTextLight ? "white" : theme.heading || "text.primary",
         }}
       >
         Customer Reviews
       </Typography>
+      {reviews.length === 0 ? (
+        <Typography variant="body2" color="text.secondary">
+          No reviews yet.
+        </Typography>
+      ) : null}
       <Stack spacing={2}>
         {reviews.slice(0, 2).map((r) => (
           <Card
@@ -45,7 +56,6 @@ export function PreviewReviews({ theme, reviews }: Props) {
                   <Typography fontWeight={600} variant="body2">
                     {r.name}
                   </Typography>
-                  <Rating value={r.rating} readOnly size="small" />
                   <Typography variant="caption" color="text.secondary">
                     {r.date}
                   </Typography>
@@ -61,4 +71,3 @@ export function PreviewReviews({ theme, reviews }: Props) {
     </Box>
   );
 }
-

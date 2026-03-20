@@ -53,7 +53,10 @@ export function isCarListingSummary(value: any): value is CarListingSummary {
     typeof value.year === "number" &&
     typeof value.mileage === "number" &&
     typeof value.price === "number" &&
-    (value.condition === "new" || value.condition === "used" || value.condition === "certified") &&
+    (value.conditionTier === "new" ||
+      value.conditionTier === "slightly_used" ||
+      value.conditionTier === "first_payment" ||
+      value.conditionTier === "used") &&
     typeof value.location === "string" &&
     typeof value.color === "string" &&
     typeof value.marketRange === "object" &&
@@ -85,8 +88,13 @@ export function isCarListingDetailsJson(value: any): value is CarListingDetailsJ
      value.drivetrain === "awd" || value.drivetrain === "4wd") &&
     typeof value.horsepower === "number" &&
     typeof value.price === "number" &&
+    typeof value.selfCost === "number" &&
     typeof value.interiorColor === "string" &&
-    (value.condition === "new" || value.condition === "used" || value.condition === "certified") &&
+    (value.conditionTier === "new" ||
+      value.conditionTier === "slightly_used" ||
+      value.conditionTier === "first_payment" ||
+      value.conditionTier === "used") &&
+    (value.status === "draft" || value.status === "published" || value.status === "closed") &&
     typeof value.color === "string" &&
     typeof value.location === "string" &&
     typeof value.marketRange === "object" &&
@@ -141,8 +149,8 @@ export function parseListingSummaryFromUnknown(data: unknown): CarListingSummary
 /**
  * Validates that a string is a valid condition type
  */
-export function isValidCondition(value: string): value is "new" | "used" | "certified" {
-  return value === "new" || value === "used" || value === "certified";
+export function isValidCondition(value: string): value is "new" | "slightly_used" | "first_payment" | "used" {
+  return value === "new" || value === "slightly_used" || value === "first_payment" || value === "used";
 }
 
 /**

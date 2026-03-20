@@ -1,4 +1,6 @@
 import type { CarListingDetailsJson } from "~/types/types";
+import { httpsCallable } from "firebase/functions";
+import { functions } from "~/firebase/functions";
 
 /**
  * Partial listing data that the AI can infer from images.
@@ -12,7 +14,7 @@ export type AiInferredListingData = Partial<
     | "year"
     | "color"
     | "interiorColor"
-    | "condition"
+    | "conditionTier"
     | "fuelType"
     | "transmission"
     | "drivetrain"
@@ -40,14 +42,43 @@ export async function analyzeCarImages(
   if (!first) return {};
 
   try {
+    // Convert to base64
+    const base64Image = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result.split(",")[1]);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(first);
+    });
+
+    const call = httpsCallable(functions, "geminiAnalyzeCarImage");
+    const res = await call({
+      imageBase64: base64Image,
+      mimeType: first.type || "image/jpeg",
+    });
+
+    const parsed: any = res.data;
+    if (parsed && typeof parsed === "object") {
+      return {
+        ...parsed,
+        description: `AI Analysis complete. We detected a ${parsed.year || ""} ${parsed.make || ""} ${parsed.model || ""} in ${parsed.color || "an unknown color"}. Please verify these details.`,
+      };
+    }
+  } catch (err) {
+    console.error("Gemini AI failed, falling back to local estimation", err);
+  }
+
+  // Fallback to local
+  try {
     const dominant = await estimateDominantColorName(first);
-    const description = `Photos uploaded. We detected an estimated exterior color: ${dominant}. Please confirm key details (make, model, year, mileage) to complete your listing.`;
+    const description = `Photos uploaded. We detected an estimated exterior color: ${dominant} (AI key missing/failed). Please confirm key details to complete your listing.`;
     return {
       color: dominant,
       description,
     };
   } catch {
-    // If browser APIs fail (rare), just return empty rather than erroring the flow.
     return {};
   }
 }

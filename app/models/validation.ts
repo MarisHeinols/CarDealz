@@ -48,6 +48,10 @@ export function validateListing(listing: CarListingDetailsJson): ValidationResul
     errors.push({ field: "price", message: "Price must be greater than 0" });
   }
 
+  if (typeof listing.selfCost !== "number" || listing.selfCost < 0) {
+    errors.push({ field: "selfCost", message: "Self cost cannot be negative" });
+  }
+
   if (listing.marketRange.min < 0 || listing.marketRange.max < 0) {
     errors.push({ field: "marketRange", message: "Market range values cannot be negative" });
   }
@@ -80,6 +84,15 @@ export function validateListing(listing: CarListingDetailsJson): ValidationResul
   // Location
   if (!listing.location || listing.location.trim() === "") {
     errors.push({ field: "location", message: "Location is required" });
+  }
+
+  // Dealer MVP fields
+  if (!listing.conditionTier || String(listing.conditionTier).trim() === "") {
+    errors.push({ field: "conditionTier", message: "Condition tier is required" });
+  }
+
+  if (!listing.status || String(listing.status).trim() === "") {
+    errors.push({ field: "status", message: "Status is required" });
   }
 
   // Images
@@ -138,6 +151,12 @@ export function validateField(
       }
       break;
 
+    case "selfCost":
+      if (value < 0) {
+        return { field, message: "Self cost cannot be negative" };
+      }
+      break;
+
     case "mileage":
     case "displacement":
     case "horsepower":
@@ -159,6 +178,13 @@ export function validateField(
         return { field, message: "Description is required" };
       } else if (value.length < 50) {
         return { field, message: "Description must be at least 50 characters" };
+      }
+      break;
+
+    case "conditionTier":
+    case "status":
+      if (!value || String(value).trim() === "") {
+        return { field, message: `${field} is required` };
       }
       break;
   }

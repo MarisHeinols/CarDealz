@@ -5,7 +5,6 @@ import {
   Stack,
   Avatar,
   Typography,
-  Rating,
   Divider,
   Pagination,
   Box,
@@ -28,7 +27,7 @@ const StoreReviewsModal = ({
   const pageCount = Math.ceil(reviews.length / REVIEWS_PER_PAGE);
   const paginated = reviews.slice(
     (page - 1) * REVIEWS_PER_PAGE,
-    page * REVIEWS_PER_PAGE
+    page * REVIEWS_PER_PAGE,
   );
 
   return (
@@ -44,7 +43,6 @@ const StoreReviewsModal = ({
 
                 <Box>
                   <Typography fontWeight={600}>{r.name}</Typography>
-                  <Rating value={r.rating} readOnly size="small" />
                   <Typography variant="body2" color="text.secondary">
                     {r.date}
                   </Typography>

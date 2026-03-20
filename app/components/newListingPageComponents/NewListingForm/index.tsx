@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Grid, Divider, Button, Alert } from "@mui/material";
 import { useNavigate } from "react-router";
 
@@ -31,6 +31,31 @@ export default function NewListingForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const dispatch = useAppDispatch();
 
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (!user) return;
+    getDoc(doc(db, "users", user.uid))
+      .then((snap) => {
+        const data = snap.data() || {};
+        const role = data.role as "individual" | "business" | undefined;
+        const dealerVerified = Boolean(data.dealerVerified);
+        if (role === "business" && !dealerVerified) {
+          dispatch(
+            showNotification({
+              message: t("newListing.unverifiedDraftNotice", {
+                defaultValue:
+                  "Your dealer account is pending verification. You can create listings as drafts, but publishing requires approval.",
+              }),
+              severity: "info",
+            }),
+          );
+        }
+      })
+      .catch(() => {
+        // ignore
+      });
+  }, [dispatch, t]);
+
   const handleSubmit = async () => {
     const user = auth.currentUser;
     if (!user) {
@@ -46,11 +71,12 @@ export default function NewListingForm() {
       const userDoc = await getDoc(doc(db, "users", user.uid));
       const userData = userDoc.data() || {};
       const role = userData.role as "individual" | "business" | undefined;
+      const dealerVerified = Boolean(userData.dealerVerified);
       const seller = {
         name: userData.ownerName || userData.name || "Private Seller",
         phone: userData.ownerPhone || userData.phone || "",
         email: user.email || "",
-        isDealer: role === "business"
+        isDealer: role === "business",
       };
 
       // Individuals: limit 3 listings per calendar year
@@ -58,20 +84,23 @@ export default function NewListingForm() {
         const existing = await getListingsByOwner(user.uid);
         const year = new Date().getFullYear();
         const countThisYear = existing.filter((l) => {
-          const createdAt = typeof l.createdAt === "string" ? Date.parse(l.createdAt) : NaN;
+          const createdAt =
+            typeof l.createdAt === "string" ? Date.parse(l.createdAt) : NaN;
           if (!Number.isFinite(createdAt)) return false;
           return new Date(createdAt).getFullYear() === year;
         }).length;
         if (countThisYear >= 3) {
-          throw new Error("Individual accounts can create only 3 listings per year.");
+          throw new Error(t("newListing.individualListingLimit"));
         }
       }
 
       // 2. Validate listing
       const listingToValidate = {
         ...listing,
+        status:
+          role === "business" && !dealerVerified ? "draft" : listing.status,
         images: images as any, // pass local array to bypass empty images block
-        seller
+        seller,
       } as CarListingDetailsJson;
 
       const validation = validateListing(listingToValidate);
@@ -80,17 +109,27 @@ export default function NewListingForm() {
         const errorMessages = validation.errors
           .map((e) => `${e.field}: ${e.message}`)
           .join("\n");
-        setError(`Please fix the following errors:\n${errorMessages}`);
+        setError(`${t("newListing.fixErrors")}\n${errorMessages}`);
         return;
       }
 
       // 3. Process images and submit
       const listingImages = await filesToListingImages(images);
-      await createListing(user.uid, { ...listingToValidate, images: listingImages });
-      dispatch(showNotification({ message: t("newListing.createdSuccess"), severity: "success" }));
+      await createListing(user.uid, {
+        ...listingToValidate,
+        images: listingImages,
+      });
+      dispatch(
+        showNotification({
+          message: t("newListing.createdSuccess"),
+          severity: "success",
+        }),
+      );
       navigate("/user");
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("newListing.createFailed"));
+      setError(
+        err instanceof Error ? err.message : t("newListing.createFailed"),
+      );
       setIsSubmitting(false);
     }
   };
@@ -105,7 +144,11 @@ export default function NewListingForm() {
 
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 8 }}>
-          <ImagesSection images={images} setImages={setImages} setListing={setListing} />
+          <ImagesSection
+            images={images}
+            setImages={setImages}
+            setListing={setListing}
+          />
           <Divider sx={{ my: 2 }} />
           <BasicInfoSection listing={listing} setListing={setListing} />
           <Divider sx={{ my: 2 }} />

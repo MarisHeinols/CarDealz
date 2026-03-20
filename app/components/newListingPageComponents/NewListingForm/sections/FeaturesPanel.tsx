@@ -11,9 +11,10 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
   CAR_FEATURE_GROUPS,
-  CAR_FEATURE_LABELS,
 } from "~/constants/carConstants";
 import type { CarListingDetailsJson, CarFeature } from "~/types/types";
+import { useTranslation } from "react-i18next";
+import { featureDefinitions } from "~/components/listingPageComponents/SpecSheet/featureLabels";
 
 interface Props {
   listing: CarListingDetailsJson;
@@ -21,6 +22,8 @@ interface Props {
 }
 
 export default function FeaturesPanel({ listing, setListing }: Props) {
+  const { t } = useTranslation();
+
   const toggleFeature = (feature: CarFeature) => {
     setListing((prev) => ({
       ...prev,
@@ -44,12 +47,14 @@ export default function FeaturesPanel({ listing, setListing }: Props) {
       }}
     >
       <Typography variant="h6" gutterBottom>
-        Features
+        {t("form.features")}
       </Typography>
-      {Object.values(CAR_FEATURE_GROUPS).map((group) => (
+      {Object.entries(CAR_FEATURE_GROUPS).map(([groupKey, group]) => (
         <Accordion key={group.title}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography fontWeight={600}>{group.title}</Typography>
+            <Typography fontWeight={600}>
+              {t(`featureCategories.${groupKey}`, { defaultValue: group.title })}
+            </Typography>
           </AccordionSummary>
           <AccordionDetails>
             {group.features.map((feature) => (
@@ -61,7 +66,7 @@ export default function FeaturesPanel({ listing, setListing }: Props) {
                     onChange={() => toggleFeature(feature)}
                   />
                 }
-                label={CAR_FEATURE_LABELS[feature]}
+                label={t(`features.${feature}`, { defaultValue: featureDefinitions[feature].label })}
               />
             ))}
           </AccordionDetails>

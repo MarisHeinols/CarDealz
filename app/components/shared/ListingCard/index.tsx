@@ -7,29 +7,41 @@ import {
   Stack,
   Chip,
   Box,
-  CardActions,
   IconButton,
   Button,
   Menu,
   MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  CircularProgress,
 } from "@mui/material";
 import { useNavigate } from "react-router";
 import type { CarListingSummary } from "~/types/types";
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import EditIcon from "@mui/icons-material/Edit";
+import PeopleIcon from "@mui/icons-material/People";
 import { useState } from "react";
-import { markAsSale, updateListingPrice, deleteListingFromDb } from "~/services/listingsService";
+import { useTranslation } from "react-i18next";
+import {
+  updateListingPrice,
+  deleteListingFromDb,
+  markListingAsSold,
+} from "~/services/listingsService";
 import { useAppDispatch } from "~/redux/hooks";
 import { showNotification } from "~/redux/slices/uiSlice";
 import { useAppSelector } from "~/redux/hooks";
 import { useTheme } from "@mui/material/styles";
 import type { StoreTheme } from "~/redux/slices/storeSettingsSlice";
 
-const conditionVariantMap = {
+const conditionTierVariantMap = {
   new: "levelHigh",
-  certified: "levelMedium",
+  slightly_used: "levelMedium",
+  first_payment: "levelMedium",
   used: "levelLow",
 } as const;
 
@@ -50,16 +62,22 @@ const ListingCard = ({
   useStoreTheme = false,
   storeThemeOverride,
 }: Props) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const muiTheme = useTheme();
   const storeTheme = useAppSelector((state) => state.storeSettings.theme);
-  const activeTheme = useStoreTheme ? (storeThemeOverride || storeTheme) : null;
+  const activeTheme = useStoreTheme ? storeThemeOverride || storeTheme : null;
 
   const color = activeTheme?.isTextLight ? "white" : "inherit";
   const isMinimal = activeTheme?.layout === "minimal";
   const dispatch = useAppDispatch();
-  
+
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [priceOpen, setPriceOpen] = useState(false);
+  const [soldOpen, setSoldOpen] = useState(false);
+  const [price, setPrice] = useState<string>("");
+  const [soldPrice, setSoldPrice] = useState<string>("");
 
   const handleActionMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
@@ -73,60 +91,133 @@ const ListingCard = ({
     setAnchorEl(null);
   };
 
+  const openLeads = (e: React.MouseEvent) => {
+    handleClose(e);
+    navigate("/admin", { state: { tabIndex: 2 } });
+  };
+
+  const openEditPrice = (e: React.MouseEvent) => {
+    handleClose(e);
+    setPrice(listing.price.toString());
+    setPriceOpen(true);
+  };
+
+  const openMarkSold = (e: React.MouseEvent) => {
+    handleClose(e);
+    setSoldPrice(listing.price.toString());
+    setSoldOpen(true);
+  };
+
+  const confirmDelete = (e: React.MouseEvent) => {
+    handleClose(e);
+    if (window.confirm(t("listingControl.confirmDelete"))) {
+      submitDelete();
+    }
+  };
+
+  const submitPrice = async () => {
+    const n = Number(price);
+    if (!Number.isFinite(n) || n <= 0) return;
+    setBusy(true);
+    try {
+      await updateListingPrice(listing.id, n);
+      dispatch(showNotification({ message: t("pricing.priceUpdated"), severity: "success" }));
+      setPriceOpen(false);
+    } catch (e) {
+      dispatch(showNotification({ message: t("pricing.priceUpdateFailed"), severity: "error" }));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitDelete = async () => {
+    setBusy(true);
+    try {
+      await deleteListingFromDb(listing.id);
+      dispatch(showNotification({ message: t("pricing.listingDeleted"), severity: "success" }));
+    } catch (e) {
+      dispatch(showNotification({ message: t("pricing.listingDeleteFailed"), severity: "error" }));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitSold = async () => {
+    const n = Number(soldPrice);
+    if (!Number.isFinite(n) || n <= 0) return;
+    setBusy(true);
+    try {
+      await markListingAsSold(listing.id, n);
+      dispatch(showNotification({ message: t("listingControl.soldSuccess"), severity: "success" }));
+      setSoldOpen(false);
+    } catch (e) {
+      dispatch(showNotification({ message: t("auth.loginFailed"), severity: "error" }));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <Card
-      sx={{ 
-        height: isMinimal ? 110 : "100%",
-        minHeight: isMinimal ? 110 : 340,
-        bgcolor: activeTheme?.secondary || undefined,
+      sx={{
+        height: "100%",
         display: "flex",
-        flexDirection: isMinimal ? "row" : "column",
+        flexDirection: "column",
+        borderRadius: 2,
+        overflow: "hidden",
+        position: "relative",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+        transition: "transform 0.2s, box-shadow 0.2s",
+        "&:hover": {
+          transform: "translateY(-4px)",
+          boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
+        },
+        bgcolor: useStoreTheme
+          ? activeTheme?.background || "background.paper"
+          : "background.paper",
       }}
     >
-      <CardActionArea 
+      <CardActionArea
         onClick={() => navigate(`/listing/${listing.id}`)}
-        sx={{ 
-          flex: 1, 
-          display: "flex", 
-          flexDirection: isMinimal ? "row" : "column", 
-          alignItems: "stretch", 
-          justifyContent: "flex-start",
-          minWidth: 0, // important for text overflow in flex row
+        sx={{
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "stretch",
         }}
       >
-        {/* Image */}
-        <Box sx={{ width: isMinimal ? { xs: 100, sm: 160 } : "100%", height: isMinimal ? "100%" : 180, flexShrink: 0, position: "relative" }}>
+        <Box sx={{ position: "relative" }}>
           <CardMedia
             component="img"
+            height={isMinimal ? 160 : 180}
             image={listing.thumbnailUrl}
             alt={`${listing.make} ${listing.model}`}
-            sx={{
-              width: "100%",
-              height: "100%",
-              aspectRatio: isMinimal ? "auto" : "4 / 3",
-              objectFit: "cover",
-            }}
+            sx={{ objectFit: "cover" }}
           />
-
-          {/* Condition badge */}
           <Chip
-            label={listing.condition}
+            label={t(`carValues.condition_${listing.conditionTier}`)}
             size="small"
-            variant={conditionVariantMap[listing.condition]}
+            variant={conditionTierVariantMap[listing.conditionTier]}
             sx={{
               position: "absolute",
-              top: 8,
-              left: 8,
-              backgroundColor: "rgba(255,255,255,0.85)",
-              backdropFilter: "blur(6px)",
-              border: "1px solid rgba(0,0,0,0.08)",
+              top: 12,
+              left: 12,
+              backdropFilter: "blur(4px)",
               boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
             }}
           />
         </Box>
 
         {/* Content */}
-        <CardContent sx={{ pb: 2, flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+        <CardContent
+          sx={{
+            pb: 2,
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+          }}
+        >
           <Stack spacing={0.5}>
             <Typography
               variant="subtitle1"
@@ -139,26 +230,59 @@ const ListingCard = ({
               }}
             >
               {listing.year} {listing.make} {listing.model}
+              {listing.isSold && (
+                <Chip
+                  label={t("sellerCard.status_sold")}
+                  size="small"
+                  color="success"
+                  sx={{
+                    ml: 1,
+                    height: 18,
+                    fontSize: "0.65rem",
+                    fontWeight: "bold",
+                  }}
+                />
+              )}
             </Typography>
 
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ gap: 0.5 }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              flexWrap="wrap"
+              sx={{ gap: 0.5 }}
+            >
               <Typography
                 variant="h6"
                 fontWeight={600}
                 sx={{
                   color: useStoreTheme
-                    ? ((activeTheme?.accent || activeTheme?.primary) ?? muiTheme.palette.primary.main)
+                    ? ((activeTheme?.accent || activeTheme?.primary) ??
+                      muiTheme.palette.primary.main)
                     : muiTheme.palette.primary.main,
                 }}
               >
-                ${(listing.isOnSale && listing.salePrice ? listing.salePrice : listing.price).toLocaleString("en-US")}
+                €
+                {(listing.isOnSale && listing.salePrice
+                  ? listing.salePrice
+                  : listing.price
+                ).toLocaleString(undefined)}
               </Typography>
               {listing.isOnSale && listing.salePrice && (
                 <>
-                  <Typography variant="body2" color="text.secondary" sx={{ textDecoration: "line-through", opacity: 0.7 }}>
-                    ${listing.price.toLocaleString("en-US")}
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ textDecoration: "line-through", opacity: 0.7 }}
+                  >
+                    €{listing.price.toLocaleString(undefined)}
                   </Typography>
-                  <Chip size="small" label="SALE" color="error" sx={{ height: 20, fontSize: "0.65rem", fontWeight: "bold" }} />
+                  <Chip
+                    size="small"
+                    label={t("listing.saleBadge")}
+                    color="error"
+                    sx={{ height: 20, fontSize: "0.65rem", fontWeight: "bold" }}
+                  />
                 </>
               )}
             </Stack>
@@ -171,110 +295,147 @@ const ListingCard = ({
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 color: color,
-                opacity: 0.8
+                opacity: 0.8,
               }}
             >
-              {listing.mileage.toLocaleString("en-US")} km • {listing.location}
+              {listing.mileage.toLocaleString(undefined)} {t("common.unit_km")} • {listing.location}
             </Typography>
           </Stack>
         </CardContent>
       </CardActionArea>
 
-      {/* Owner Actions */}
+      {/* Owner Menu Button */}
       {isOwner && (
-        <CardActions 
-          sx={{ 
-            borderTop: isMinimal ? "none" : "1px solid", 
-            borderLeft: isMinimal ? "1px solid" : "none", 
-            borderColor: "divider", 
-            bgcolor: "rgba(0,0,0,0.02)", 
-            justifyContent: isMinimal ? "center" : "space-between", 
-            flexDirection: isMinimal ? "column" : "row",
-            px: isMinimal ? 1 : 2,
-            minWidth: isMinimal ? 60 : "auto"
+        <IconButton
+          size="small"
+          onClick={handleActionMenu}
+          sx={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            backgroundColor: "rgba(255,255,255,0.85)",
+            backdropFilter: "blur(6px)",
+            border: "1px solid rgba(0,0,0,0.08)",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
+            zIndex: 10,
+            "&:hover": {
+              backgroundColor: "rgba(255,255,255,1)",
+            },
           }}
         >
-          {isMinimal ? null : (
-            <Button
-              size="small"
-              startIcon={<EditIcon />}
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/listing/${listing.id}/edit`);
-              }}
-              sx={{
-                color: useStoreTheme ? (storeTheme.accent || storeTheme.primary) : undefined,
-              }}
-            >
-              Edit
-            </Button>
-          )}
-          <Box sx={{ display: 'flex', flexDirection: isMinimal ? 'column' : 'row', alignItems: 'center', gap: isMinimal ? 1 : 0 }}>
-            {isMinimal && (
-              <IconButton
-                size="small"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(`/listing/${listing.id}/edit`);
-                }}
-                sx={{
-                  color: useStoreTheme ? (storeTheme.accent || storeTheme.primary) : undefined,
-                }}
+          <MoreVertIcon fontSize="small" />
+        </IconButton>
+      )}
+
+      {/* Action Menu & Dialogs */}
+      {isOwner && (
+        <>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <MenuItem onClick={openLeads} disabled={busy}>
+              <PeopleIcon fontSize="small" sx={{ mr: 1 }} />
+              {t("listingControl.goToLeads")}
+            </MenuItem>
+            <MenuItem onClick={openEditPrice} disabled={busy}>
+              <EditIcon fontSize="small" sx={{ mr: 1 }} />
+              {t("listingControl.changePrice")}
+            </MenuItem>
+            {!listing.isSold && (
+              <MenuItem
+                onClick={openMarkSold}
+                disabled={busy}
+                sx={{ color: "success.main" }}
               >
-                <EditIcon fontSize="small" />
-              </IconButton>
+                <CheckCircleOutlineIcon fontSize="small" sx={{ mr: 1 }} />
+                {t("listingControl.markAsSold")}
+              </MenuItem>
             )}
-            <IconButton size="small" onClick={handleActionMenu}>
-              <MoreVertIcon fontSize="small" />
-            </IconButton>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleClose}
-              onClick={(e) => e.stopPropagation()}
+            <MenuItem
+              onClick={confirmDelete}
+              disabled={busy}
+              sx={{ color: "error.main" }}
             >
-              <MenuItem onClick={(e) => {
-                handleClose(e);
-                const price = window.prompt("Enter Sale Price:");
-                if (price && !isNaN(Number(price))) {
-                  markAsSale(listing.id, Number(price)).then(() => {
-                    dispatch(showNotification({ message: "Listing marked as SALE!", severity: "success" }));
-                    setTimeout(() => window.location.reload(), 500);
-                  });
-                }
-              }}>
-                <AttachMoneyIcon fontSize="small" sx={{ mr: 1 }} />
-                Make a Sale
-              </MenuItem>
-              <MenuItem onClick={(e) => {
-                handleClose(e);
-                const price = window.prompt("Enter New Price:");
-                if (price && !isNaN(Number(price))) {
-                  updateListingPrice(listing.id, Number(price)).then(() => {
-                    dispatch(showNotification({ message: "Price updated!", severity: "success" }));
-                    setTimeout(() => window.location.reload(), 500);
-                  });
-                }
-              }}>
-                <AttachMoneyIcon fontSize="small" sx={{ mr: 1 }} />
-                Change Price
-              </MenuItem>
-              <MenuItem onClick={(e) => {
-                handleClose(e);
-                const confirmed = window.confirm("Are you sure you want to delete this listing?");
-                if (confirmed) {
-                  deleteListingFromDb(listing.id).then(() => {
-                    dispatch(showNotification({ message: "Listing deleted.", severity: "info" }));
-                    setTimeout(() => window.location.reload(), 500);
-                  });
-                }
-              }} sx={{ color: "error.main" }}>
-                <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
-                Delete Listing
-              </MenuItem>
-            </Menu>
-          </Box>
-        </CardActions>
+              <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
+              {t("listingControl.deleteListing")}
+            </MenuItem>
+          </Menu>
+
+          <Dialog
+            open={priceOpen}
+            onClose={() => setPriceOpen(false)}
+            maxWidth="xs"
+            fullWidth
+          >
+            <DialogTitle>{t("listingControl.changePrice")}</DialogTitle>
+            <DialogContent dividers>
+              <TextField
+                autoFocus
+                label={t("form.newPrice")}
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                fullWidth
+                type="number"
+                inputProps={{ min: 1 }}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setPriceOpen(false)} disabled={busy}>
+                {t("common.cancel")}
+              </Button>
+              <Button variant="contained" onClick={submitPrice} disabled={busy}>
+                {busy ? (
+                  <CircularProgress size={18} color="inherit" />
+                ) : (
+                  t("common.save")
+                )}
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          <Dialog
+            open={soldOpen}
+            onClose={() => setSoldOpen(false)}
+            maxWidth="xs"
+            fullWidth
+          >
+            <DialogTitle>{t("listingControl.markAsSold")}</DialogTitle>
+            <DialogContent dividers>
+              <Typography variant="body2" sx={{ mb: 2 }}>
+                {t("listingControl.askSoldPrice")}
+              </Typography>
+              <TextField
+                autoFocus
+                label={t("form.soldPrice")}
+                value={soldPrice}
+                onChange={(e) => setSoldPrice(e.target.value)}
+                fullWidth
+                type="number"
+                inputProps={{ min: 1 }}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setSoldOpen(false)} disabled={busy}>
+                {t("common.cancel")}
+              </Button>
+              <Button
+                variant="contained"
+                onClick={submitSold}
+                disabled={busy}
+                color="success"
+              >
+                {busy ? (
+                  <CircularProgress size={18} color="inherit" />
+                ) : (
+                  t("listingControl.markAsSold")
+                )}
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </>
       )}
     </Card>
   );

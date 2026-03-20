@@ -1,6 +1,7 @@
 import React from "react";
 import { TextField } from "@mui/material";
 import type { CarListingDetailsJson } from "~/types/types";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   listing: CarListingDetailsJson;
@@ -8,11 +9,12 @@ interface Props {
 }
 
 export default function DescriptionSection({ listing, setListing }: Props) {
+  const { t } = useTranslation();
   return (
     <TextField
       multiline
       rows={4}
-      label="Description"
+      label={t("form.description")}
       fullWidth
       value={listing.description}
       onChange={(e) =>

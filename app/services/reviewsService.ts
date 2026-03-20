@@ -37,7 +37,6 @@ export async function getStoreReviews(storeUid: string): Promise<StoreReview[]> 
       storeUid: String(data.storeUid || storeUid),
       reviewerUid: String(data.reviewerUid || ""),
       reviewerName: String(data.reviewerName || "User"),
-      rating: Number(data.rating || 0),
       text: String(data.text || ""),
       createdAt: tsToIso(data.createdAt),
       updatedAt: data.updatedAt ? tsToIso(data.updatedAt) : undefined,
@@ -60,7 +59,6 @@ export async function getMyStoreReview(
     storeUid: String(data.storeUid || storeUid),
     reviewerUid: String(data.reviewerUid || reviewerUid),
     reviewerName: String(data.reviewerName || "User"),
-    rating: Number(data.rating || 0),
     text: String(data.text || ""),
     createdAt: tsToIso(data.createdAt),
     updatedAt: data.updatedAt ? tsToIso(data.updatedAt) : undefined,
@@ -71,7 +69,6 @@ export async function upsertStoreReview(input: {
   storeUid: string;
   reviewerUid: string;
   reviewerName: string;
-  rating: number;
   text: string;
 }): Promise<void> {
   const id = storeReviewDocId(input.storeUid, input.reviewerUid);
@@ -82,7 +79,6 @@ export async function upsertStoreReview(input: {
     storeUid: input.storeUid,
     reviewerUid: input.reviewerUid,
     reviewerName: input.reviewerName,
-    rating: input.rating,
     text: input.text,
     ...(existing.exists()
       ? { updatedAt: serverTimestamp() }

@@ -20,8 +20,12 @@ import { Link as RouterLink, useNavigate } from "react-router";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import DeleteIcon from "@mui/icons-material/Delete";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { markListingAsSold } from "~/services/listingsService";
+import { useAppDispatch } from "~/redux/hooks";
+import { showNotification } from "~/redux/slices/uiSlice";
 
 const ListingsTable = ({
   rows,
@@ -40,6 +44,7 @@ const ListingsTable = ({
   onChangePrice?: (listingId: string, newPrice: number) => void;
   onDelete?: (listingId: string) => void;
 }) => {
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -62,7 +67,9 @@ const ListingsTable = ({
   };
 
   const closeMenu = (e?: unknown) => {
-    const evt = e as { stopPropagation?: () => void; preventDefault?: () => void } | undefined;
+    const evt = e as
+      | { stopPropagation?: () => void; preventDefault?: () => void }
+      | undefined;
     evt?.stopPropagation?.();
     evt?.preventDefault?.();
     setAnchorEl(null);
@@ -93,7 +100,7 @@ const ListingsTable = ({
               {sortLabel("year", t("table.year"))}
             </TableCell>
             <TableCell sx={{ width: 120 }}>
-              {sortLabel("condition", t("table.condition"))}
+              {sortLabel("conditionTier", t("table.condition"))}
             </TableCell>
             <TableCell sx={{ width: 120 }}>
               {sortLabel("price", t("table.price"))}
@@ -144,10 +151,22 @@ const ListingsTable = ({
                 {l.make}
                 {l.isDealer && (
                   <Chip
-                    label="Dealer"
+                    label={t("listing.dealer")}
                     size="small"
                     variant="levelHigh"
                     sx={{ ml: 1, fontSize: "0.65rem" }}
+                  />
+                )}
+                {l.isSold && (
+                  <Chip
+                    label={t("sellerCard.status_sold")}
+                    size="small"
+                    color="success"
+                    sx={{
+                      ml: l.isDealer ? 0.5 : 1,
+                      fontSize: "0.65rem",
+                      fontWeight: "bold",
+                    }}
                   />
                 )}
               </TableCell>
@@ -156,19 +175,22 @@ const ListingsTable = ({
 
               <TableCell>
                 <Chip
-                  label={l.condition}
+                  label={t(`carValues.condition_${l.conditionTier}`, {
+                    defaultValue: l.conditionTier,
+                  })}
                   size="small"
                   variant={
-                    l.condition === "new"
+                    l.conditionTier === "new"
                       ? "levelHigh"
-                      : l.condition === "certified"
+                      : l.conditionTier === "slightly_used" ||
+                        l.conditionTier === "first_payment"
                         ? "levelMedium"
                         : "levelLow"
                   }
                 />
               </TableCell>
 
-              <TableCell>${l.price.toLocaleString("en-US")}</TableCell>
+              <TableCell>€{l.price.toLocaleString("en-US")}</TableCell>
 
               <TableCell>{l.mileage} km</TableCell>
 
@@ -224,6 +246,46 @@ const ListingsTable = ({
           <AttachMoneyIcon fontSize="small" sx={{ mr: 1 }} />
           {t("table.changePrice")}
         </MenuItem>
+
+        {/* Mark as Sold Option */}
+        {anchorEl &&
+          activeId &&
+          !rows.find((r) => r.id === activeId)?.isSold && (
+            <MenuItem
+              onClick={(e) => {
+                const id = activeId;
+                closeMenu(e);
+                if (!id) return;
+
+                const listing = rows.find((r) => r.id === id);
+                if (!listing) return;
+
+                const soldPriceStr = window.prompt(
+                  t("listingControl.askSoldPrice"),
+                  listing.price.toString(),
+                );
+                if (soldPriceStr === null) return; // cancelled
+
+                const soldPrice = Number(soldPriceStr);
+                if (!isNaN(soldPrice) && soldPrice > 0) {
+                  markListingAsSold(id, soldPrice).then(() => {
+                    dispatch(
+                      showNotification({
+                        message: t("listingControl.soldSuccess"),
+                        severity: "success",
+                      }),
+                    );
+                    setTimeout(() => window.location.reload(), 500);
+                  });
+                }
+              }}
+              sx={{ color: "success.main" }}
+            >
+              <CheckCircleOutlineIcon fontSize="small" sx={{ mr: 1 }} />
+              {t("listingControl.markAsSold")}
+            </MenuItem>
+          )}
+
         <MenuItem
           onClick={(e) => {
             const id = activeId;

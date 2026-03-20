@@ -52,10 +52,10 @@ const MarketValueBar = ({ price, marketRange }: Props) => {
 
       <Box display="flex" justifyContent="space-between">
         <Typography variant="caption" color="text.secondary">
-          ${marketRange.min.toLocaleString("en-US")}
+          €{marketRange.min.toLocaleString("en-US")}
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          ${marketRange.max.toLocaleString("en-US")}
+          €{marketRange.max.toLocaleString("en-US")}
         </Typography>
       </Box>
     </Stack>

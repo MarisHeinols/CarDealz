@@ -64,6 +64,10 @@ export function cacheKeyListingDetails(listingId: string) {
   return `listing.details.${listingId}`;
 }
 
+export function cacheKeyListingsAllForStats() {
+  return "listings.allForStats";
+}
+
 // Helpful narrow types for the common cached shapes
 export type CachedListings = CacheEntry<CarListingSummary[]>;
 

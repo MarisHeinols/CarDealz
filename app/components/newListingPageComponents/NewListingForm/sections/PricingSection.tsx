@@ -17,6 +17,7 @@ import {
   estimateMarketValue,
   type MarketValuationResult,
 } from "~/services/estimateMarketValue";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   listing: CarListingDetailsJson;
@@ -29,13 +30,8 @@ const DEAL_COLOR = {
   above_market: "error",
 } as const;
 
-const DEAL_LABEL = {
-  good: "Good Deal",
-  fair: "Fair Price",
-  above_market: "Above Market",
-};
-
 export default function PricingSection({ listing, setListing }: Props) {
+  const { t } = useTranslation();
   const [estimating, setEstimating] = useState(false);
   const [aiResult, setAiResult] = useState<MarketValuationResult | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
@@ -47,14 +43,15 @@ export default function PricingSection({ listing, setListing }: Props) {
     try {
       const result = await estimateMarketValue(listing);
       setAiResult(result);
-      // Auto-fill the market range fields
       setListing((prev) => ({
         ...prev,
         marketRange: { min: result.min, max: result.max },
         marketRangeUpdatedAt: new Date().toISOString(),
       }));
     } catch (err) {
-      setAiError(err instanceof Error ? err.message : "AI estimation failed");
+      setAiError(
+        err instanceof Error ? err.message : t("newListing.createFailed"),
+      );
     } finally {
       setEstimating(false);
     }
@@ -64,7 +61,7 @@ export default function PricingSection({ listing, setListing }: Props) {
     <Grid container spacing={2}>
       <Grid size={{ xs: 12, sm: 6 }}>
         <TextField
-          label="Price"
+          label={t("form.price")}
           type="number"
           fullWidth
           value={listing.price}
@@ -74,22 +71,42 @@ export default function PricingSection({ listing, setListing }: Props) {
         />
       </Grid>
 
+      <Grid size={{ xs: 12, sm: 6 }}>
+        <TextField
+          label={t("form.selfCost", { defaultValue: "Self cost" })}
+          type="number"
+          fullWidth
+          value={listing.selfCost}
+          onChange={(e) =>
+            setListing((prev) => ({
+              ...prev,
+              selfCost: Number(e.target.value),
+            }))
+          }
+        />
+      </Grid>
+
       {/* AI Estimation */}
       <Grid size={{ xs: 12 }}>
         <Button
           variant="outlined"
+          color="primary"
           startIcon={
             estimating ? <CircularProgress size={16} /> : <AutoAwesomeIcon />
           }
           onClick={handleEstimate}
           disabled={estimating || !listing.make || !listing.model}
-          sx={{ borderStyle: "dashed" }}
+          sx={{
+            borderStyle: "dashed",
+            fontWeight: 700,
+            px: 3,
+          }}
         >
-          {estimating ? "Estimating…" : "Estimate Market Value"}
+          {estimating ? t("form.estimating") : t("form.estimateMarketValue")}
         </Button>
         {!listing.make || !listing.model ? (
           <Typography variant="caption" color="text.secondary" sx={{ ml: 2 }}>
-            Fill in make &amp; model first
+            {t("form.fillMakeModelFirst")}
           </Typography>
         ) : null}
       </Grid>
@@ -119,10 +136,10 @@ export default function PricingSection({ listing, setListing }: Props) {
             <Stack direction="row" spacing={1} alignItems="center" mb={1}>
               <AutoAwesomeIcon fontSize="small" color="primary" />
               <Typography variant="subtitle2" fontWeight={700}>
-                Market Value Estimate
+                {t("form.marketValueEstimate")}
               </Typography>
               <Chip
-                label={DEAL_LABEL[aiResult.dealRating]}
+                label={t(`carValues.deal_${aiResult.dealRating}`)}
                 color={DEAL_COLOR[aiResult.dealRating]}
                 size="small"
               />
@@ -133,23 +150,23 @@ export default function PricingSection({ listing, setListing }: Props) {
             <Stack direction="row" spacing={3} flexWrap="wrap" mb={1.5}>
               <Box>
                 <Typography variant="caption" color="text.secondary">
-                  Market Range
+                  {t("form.marketRange")}
                 </Typography>
                 <Typography variant="body2" fontWeight={600}>
-                  ${aiResult.min.toLocaleString()} – $
+                  €{aiResult.min.toLocaleString()} – €
                   {aiResult.max.toLocaleString()}
                 </Typography>
               </Box>
               <Box>
                 <Typography variant="caption" color="text.secondary">
-                  Recommended Sell Price
+                  {t("form.recommendedSellPrice")}
                 </Typography>
                 <Typography
                   variant="body2"
                   fontWeight={700}
                   color="primary.main"
                 >
-                  ${aiResult.recommendedSellPrice.toLocaleString()}
+                  €{aiResult.recommendedSellPrice.toLocaleString()}
                 </Typography>
               </Box>
             </Stack>

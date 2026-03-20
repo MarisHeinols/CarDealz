@@ -20,6 +20,7 @@ import {
   useListingsTable,
 } from "~/components/homePageComponents/ListingsTable/useListingTable";
 import type { ListingsFiltersState } from "~/types/types";
+import { useTranslation } from "react-i18next";
 import { updateListingPrice, deleteListingFromDb } from "~/services/listingsService";
 import { showNotification } from "~/redux/slices/uiSlice";
 import type { CarListingSummary } from "~/types/types";
@@ -39,6 +40,7 @@ function IndividualProfileListings({
   refreshing: boolean;
   canManage: boolean;
 }) {
+  const { t } = useTranslation();
   const [filters, setFilters] = useState<ListingsFiltersState>(defaultFilters);
   const dispatch = useAppDispatch();
   const [localListings, setLocalListings] = useState<CarListingSummary[]>(listings);
@@ -55,9 +57,9 @@ function IndividualProfileListings({
       setLocalListings((prev) =>
         prev.map((l) => (l.id === listingId ? { ...l, price: newPrice, isOnSale: false, salePrice: undefined } : l))
       );
-      dispatch(showNotification({ message: "Price updated!", severity: "success" }));
+      dispatch(showNotification({ message: t("pricing.priceUpdated"), severity: "success" }));
     } catch (e: any) {
-      dispatch(showNotification({ message: e?.message || "Failed to update price", severity: "error" }));
+      dispatch(showNotification({ message: e?.message || t("pricing.priceUpdateFailed"), severity: "error" }));
     }
   };
 
@@ -65,9 +67,9 @@ function IndividualProfileListings({
     try {
       await deleteListingFromDb(listingId);
       setLocalListings((prev) => prev.filter((l) => l.id !== listingId));
-      dispatch(showNotification({ message: "Listing deleted.", severity: "info" }));
+      dispatch(showNotification({ message: t("pricing.listingDeleted"), severity: "info" }));
     } catch (e: any) {
-      dispatch(showNotification({ message: e?.message || "Failed to delete listing", severity: "error" }));
+      dispatch(showNotification({ message: e?.message || t("pricing.listingDeleteFailed"), severity: "error" }));
     }
   };
 
@@ -106,7 +108,7 @@ function IndividualProfileListings({
 
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 2 }}>
         <Typography variant="body2" color="text.secondary">
-          {table.total} results
+          {t("businesses.resultsCount", { count: table.total })}
         </Typography>
         <Pagination
           page={table.page}
@@ -119,6 +121,7 @@ function IndividualProfileListings({
 }
 
 export default function StorePage({ handle }: { handle: string }) {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const [ownerId, setOwnerId] = useState<string | null>(null);
   const [loadingStore, setLoadingStore] = useState(true);
@@ -252,14 +255,14 @@ export default function StorePage({ handle }: { handle: string }) {
     return (
       <Container maxWidth="md" sx={{ py: 6 }}>
         <Typography variant="h5" fontWeight={700} sx={{ mb: 1 }}>
-          Store not found
+          {t("about.store.notFound")}
         </Typography>
         <Typography color="text.secondary">
-          This store link may be incorrect, the store hasn’t been published yet, or the app doesn’t have permission to look it up.
+          {t("about.store.notFoundDesc")}
         </Typography>
         {lookupError ? (
           <Typography color="text.secondary" variant="caption" sx={{ display: "block", mt: 1 }}>
-            Details: {lookupError}
+            {t("about.store.details", { error: lookupError })}
           </Typography>
         ) : null}
       </Container>
@@ -298,10 +301,10 @@ export default function StorePage({ handle }: { handle: string }) {
       <Container maxWidth="md" sx={{ py: 6 }}>
         <LinearProgress sx={{ mb: 2 }} />
         <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>
-          Loading store…
+          {t("about.store.loadingStore")}
         </Typography>
         <Typography color="text.secondary">
-          Fetching store profile and settings.
+          {t("about.store.fetchingProfile")}
         </Typography>
       </Container>
     );
@@ -312,10 +315,10 @@ export default function StorePage({ handle }: { handle: string }) {
     return (
       <Container maxWidth="md" sx={{ py: 6 }}>
         <Typography variant="h5" fontWeight={700} sx={{ mb: 1 }}>
-          Store not published yet
+          {t("about.store.notPublished")}
         </Typography>
         <Typography color="text.secondary">
-          This business store doesn’t have storefront settings saved yet.
+          {t("about.store.notPublishedDesc")}
         </Typography>
       </Container>
     );
