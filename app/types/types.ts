@@ -5,13 +5,25 @@ export type CarListingJson = {
   year: number;
   mileage: number;
   price: number;
-  condition: string;       
+  conditionTier: ConditionTier;
   location: string;
   color: string;
   marketRange: { min: number; max: number };
   thumbnailUrl: string;
   viewCount: number;
 };
+
+export type ConditionTier =
+  | "new"
+  | "slightly_used"
+  | "first_payment"
+  | "used";
+
+export type ListingStatus = "draft" | "published" | "closed";
+
+export type LeadStatus = "new" | "contacted" | "closed";
+
+export type LeadPreferredContactMethod = "phone" | "email";
 
 export type UploadFunction = (files: File[]) => void;
 
@@ -48,15 +60,19 @@ export interface CarListingSummary {
   year: number;
   mileage: number;
   price: number;
-  condition: "new" | "used" | "certified";
+  conditionTier: ConditionTier;
   location: string;
   color: string;
   marketRange: { min: number; max: number };
   thumbnailUrl: string;
   viewCount: number;
+  leadCount?: number;
   createdAt?: string;
   isOnSale?: boolean;
   salePrice?: number;
+  isSold?: boolean;
+  soldAt?: string;
+  status?: ListingStatus;
   // Seller info
   sellerId?: string;
   sellerName?: string;
@@ -69,7 +85,7 @@ export type SortKey =
   | "year"
   | "mileage"
   | "price"
-  | "condition"
+  | "conditionTier"
   | "color"
   | "location";
 
@@ -79,7 +95,7 @@ export interface ListingsFiltersState {
   search: string;
   brand: string;
   year: string;
-  condition: string;
+  conditionTier: string;
   color: string;
   priceFrom: string;
   priceTo: string;
@@ -87,6 +103,7 @@ export interface ListingsFiltersState {
   mileageTo: string;
   country: string;
   city: string;
+  model: string;
 }
 
 export interface SellerInfo {
@@ -101,7 +118,6 @@ export type StoreReview = {
   storeUid: string;
   reviewerUid: string;
   reviewerName: string;
-  rating: number; // 1-5
   text: string;
   createdAt: string; // ISO
   updatedAt?: string; // ISO
@@ -128,6 +144,7 @@ export interface BusinessRegisterData {
   businessEmail: string;
   businessPhone: string;
   address: string;
+  city: string;
   country: string;
   lat: string;
   lng: string;
@@ -155,7 +172,7 @@ export interface CarListingDetails {
 
   // Usage & condition
   mileage: number;
-  condition: "new" | "used" | "certified";
+  conditionTier: ConditionTier;
 
   // Powertrain
   fuelType: "diesel" | "petrol" | "hybrid" | "electric";
@@ -166,10 +183,13 @@ export interface CarListingDetails {
 
   // Pricing
   price: number;
+  selfCost: number;
   marketRange: {
     min: number;
     max: number;
   };
+
+  status: ListingStatus;
 
   // Appearance
   color: string;
@@ -192,8 +212,11 @@ export interface CarListingDetails {
 
   // Analytics & timestamps
   viewCount: number;
-  lastViewed: Date;
-  createdAt: Date;
+  leadCount?: number;
+  lastViewed: string;
+  createdAt: string;
+  isSold?: boolean;
+  soldAt?: string;
 }
 
 export type CarListingDetailsJson = {
@@ -211,11 +234,14 @@ export type CarListingDetailsJson = {
   drivetrain: "fwd" | "rwd" | "awd" | "4wd";
   horsepower:number;
   price: number;
+  selfCost: number;
   interiorColor: string;
-  condition: "new" | "used" | "certified";
+  conditionTier: ConditionTier;
+  status: ListingStatus;
   color: string;
   location: string;
   marketRange: { min: number; max: number };
+
   /**
    * ISO timestamp of the last time we (re)estimated `marketRange`.
    * Optional for backwards compatibility with older listings.
@@ -231,10 +257,28 @@ export type CarListingDetailsJson = {
     isDealer: boolean;
   };
   viewCount: number;
+  leadCount?: number;
   lastViewed: string;       
   createdAt: string;           
+  isSold?: boolean;
+  soldAt?: string;
 };
 
+export type LeadDoc = {
+  id: string;
+  listingId: string;
+  dealerId: string;
+
+  buyerUid?: string;
+  buyerName: string;
+  buyerEmail?: string;
+  buyerPhone?: string;
+  preferredContactMethod: LeadPreferredContactMethod;
+  message: string;
+
+  status: LeadStatus;
+  createdAt: string;
+};
 
 export type CarFeature =
   // Comfort & Convenience

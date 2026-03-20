@@ -9,13 +9,18 @@ import {
   MenuItem,
 } from "@mui/material";
 import type { IndividualRegisterData } from "~/types/types";
-import { registerUser } from "../../../services/auth";
+import {
+  completeSocialRegistration,
+  formatAuthError,
+  registerUser,
+  sendVerificationEmail,
+} from "../../../services/auth";
 import { useNavigate } from "react-router";
 import { useAppDispatch } from "~/redux/hooks";
 import { showNotification } from "~/redux/slices/uiSlice";
 import { COUNTRIES } from "~/constants/countries";
 
-const IndividualRegisterForm = () => {
+const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState<IndividualRegisterData>({
@@ -36,14 +41,61 @@ const IndividualRegisterForm = () => {
   };
 
   const handleRegister = async () => {
-    if (formData.password !== formData.confirmPassword) {
-      dispatch(showNotification({ message: "Passwords do not match", severity: "error" }));
+    if (!socialMode) {
+      if (formData.password !== formData.confirmPassword) {
+        dispatch(
+          showNotification({
+            message: "Passwords do not match.",
+            severity: "error",
+          }),
+        );
+        return;
+      }
+      if (!formData.email.trim()) {
+        dispatch(
+          showNotification({
+            message: "Email is required.",
+            severity: "error",
+          }),
+        );
+        return;
+      }
+    }
+
+    if (!formData.name.trim() || !formData.surname.trim()) {
+      dispatch(
+        showNotification({
+          message: "First name and surname are required.",
+          severity: "error",
+        }),
+      );
       return;
     }
 
     setIsLoading(true);
     try {
-      await registerUser(
+      if (socialMode) {
+        await completeSocialRegistration(
+          {
+            name: formData.name,
+            surname: formData.surname,
+            phone: formData.phone,
+            country: formData.country,
+          },
+          "individual",
+        );
+
+        dispatch(
+          showNotification({
+            message: "Profile created. Please verify your phone number.",
+            severity: "success",
+          }),
+        );
+        navigate("/verify-phone");
+        return;
+      }
+
+      const cred = await registerUser(
         formData.email,
         formData.password,
         {
@@ -55,10 +107,24 @@ const IndividualRegisterForm = () => {
         "individual",
       );
 
-      dispatch(showNotification({ message: "Registration successful! Please log in.", severity: "success" }));
-      navigate("/login");
+      try {
+        await sendVerificationEmail(cred.user);
+      } catch {
+        // ignore
+      }
+
+      dispatch(
+        showNotification({
+          message:
+            "Account created. Check your email to verify it, then verify your phone.",
+          severity: "success",
+        }),
+      );
+      navigate("/verify-phone");
     } catch (err: any) {
-      dispatch(showNotification({ message: err.message, severity: "error" }));
+      dispatch(
+        showNotification({ message: formatAuthError(err), severity: "error" }),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -90,6 +156,7 @@ const IndividualRegisterForm = () => {
         onChange={handleChange}
         fullWidth
         margin="normal"
+        disabled={Boolean(socialMode)}
       />
       <TextField
         name="phone"
@@ -105,7 +172,9 @@ const IndividualRegisterForm = () => {
           labelId="country-label"
           label="Country"
           value={formData.country}
-          onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, country: e.target.value })
+          }
         >
           {COUNTRIES.map((c) => (
             <MenuItem key={c} value={c}>
@@ -122,6 +191,7 @@ const IndividualRegisterForm = () => {
         onChange={handleChange}
         fullWidth
         margin="normal"
+        disabled={Boolean(socialMode)}
       />
       <TextField
         name="confirmPassword"
@@ -131,6 +201,7 @@ const IndividualRegisterForm = () => {
         onChange={handleChange}
         fullWidth
         margin="normal"
+        disabled={Boolean(socialMode)}
       />
 
       <Button
@@ -140,7 +211,11 @@ const IndividualRegisterForm = () => {
         onClick={handleRegister}
         disabled={isLoading}
       >
-        {isLoading ? "Registering…" : "Register Individual"}
+        {isLoading
+          ? "Registering…"
+          : socialMode
+            ? "Complete Registration"
+            : "Register Individual"}
       </Button>
     </Box>
   );

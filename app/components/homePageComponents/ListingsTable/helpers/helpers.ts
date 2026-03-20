@@ -8,7 +8,7 @@ export function matchesQuery(listing: CarListingSummary, query: string) {
     listing.model,
     listing.year,
     listing.mileage === 0 ? "new" : listing.mileage,
-    listing.condition,
+    listing.conditionTier,
     listing.price,
     listing.color,
     listing.location,

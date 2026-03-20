@@ -22,8 +22,27 @@ export function useCarModels(make: string) {
         const results = data?.Results || [];
         const modelNames = Array.from(
           new Set(results.map((r: any) => r.Model_Name as string))
-        ).sort();
-        setModels(modelNames as string[]);
+        ).filter(Boolean).sort();
+        
+        // Fallbacks for non-US makes that NHTSA misses
+        if (modelNames.length === 0) {
+          const lowerMake = make.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+          if (lowerMake === "skoda") {
+            setModels(["Octavia", "Superb", "Kodiaq", "Karoq", "Kamiq", "Fabia", "Scala", "Enyaq"]);
+          } else if (lowerMake === "seat") {
+            setModels(["Leon", "Ibiza", "Ateca", "Arona", "Tarraco", "Toledo", "Alhambra"]);
+          } else if (lowerMake === "peugeot") {
+            setModels(["208", "308", "508", "2008", "3008", "5008", "Rifter"]);
+          } else if (lowerMake === "renault") {
+            setModels(["Clio", "Megane", "Captur", "Kadjar", "Austral", "Koleos", "Zoe", "Arkana"]);
+          } else if (lowerMake === "dacia") {
+            setModels(["Sandero", "Duster", "Jogger", "Spring", "Logan"]);
+          } else {
+            setModels([]);
+          }
+        } else {
+          setModels(modelNames as string[]);
+        }
       })
       .catch((err) => {
         if (cancelled) return;

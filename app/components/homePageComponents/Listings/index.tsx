@@ -1,6 +1,15 @@
 import React, { useState } from "react";
-import { Button, Pagination, Typography, Box, Chip, Stack, LinearProgress } from "@mui/material";
+import {
+  Button,
+  Pagination,
+  Typography,
+  Box,
+  Chip,
+  Stack,
+  LinearProgress,
+} from "@mui/material";
 import { useSearchParams } from "react-router";
+import { useTranslation } from "react-i18next";
 
 import ListingsTable from "../ListingsTable";
 import {
@@ -13,16 +22,36 @@ import type { ListingsFiltersState } from "~/types/types";
 import ListingsFilters from "../ListingFilter";
 import TopListings from "../TopListings";
 import { useAllListingsCached } from "~/hooks/useCachedListings";
+import { useUserPreferences } from "~/context/UserPreferencesContext";
 
 const Listings = () => {
   const { listings, loading, refreshing } = useAllListingsCached();
   const [filters, setFilters] = useState<ListingsFiltersState>(defaultFilters);
+  const [filtersTouched, setFiltersTouched] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const sellerFilter = searchParams.get("seller");
+  const prefs = useUserPreferences();
+  const { t } = useTranslation();
 
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [sellerFilter]);
+
+  React.useEffect(() => {
+    if (filtersTouched) return;
+    const loc = prefs.location;
+    if (!loc) return;
+
+    const nextCountry = loc.country ? loc.country : "all";
+    const nextCity = loc.city || "";
+
+    // Only apply defaults if user hasn't interacted and filters are still blank for location.
+    setFilters((prev) => {
+      if ((prev.country && prev.country !== "all") || prev.city) return prev;
+      if (nextCountry === "all" && !nextCity) return prev;
+      return { ...prev, country: nextCountry, city: nextCity };
+    });
+  }, [prefs.location, filtersTouched]);
 
   // If ?seller= is set, filter listings to that seller only
   const displayedListings = sellerFilter
@@ -39,7 +68,7 @@ const Listings = () => {
         <Box mb={2}>
           <Stack direction="row" spacing={1} alignItems="center">
             <Typography variant="body2" color="text.secondary">
-              Showing listings from:
+              {t("common.showing_from")}
             </Typography>
             <Chip
               label={
@@ -56,8 +85,14 @@ const Listings = () => {
 
       <ListingsFilters
         filters={filters}
-        onChange={setFilters}
-        onReset={() => setFilters(defaultFilters)}
+        onChange={(f) => {
+          setFiltersTouched(true);
+          setFilters(f);
+        }}
+        onReset={() => {
+          setFiltersTouched(false);
+          setFilters(defaultFilters);
+        }}
       />
       <TopListings carListings={table.rows} />
       {loading && listings.length === 0 ? (
@@ -73,7 +108,9 @@ const Listings = () => {
       />
 
       <div className={styles.footer}>
-        <Typography variant="body2">{table.total} results</Typography>
+        <Typography variant="body2">
+          {table.total} {t("common.results")}
+        </Typography>
 
         <Pagination
           page={table.page}

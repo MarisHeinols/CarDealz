@@ -140,13 +140,11 @@ export const DRIVETRAIN_TYPES = [
   { value: "4wd", label: "Four-Wheel Drive (4WD)" },
 ] as const;
 
-/**
- * Condition options
- */
-export const CONDITION_TYPES = [
+export const CONDITION_TIERS = [
   { value: "new", label: "New" },
+  { value: "slightly_used", label: "Slightly used" },
   { value: "used", label: "Used" },
-  { value: "certified", label: "Certified Pre-Owned" },
+  { value: "first_payment", label: "First payment car" },
 ] as const;
 
 /**
@@ -201,7 +199,7 @@ export const LISTING_DEFAULTS = {
   fuelType: "petrol" as const,
   transmission: "automatic" as const,
   drivetrain: "fwd" as const,
-  condition: "used" as const,
+  conditionTier: "used" as const,
   displacement: 0,
   horsepower: 0,
   price: 0,

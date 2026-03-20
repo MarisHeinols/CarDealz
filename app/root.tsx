@@ -17,6 +17,7 @@ import Header from "./components/shared/Header";
 import { store } from "./redux/store";
 import { Provider } from "react-redux";
 import { FirebaseAuthProvider } from "./provider/FirebaseAuthProvider";
+import { UserPreferencesProvider } from "./context/UserPreferencesContext";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -56,10 +57,12 @@ export default function App() {
     <Provider store={store}>
       <ThemeProvider theme={theme}>
         <FirebaseAuthProvider>
-          <CssBaseline />
-          <Header />
-          <Outlet />
-          <GlobalSnackbar />
+          <UserPreferencesProvider>
+            <CssBaseline />
+            <Header />
+            <Outlet />
+            <GlobalSnackbar />
+          </UserPreferencesProvider>
         </FirebaseAuthProvider>
       </ThemeProvider>
     </Provider>

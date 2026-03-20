@@ -8,7 +8,6 @@ import {
   MenuItem,
   Button,
   Tooltip,
-  Avatar,
   Divider,
   ListItemIcon,
   ListItemText,
@@ -28,6 +27,11 @@ import { useTranslation } from "react-i18next";
 import { setAppLanguage } from "~/i18n";
 import CheckIcon from "@mui/icons-material/Check";
 import TranslateIcon from "@mui/icons-material/Translate";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import PersonIcon from "@mui/icons-material/Person";
+import ExitToAppIcon from "@mui/icons-material/ExitToApp";
+import LanguageIcon from "@mui/icons-material/Language";
 
 const dropDownSeetings = [
   {
@@ -40,7 +44,10 @@ const dropDownSeetings = [
 const Header = () => {
   const { user } = useAuth();
   const { t, i18n } = useTranslation();
-  const [role, setRole] = React.useState<"individual" | "business" | null>(null);
+  const [role, setRole] = React.useState<"individual" | "business" | null>(
+    null,
+  );
+  const [dealerVerified, setDealerVerified] = React.useState<boolean>(false);
 
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(
     null,
@@ -53,30 +60,50 @@ const Header = () => {
 
   React.useEffect(() => {
     let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
     if (!user) {
       setRole(null);
+      setDealerVerified(false);
       return;
     }
-    getUserProfile(user.uid)
-      .then((p) => {
-        if (!cancelled) setRole(p?.role ?? null);
-      })
-      .catch(() => {
-        if (!cancelled) setRole(null);
-      });
+    const load = async (attempt: number) => {
+      try {
+        const p = await getUserProfile(user.uid);
+        if (cancelled) return;
+        setRole(p?.role ?? null);
+        setDealerVerified(Boolean(p?.dealerVerified));
+
+        if (!p && attempt < 5) {
+          retryTimer = setTimeout(() => load(attempt + 1), 800);
+        }
+      } catch {
+        if (cancelled) return;
+        setRole(null);
+        setDealerVerified(false);
+        if (attempt < 5) {
+          retryTimer = setTimeout(() => load(attempt + 1), 800);
+        }
+      }
+    };
+
+    load(0);
     return () => {
       cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
     };
   }, [user]);
 
   const pages = React.useMemo(() => {
-    const base = [
+    return [
       { pageName: t("nav.listings"), url: "/", key: "listings" },
-      { pageName: t("nav.profile"), url: "/user", key: "profile" },
+      { pageName: t("nav.businesses"), url: "/businesses", key: "businesses" },
+      {
+        pageName: t("nav.about", { defaultValue: "About" }),
+        url: "/about",
+        key: "about",
+      },
     ];
-    if (role === "business") base.push({ pageName: t("nav.admin"), url: "/admin", key: "admin" });
-    return base;
-  }, [role, t]);
+  }, [t]);
 
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget);
@@ -122,7 +149,7 @@ const Header = () => {
               component="img"
               src="/logo.svg"
               alt="CarDealz"
-              sx={{ height: 32, width: "auto" }}
+              sx={{ height: 60, width: "auto" }}
             />
           </Box>
 
@@ -154,45 +181,6 @@ const Header = () => {
               sx={{ display: { xs: "block", md: "none" } }}
             >
               {pages.map((page) => (
-                  <Button
-                    key={page.key}
-                    onClick={() => {
-                      if (page.key === "profile") {
-                        goProfile();
-                      } else {
-                        navigate(page.url);
-                      }
-                      handleCloseNavMenu();
-                    }}
-                    sx={{ my: 2, display: "block" }}
-                  >
-                    {page.pageName}
-                  </Button>
-                ))}
-            </Menu>
-          </Box>
-          <Box
-            onClick={() => navigate("/")}
-            sx={{
-              mr: 2,
-              display: { xs: "flex", md: "none" },
-              flexGrow: 1,
-              alignItems: "center",
-              cursor: "pointer",
-              userSelect: "none",
-            }}
-          >
-            <Box component="img" src="/logo.svg" alt="CarDealz" sx={{ height: 28, width: "auto" }} />
-          </Box>
-          <Box
-            sx={{
-              flexGrow: 1,
-              display: { xs: "none", md: "flex" },
-              alignItems: "center",
-              gap: 2,
-            }}
-          >
-            {pages.map((page) => (
                 <Button
                   key={page.key}
                   onClick={() => {
@@ -208,111 +196,222 @@ const Header = () => {
                   {page.pageName}
                 </Button>
               ))}
+            </Menu>
+          </Box>
+          <Box
+            onClick={() => navigate("/")}
+            sx={{
+              mr: 2,
+              display: { xs: "flex", md: "none" },
+              flexGrow: 1,
+              alignItems: "center",
+              cursor: "pointer",
+              userSelect: "none",
+            }}
+          >
+            <Box
+              component="img"
+              src="/logo.svg"
+              alt="CarDealz"
+              sx={{ height: 28, width: "auto" }}
+            />
           </Box>
           <Box
             sx={{
+              flexGrow: 1,
               display: { xs: "none", md: "flex" },
               alignItems: "center",
               gap: 2,
-              mr: 2,
             }}
           >
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => navigate("/new-listing")}
-            >
-              {t("nav.newListing")}
-            </Button>
+            {pages.map((page) => (
+              <Button
+                key={page.key}
+                onClick={() => {
+                  if (page.key === "profile") {
+                    goProfile();
+                  } else {
+                    navigate(page.url);
+                  }
+                  handleCloseNavMenu();
+                }}
+                sx={{ my: 2, display: "block" }}
+              >
+                {page.pageName}
+              </Button>
+            ))}
           </Box>
+          <Box sx={{ flexGrow: 1 }} />
 
-          <Box sx={{ flexGrow: 0 }}>
-            {user ? (
-              <>
-                <Tooltip title={t("nav.profile")}>
-                  <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                    <Avatar alt="User" src="/static/images/avatar/2.jpg" />
-                  </IconButton>
-                </Tooltip>
-                <Menu
-                  sx={{ mt: "45px" }}
-                  id="menu-appbar"
-                  anchorEl={anchorElUser}
-                  anchorOrigin={{
-                    vertical: "top",
-                    horizontal: "right",
-                  }}
-                  keepMounted
-                  transformOrigin={{
-                    vertical: "top",
-                    horizontal: "right",
-                  }}
-                  open={Boolean(anchorElUser)}
-                  onClose={handleCloseUserMenu}
-                >
-                  <MenuItem disabled sx={{ opacity: 0.9 }}>
-                    <ListItemIcon>
-                      <TranslateIcon fontSize="small" />
+          <Box
+            sx={{ flexGrow: 0, display: "flex", alignItems: "center", gap: 2 }}
+          >
+            {!user ? (
+              <Button
+                variant="contained"
+                onClick={() => navigate("/login")}
+                sx={{ borderRadius: 2, px: 3 }}
+              >
+                {t("nav.login")}
+              </Button>
+            ) : null}
+
+            <Tooltip
+              title={
+                user
+                  ? t("nav.account", { defaultValue: "Account" })
+                  : t("nav.language", { defaultValue: "Language" })
+              }
+            >
+              <IconButton
+                onClick={handleOpenUserMenu}
+                sx={{
+                  p: 0.5,
+                  color: "inherit",
+                  border: "1px solid rgba(255,255,255,0.2)",
+                  borderRadius: 2,
+                }}
+              >
+                {user ? (
+                  <AccountCircleIcon fontSize="large" />
+                ) : (
+                  <LanguageIcon />
+                )}
+              </IconButton>
+            </Tooltip>
+
+            <Menu
+              sx={{ mt: "45px" }}
+              id="menu-appbar"
+              anchorEl={anchorElUser}
+              anchorOrigin={{
+                vertical: "top",
+                horizontal: "right",
+              }}
+              keepMounted
+              transformOrigin={{
+                vertical: "top",
+                horizontal: "right",
+              }}
+              open={Boolean(anchorElUser)}
+              onClose={handleCloseUserMenu}
+            >
+            {user && (
+              <Box>
+                {role === "business" && (
+                  <>
+                    <MenuItem
+                      onClick={() => {
+                        goProfile();
+                        handleCloseUserMenu();
+                      }}
+                    >
+                      <ListItemIcon>
+                        <PersonIcon fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={t("nav.profile")}
+                        primaryTypographyProps={{ fontWeight: 600 }}
+                      />
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        navigate("/admin");
+                        handleCloseUserMenu();
+                      }}
+                    >
+                      <ListItemIcon>
+                        <DashboardIcon fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={t("nav.admin")}
+                        primaryTypographyProps={{ fontWeight: 600 }}
+                      />
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        navigate("/new-listing");
+                        handleCloseUserMenu();
+                      }}
+                    >
+                      <ListItemIcon>
+                        <AddIcon fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={t("nav.newListing")}
+                        primaryTypographyProps={{ fontWeight: 600 }}
+                      />
+                    </MenuItem>
+                  </>
+                )}
+                <Divider />
+              </Box>
+            )}
+
+            <MenuItem disabled sx={{ opacity: 0.9 }}>
+              <ListItemIcon>
+                <LanguageIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText
+                primary={t("nav.language")}
+                primaryTypographyProps={{ fontWeight: 700 }}
+              />
+            </MenuItem>
+              <Divider />
+              {[
+                { code: "en", label: "English", flag: "🇬🇧" },
+                { code: "lv", label: "Latviešu", flag: "🇱🇻" },
+                { code: "lt", label: "Lietuvių", flag: "🇱🇹" },
+                { code: "et", label: "Eesti", flag: "🇪🇪" },
+                { code: "es", label: "Español", flag: "🇪🇸" },
+                { code: "de", label: "Deutsch", flag: "🇩🇪" },
+              ].map((lang) => {
+                const selected = i18n.language?.startsWith(lang.code);
+                return (
+                  <MenuItem
+                    key={lang.code}
+                    selected={selected}
+                    onClick={() => {
+                      setAppLanguage(lang.code as any);
+                      handleCloseUserMenu();
+                    }}
+                  >
+                    <ListItemIcon sx={{ minWidth: 32 }}>
+                      <span style={{ fontSize: 16, lineHeight: 1 }}>
+                        {lang.flag}
+                      </span>
                     </ListItemIcon>
-                    <ListItemText
-                      primary={t("nav.language")}
-                      secondary={t("nav.languageHint")}
-                      primaryTypographyProps={{ fontWeight: 700 }}
-                      secondaryTypographyProps={{ variant: "caption" }}
-                    />
+                    <ListItemText primary={lang.label} />
+                    {selected ? <CheckIcon fontSize="small" /> : null}
                   </MenuItem>
-                  <Divider />
-                  {[
-                    { code: "en", label: "English", flag: "🇬🇧" },
-                    { code: "lv", label: "Latviešu", flag: "🇱🇻" },
-                    { code: "lt", label: "Lietuvių", flag: "🇱🇹" },
-                    { code: "et", label: "Eesti", flag: "🇪🇪" },
-                    { code: "es", label: "Español", flag: "🇪🇸" },
-                    { code: "de", label: "Deutsch", flag: "🇩🇪" },
-                  ].map((lang) => {
-                    const selected = i18n.language?.startsWith(lang.code);
-                    return (
-                      <MenuItem
-                        key={lang.code}
-                        selected={selected}
-                        onClick={() => {
-                          setAppLanguage(lang.code as any);
-                          handleCloseUserMenu();
-                        }}
-                      >
-                        <ListItemIcon sx={{ minWidth: 32 }}>
-                          <span style={{ fontSize: 16, lineHeight: 1 }}>{lang.flag}</span>
-                        </ListItemIcon>
-                        <ListItemText primary={lang.label} />
-                        {selected ? <CheckIcon fontSize="small" /> : null}
-                      </MenuItem>
-                    );
-                  })}
+                );
+              })}
 
+              {user && (
+                <Box>
                   <Divider sx={{ my: 0.5 }} />
                   <MenuItem
                     onClick={() => {
                       logout().then(() => {
                         dispatch(
                           showNotification({
-                            message: "Logged out successfully",
+                            message: t("nav.logout"),
                             severity: "info",
-                          })
+                          }),
                         );
                         navigate("/");
                       });
                       handleCloseUserMenu();
                     }}
                   >
+                    <ListItemIcon>
+                      <ExitToAppIcon fontSize="small" />
+                    </ListItemIcon>
                     <ListItemText primary={t("nav.logout")} />
                   </MenuItem>
-                </Menu>
-              </>
-            ) : (
-              <Button variant="outlined" onClick={() => navigate("/login")}>
-                {t("nav.login")}
-              </Button>
-            )}
+                </Box>
+              )}
+            </Menu>
           </Box>
         </Toolbar>
       </AppContainer>

@@ -2,6 +2,16 @@ import { collection, getDocs, getDoc, query, where, doc, updateDoc, increment, s
 import { db } from "~/firebase/fireStore";
 import type { CarListingDetailsJson, CarListingSummary } from "~/types/types";
 
+function normalizeCondition(cond: string): string {
+  const map: Record<string, string> = {
+    jauna: "new",
+    mazlietota: "slightly_used",
+    pirmas_iemaksas_auto: "first_payment",
+    lietota: "used",
+  };
+  return map[cond] || cond;
+}
+
 // Helper to convert Firestore document data to our Summary type
 export function mapListingToSummary(id: string, data: any): CarListingSummary {
   return {
@@ -11,18 +21,22 @@ export function mapListingToSummary(id: string, data: any): CarListingSummary {
     year: data.year || 0,
     mileage: data.mileage || 0,
     price: data.price || 0,
-    condition: data.condition || "used",
+    conditionTier: normalizeCondition(data.conditionTier || "used"),
     location: data.location || "",
     color: data.color || "",
     marketRange: data.marketRange || { min: 0, max: 0 },
     thumbnailUrl: data.images?.[0]?.url || data.thumbnailUrl || "",
     viewCount: data.viewCount || 0,
+    leadCount: typeof data.leadCount === "number" ? data.leadCount : 0,
     createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt,
     isOnSale: data.isOnSale || false,
     salePrice: data.salePrice,
+    status: data.status || "published",
     sellerId: data.sellerId || "",
     sellerName: data.seller?.name || "",
     isDealer: data.seller?.isDealer || false,
+    isSold: data.isSold || false,
+    soldAt: data.soldAt?.toDate ? data.soldAt.toDate().toISOString() : data.soldAt,
   } as CarListingSummary;
 }
 
@@ -36,8 +50,25 @@ export async function getAllListings(): Promise<CarListingSummary[]> {
   const results: CarListingSummary[] = [];
   snapshot.forEach(doc => {
     const data = doc.data();
-    if (data.deleted !== true) {
+    if (data.deleted !== true && data.isSold !== true) {
       results.push(mapListingToSummary(doc.id, data));
+    }
+  });
+  return results;
+}
+
+/**
+ * Fetch all listings (including sold) for analytics/stats.
+ * Filters out deleted listings.
+ */
+export async function getAllListingsForStats(): Promise<CarListingSummary[]> {
+  const listingsRef = collection(db, "listings");
+  const snapshot = await getDocs(listingsRef);
+  const results: CarListingSummary[] = [];
+  snapshot.forEach((d) => {
+    const data = d.data();
+    if (data.deleted !== true) {
+      results.push(mapListingToSummary(d.id, data));
     }
   });
   return results;
@@ -54,6 +85,16 @@ export async function getListingsByOwner(userId: string): Promise<CarListingSumm
   snapshot.forEach(doc => {
     const data = doc.data();
     if (!data.deleted) {
+      // Check if sold > 12 months ago
+      if (data.isSold && data.soldAt) {
+        const soldDateMs = data.soldAt.toDate ? data.soldAt.toDate().getTime() : new Date(data.soldAt).getTime();
+        const twelveMonthsMs = 12 * 30 * 24 * 60 * 60 * 1000;
+        if (Date.now() - soldDateMs > twelveMonthsMs) {
+          // Asynchronously flag as deleted for next time
+          deleteListingFromDb(doc.id).catch(console.error);
+          return; // Skip adding to results
+        }
+      }
       results.push(mapListingToSummary(doc.id, data));
     }
   });
@@ -65,6 +106,17 @@ export async function markAsSale(listingId: string, salePrice: number) {
   await updateDoc(listingRef, {
     isOnSale: true,
     salePrice
+  });
+}
+
+export async function markListingAsSold(listingId: string, soldPrice: number) {
+  const listingRef = doc(db, "listings", listingId);
+  await updateDoc(listingRef, {
+    isSold: true,
+    soldAt: serverTimestamp(),
+    soldPrice: soldPrice,
+    isOnSale: false,
+    salePrice: null
   });
 }
 
@@ -100,7 +152,9 @@ export async function getListingDetails(listingId: string): Promise<any | null> 
     return {
       ...data,
       id: snapshot.id,
+      conditionTier: normalizeCondition(data.conditionTier),
       createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt,
+      soldAt: data.soldAt?.toDate ? data.soldAt.toDate().toISOString() : data.soldAt,
     };
   }
   return null;

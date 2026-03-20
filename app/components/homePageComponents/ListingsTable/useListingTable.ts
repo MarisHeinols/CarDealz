@@ -5,7 +5,7 @@ export const defaultFilters: ListingsFiltersState  = {
   search: "",
   brand: "all",
   year: "all",
-  condition: "all",
+  conditionTier: "all",
   color: "all",
   priceFrom: "",
   priceTo: "",
@@ -21,7 +21,7 @@ export type SortKey =
   | "year"
   | "mileage"
   | "price"
-  | "condition"
+  | "conditionTier"
   | "color"
   | "location";
 
@@ -53,7 +53,7 @@ export function useListingsTable(
           l.model,
           l.year,
           l.color,
-          l.condition,
+          l.conditionTier,
           l.location,
         ]
           .join(" ")
@@ -73,8 +73,8 @@ export function useListingsTable(
         return false;
 
       if (
-        filters.condition !== "all" &&
-        l.condition !== filters.condition
+        filters.conditionTier !== "all" &&
+        l.conditionTier !== filters.conditionTier
       )
         return false;
 

@@ -23,8 +23,8 @@ export const filterListings = (
     if (filters.brand !== "all" && l.make !== filters.brand) return false;
     if (filters.year !== "all" && String(l.year) !== filters.year) return false;
     if (
-      filters.condition !== "all" &&
-      l.condition !== filters.condition
+      filters.conditionTier !== "all" &&
+      l.conditionTier !== filters.conditionTier
     )
       return false;
     if (

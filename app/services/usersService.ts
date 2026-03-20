@@ -8,6 +8,10 @@ export type UserProfileDoc = {
   role?: "individual" | "business";
   storeHandle?: string;
 
+  // business verification
+  dealerVerified?: boolean;
+  dealerVerificationStatus?: "pending" | "approved" | "rejected";
+
   // individual
   name?: string;
   surname?: string;

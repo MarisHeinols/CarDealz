@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { Box, CircularProgress, Typography } from "@mui/material";
 import { useAuth } from "~/hooks/userStore/useAuth";
 import { getStoreHandleForUid } from "~/services/storeHandleService";
+import { useTranslation } from "react-i18next";
 
 export function meta() {
   return [
@@ -12,6 +13,7 @@ export function meta() {
 }
 
 export default function NewUserStoreRoute() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(true);
@@ -47,7 +49,7 @@ export default function NewUserStoreRoute() {
   return (
     <Box display="flex" justifyContent="center" alignItems="center" p={6} flexDirection="column" gap={1.5}>
       <CircularProgress />
-      <Typography color="text.secondary">Opening your store…</Typography>
+      <Typography color="text.secondary">{t("about.store.opening")}</Typography>
     </Box>
   );
 }

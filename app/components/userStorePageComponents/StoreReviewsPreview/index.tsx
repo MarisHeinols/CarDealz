@@ -1,7 +1,6 @@
 import {
   Box,
   Typography,
-  Rating,
   Avatar,
   Stack,
   Button,
@@ -44,7 +43,6 @@ const StoreReviewsPreview = ({ reviews }: { reviews: any[] }) => {
 
                 <Box>
                   <Typography fontWeight={600}>{r.name}</Typography>
-                  <Rating value={r.rating} readOnly size="small" />
                   <Typography variant="body2" color="text.secondary">
                     {r.date}
                   </Typography>

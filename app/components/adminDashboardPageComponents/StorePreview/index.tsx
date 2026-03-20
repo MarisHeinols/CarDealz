@@ -17,7 +17,6 @@ import StoreListingsGrid from "~/components/userStorePageComponents/StoreListing
 import { useAppSelector } from "~/redux/hooks";
 import { auth } from "~/firebase/auth";
 import { onAuthStateChanged } from "firebase/auth";
-import reviewJson from "~/data/mockData/reviews.json";
 import { PreviewChrome } from "./PreviewChrome";
 import { PreviewReviews } from "./PreviewReviews";
 import { useEffect, useState } from "react";
@@ -146,7 +145,7 @@ const StorePreview = () => {
             <Pagination count={3} page={1} size="small" />
           </Box>
 
-          <PreviewReviews theme={theme} reviews={reviewJson as any[]} />
+          <PreviewReviews theme={theme} reviews={[]} />
         </Box>
       </Box>
     </Box>

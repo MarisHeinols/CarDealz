@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Grid,
   TextField,
@@ -14,11 +14,17 @@ import {
 } from "@mui/material";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
 import type { CarListingDetailsJson } from "~/types/types";
-import { CAR_MAKES, EXTERIOR_COLORS, INTERIOR_COLORS } from "~/constants/listingOptions";
+import {
+  CAR_MAKES,
+  CONDITION_TIERS,
+  EXTERIOR_COLORS,
+  INTERIOR_COLORS,
+} from "~/constants/listingOptions";
 import { COUNTRIES } from "~/constants/countries";
 import { parseLocation, buildLocation } from "~/utils/location";
 import { useCarModels } from "~/hooks/useCarModels";
 import { useCities } from "~/hooks/useCities";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   listing: CarListingDetailsJson;
@@ -26,20 +32,30 @@ interface Props {
 }
 
 export default function BasicInfoSection({ listing, setListing }: Props) {
+  const { t } = useTranslation();
   const { city, country } = parseLocation(listing.location || "");
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
 
-  // Makes (curated local list; no external API, no random/custom entries)
   const makes = CAR_MAKES as unknown as string[];
-
   const { models, loading: modelsLoading } = useCarModels(listing.make);
   const { cities, loading: citiesLoading } = useCities(country);
 
   const handleChange =
     (field: keyof CarListingDetailsJson) =>
-    (e: React.ChangeEvent<HTMLInputElement>) =>
-      setListing((prev) => ({ ...prev, [field]: e.target.value }));
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setListing((prev) => {
+        const payload = { ...prev, [field]: e.target.value };
+
+        // Parse year as number since AI estimation relies on the number
+        if (field === "year") {
+          const y = Number(e.target.value);
+          if (!isNaN(y)) payload.year = y;
+        }
+
+        return payload;
+      });
+    };
 
   const handleCityChange = (newCity: string) => {
     setListing((prev) => ({
@@ -57,7 +73,7 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
 
   const handleDetectLocation = () => {
     if (!navigator.geolocation) {
-      setGeoError("Geolocation is not supported by your browser.");
+      setGeoError(t("form.geolocationUnsupported"));
       return;
     }
     setGeoLoading(true);
@@ -68,7 +84,7 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
           const { latitude, longitude } = pos.coords;
           const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
-            { headers: { "Accept-Language": "en" } }
+            { headers: { "Accept-Language": "en" } },
           );
           const data = await res.json();
           const detectedCountry = data.address?.country || "";
@@ -83,20 +99,20 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
             location: buildLocation(detectedCity, detectedCountry),
           }));
         } catch {
-          setGeoError("Could not determine your location. Enter it manually.");
+          setGeoError(t("form.locationDetectFailed"));
         } finally {
           setGeoLoading(false);
         }
       },
       (err) => {
         if (err.code === err.TIMEOUT) {
-          setGeoError("Location request timed out. Enter it manually.");
+          setGeoError(t("form.locationTimeout"));
         } else {
-          setGeoError("Location access denied or failed. Enter it manually.");
+          setGeoError(t("form.locationDenied"));
         }
         setGeoLoading(false);
       },
-      { timeout: 10000 } // Add 10s timeout to prevent infinite spinning
+      { timeout: 10000 },
     );
   };
 
@@ -110,11 +126,7 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
             setListing((prev) => ({ ...prev, make: newValue, model: "" }))
           }
           renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Make"
-              fullWidth
-            />
+            <TextField {...params} label={t("form.make")} fullWidth />
           )}
         />
       </Grid>
@@ -130,7 +142,7 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
           renderInput={(params) => (
             <TextField
               {...params}
-              label={modelsLoading ? "Loading Models…" : "Model"}
+              label={modelsLoading ? t("form.loadingModels") : t("form.model")}
               fullWidth
               InputProps={{
                 ...params.InputProps,
@@ -149,7 +161,7 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
       </Grid>
       <Grid size={{ xs: 4 }}>
         <TextField
-          label="Year"
+          label={t("form.year")}
           type="number"
           fullWidth
           value={listing.year}
@@ -158,16 +170,36 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
       </Grid>
       <Grid size={{ xs: 4 }}>
         <TextField
-          label="Mileage"
+          label={t("form.mileage")}
           type="number"
           fullWidth
           value={listing.mileage}
           onChange={handleChange("mileage")}
         />
       </Grid>
+      <Grid size={{ xs: 4 }}>
+        <TextField
+          select
+          label={t("form.condition")}
+          fullWidth
+          value={listing.conditionTier}
+          onChange={(e) =>
+            setListing((prev) => ({
+              ...prev,
+              conditionTier: e.target.value as any,
+            }))
+          }
+        >
+          {CONDITION_TIERS.map((c) => (
+            <MenuItem key={c.value} value={c.value}>
+              {t(`carValues.condition_${c.value}`, { defaultValue: c.label })}
+            </MenuItem>
+          ))}
+        </TextField>
+      </Grid>
       <Grid size={{ xs: 3 }}>
         <TextField
-          label="VIN"
+          label={t("form.vin")}
           fullWidth
           value={listing.vin || ""}
           onChange={handleChange("vin")}
@@ -175,7 +207,7 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
       </Grid>
       <Grid size={{ xs: 3 }}>
         <TextField
-          label="TA Expiry"
+          label={t("form.taExpiry")}
           type="month"
           fullWidth
           value={listing.ta || ""}
@@ -186,21 +218,40 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
       </Grid>
       <Grid size={{ xs: 6 }}>
         <TextField
-          label="Plate Number"
+          label={t("form.plateNumber")}
           fullWidth
           value={listing.plateNumber || ""}
           onChange={handleChange("plateNumber")}
         />
       </Grid>
 
+      <Grid size={{ xs: 6 }}>
+        <TextField
+          select
+          label={t("form.status")}
+          fullWidth
+          value={listing.status}
+          onChange={(e) =>
+            setListing((prev) => ({
+              ...prev,
+              status: e.target.value as any,
+            }))
+          }
+        >
+          <MenuItem value="draft">{t("form.status_draft")}</MenuItem>
+          <MenuItem value="published">{t("form.status_published")}</MenuItem>
+          <MenuItem value="closed">{t("form.status_closed")}</MenuItem>
+        </TextField>
+      </Grid>
+
       {/* Location: Country + City + Detect */}
       <Grid size={{ xs: 12 }}>
         <Stack direction="row" spacing={1} alignItems="flex-start">
           <FormControl sx={{ minWidth: 200, flexShrink: 0 }}>
-            <InputLabel id="country-label">Country</InputLabel>
+            <InputLabel id="country-label">{t("form.country")}</InputLabel>
             <Select
               labelId="country-label"
-              label="Country"
+              label={t("form.country")}
               value={country}
               onChange={(e) => handleCountryChange(e.target.value)}
             >
@@ -222,8 +273,8 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
             renderInput={(params) => (
               <TextField
                 {...params}
-                label={citiesLoading ? "Loading Cities…" : "City / Region"}
-                placeholder="e.g. Los Angeles"
+                label={citiesLoading ? t("form.loadingCities") : t("form.city")}
+                placeholder={t("form.cityPlaceholder")}
                 InputProps={{
                   ...params.InputProps,
                   endAdornment: (
@@ -248,7 +299,7 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
             }
             sx={{ height: 56, whiteSpace: "nowrap" }}
           >
-            {geoLoading ? "Detecting…" : "My Location"}
+            {geoLoading ? t("form.detecting") : t("form.myLocation")}
           </Button>
         </Stack>
         {geoError && (
@@ -264,11 +315,11 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
 
       <Grid size={{ xs: 6 }}>
         <FormControl fullWidth>
-          <InputLabel id="color-label">Exterior Color</InputLabel>
+          <InputLabel id="color-label">{t("form.exteriorColor")}</InputLabel>
           <Select
             labelId="color-label"
             id="color-select"
-            label="Exterior Color"
+            label={t("form.exteriorColor")}
             value={listing.color}
             onChange={(e) =>
               setListing((prev) => ({
@@ -279,7 +330,7 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
           >
             {EXTERIOR_COLORS.map((color) => (
               <MenuItem key={color} value={color}>
-                {color}
+                {t(`carValues.color_${color}`, { defaultValue: color })}
               </MenuItem>
             ))}
           </Select>
@@ -287,11 +338,13 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
       </Grid>
       <Grid size={{ xs: 6 }}>
         <FormControl fullWidth>
-          <InputLabel id="interior-color-label">Interior Color</InputLabel>
+          <InputLabel id="interior-color-label">
+            {t("form.interiorColor")}
+          </InputLabel>
           <Select
             labelId="interior-color-label"
             id="interior-color-select"
-            label="Interior Color"
+            label={t("form.interiorColor")}
             value={listing.interiorColor}
             onChange={(e) =>
               setListing((prev) => ({
@@ -302,7 +355,7 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
           >
             {INTERIOR_COLORS.map((color) => (
               <MenuItem key={color} value={color}>
-                {color}
+                {t(`carValues.color_${color}`, { defaultValue: color })}
               </MenuItem>
             ))}
           </Select>

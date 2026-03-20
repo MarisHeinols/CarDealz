@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -21,7 +21,7 @@ export const defaultFilters: ListingsFiltersState = {
   search: "",
   brand: "all",
   year: "all",
-  condition: "all",
+  conditionTier: "all",
   color: "all",
   priceFrom: "",
   priceTo: "",
@@ -29,6 +29,7 @@ export const defaultFilters: ListingsFiltersState = {
   mileageTo: "",
   country: "all",
   city: "",
+  model: "",
 };
 
 interface Props {
@@ -38,29 +39,38 @@ interface Props {
 }
 
 const YEARS = Array.from({ length: 30 }, (_, i) =>
-  String(new Date().getFullYear() - i)
+  String(new Date().getFullYear() - i),
 );
+
+const DISPLAY_COLORS = [
+  "Black",
+  "White",
+  "Silver",
+  "Gray",
+  "Red",
+  "Blue",
+  "Green",
+  "Brown",
+  "Beige",
+  "Gold",
+  "Orange",
+  "Yellow",
+  "Purple",
+];
 
 const ListingsFilters = ({ filters, onChange, onReset }: Props) => {
   const { t } = useTranslation();
   const set = (key: keyof ListingsFiltersState, value: string) =>
     onChange({ ...filters, [key]: value });
 
-  // Makes (curated local list; no external API, no random/custom entries)
   const makes = CAR_MAKES as unknown as string[];
 
   const { models, loading: modelsLoading } = useCarModels(
-    !filters.brand || filters.brand === "all" ? "" : filters.brand
+    !filters.brand || filters.brand === "all" ? "" : filters.brand,
   );
   const { cities, loading: citiesLoading } = useCities(
-    !filters.country || filters.country === "all" ? "" : filters.country
+    !filters.country || filters.country === "all" ? "" : filters.country,
   );
-
-  // Note: the URL uses `searchParams.get("model")` but the state object may not have "model" depending on your types. 
-  // Standard ListingsFiltersState only has `brand` built-in. Assuming standard filters state. If model is needed in future, 
-  // you'd add it to ListingsFiltersState. For now we just implement the city Autocomplete and the brand driven models.
-
-  // models + cities are now handled by shared hooks
 
   return (
     <Box
@@ -94,45 +104,38 @@ const ListingsFilters = ({ filters, onChange, onReset }: Props) => {
               set("brand", newValue || "all");
             }}
             renderInput={(params) => (
-              <TextField
-                {...params}
-                label={t("filters.brand")}
-                placeholder={t("filters.allBrands")}
-                fullWidth
-              />
+              <TextField {...params} label={t("filters.brand")} fullWidth />
             )}
           />
         </Grid>
 
-        {/* Dynamic Model Dropdown (updates the general search text since model isn't an explicit filter field in default setup, or could be used locally) */}
-        {/* To integrate tightly, we just allow selecting a model which appends/sets the search string, or we can just leave it as an informational autocomplete */}
+        {/* Model */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-           <Autocomplete
-            freeSolo
+          <Autocomplete
             options={models}
+            disabled={!filters.brand || filters.brand === "all"}
             loading={modelsLoading}
-            disabled={filters.brand === "all"}
-            value={filters.search.split(" ").find(s => models.includes(s)) || ""}
-            onInputChange={(_, newValue) => {
-              // A simple approach: if user selects a model, we ensure it's in the search box since that handles general queries
-              if (newValue && !filters.search.includes(newValue)) {
-                set("search", `${filters.search} ${newValue}`.trim());
-              }
-            }}
+            value={filters.model || ""}
+            onInputChange={(_, newValue) => set("model", newValue)}
             renderInput={(params) => (
               <TextField
                 {...params}
-                label={modelsLoading ? "Loading Models…" : "Model"}
-                placeholder={filters.brand === "all" ? "Select a brand first" : "Search model"}
+                label={t("filters.model")}
+                placeholder={
+                  !filters.brand || filters.brand === "all"
+                    ? t("filters.selectBrandFirst")
+                    : t("filters.searchModel")
+                }
+                fullWidth
                 InputProps={{
                   ...params.InputProps,
                   endAdornment: (
-                    <React.Fragment>
+                    <>
                       {modelsLoading ? (
                         <CircularProgress color="inherit" size={20} />
                       ) : null}
                       {params.InputProps.endAdornment}
-                    </React.Fragment>
+                    </>
                   ),
                 }}
               />
@@ -145,14 +148,11 @@ const ListingsFilters = ({ filters, onChange, onReset }: Props) => {
           <TextField
             select
             fullWidth
-            label="Country"
+            label={t("filters.country")}
             value={filters.country}
-            onChange={(e) => {
-              set("country", e.target.value);
-              set("city", ""); // Reset city when country changes
-            }}
+            onChange={(e) => set("country", e.target.value)}
           >
-            <MenuItem value="all">All Countries</MenuItem>
+            <MenuItem value="all">{t("filters.allCountries")}</MenuItem>
             {COUNTRIES.map((c) => (
               <MenuItem key={c} value={c}>
                 {c}
@@ -161,29 +161,33 @@ const ListingsFilters = ({ filters, onChange, onReset }: Props) => {
           </TextField>
         </Grid>
 
-        {/* Dynamic City */}
+        {/* City */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Autocomplete
-            freeSolo
             options={cities}
+            disabled={!filters.country || filters.country === "all"}
             loading={citiesLoading}
-            disabled={filters.country === "all"}
-            value={filters.city}
+            value={filters.city || ""}
             onInputChange={(_, newValue) => set("city", newValue)}
             renderInput={(params) => (
               <TextField
                 {...params}
-                label={citiesLoading ? "Loading Cities…" : "City / Region"}
-                placeholder={filters.country === "all" ? "Select a country first" : "Search city"}
+                label={t("filters.city")}
+                placeholder={
+                  !filters.country || filters.country === "all"
+                    ? t("filters.selectCountryFirst")
+                    : t("filters.searchCity")
+                }
+                fullWidth
                 InputProps={{
                   ...params.InputProps,
                   endAdornment: (
-                    <React.Fragment>
+                    <>
                       {citiesLoading ? (
                         <CircularProgress color="inherit" size={20} />
                       ) : null}
                       {params.InputProps.endAdornment}
-                    </React.Fragment>
+                    </>
                   ),
                 }}
               />
@@ -196,11 +200,11 @@ const ListingsFilters = ({ filters, onChange, onReset }: Props) => {
           <TextField
             select
             fullWidth
-            label="Year"
+            label={t("filters.year")}
             value={filters.year}
             onChange={(e) => set("year", e.target.value)}
           >
-            <MenuItem value="all">All Years</MenuItem>
+            <MenuItem value="all">{t("filters.allYears")}</MenuItem>
             {YEARS.map((y) => (
               <MenuItem key={y} value={y}>
                 {y}
@@ -214,14 +218,14 @@ const ListingsFilters = ({ filters, onChange, onReset }: Props) => {
           <TextField
             select
             fullWidth
-            label="Condition"
-            value={filters.condition}
-            onChange={(e) => set("condition", e.target.value)}
+            label={t("filters.condition")}
+            value={filters.conditionTier}
+            onChange={(e) => set("conditionTier", e.target.value)}
           >
-            <MenuItem value="all">All</MenuItem>
-            {["new", "certified", "used"].map((c) => (
+            <MenuItem value="all">{t("filters.allConditions")}</MenuItem>
+            {["new", "slightly_used", "used", "first_payment"].map((c) => (
               <MenuItem key={c} value={c}>
-                {c}
+                {t(`carValues.condition_${c}`)}
               </MenuItem>
             ))}
           </TextField>
@@ -229,41 +233,31 @@ const ListingsFilters = ({ filters, onChange, onReset }: Props) => {
 
         {/* Color */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <TextField
-            select
-            fullWidth
-            label="Color"
-            value={filters.color}
-            onChange={(e) => set("color", e.target.value)}
-          >
-            <MenuItem value="all">All Colors</MenuItem>
-            {["White", "Black", "Silver", "Blue", "Red", "Gray", "Green", "Orange", "Yellow"].map((c) => (
-              <MenuItem key={c} value={c}>
-                {c}
-              </MenuItem>
-            ))}
-          </TextField>
+          <Autocomplete
+            options={DISPLAY_COLORS}
+            value={filters.color === "all" ? "" : filters.color}
+            getOptionLabel={(option) => option ? t(`carValues.color_${option}`) : ""}
+            onChange={(_, newValue) => set("color", newValue || "all")}
+            renderInput={(params) => (
+              <TextField {...params} label={t("filters.color")} fullWidth />
+            )}
+          />
         </Grid>
 
         {/* Price Range */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Stack direction="row" spacing={2} alignItems="center">
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Stack direction="row" spacing={1}>
             <TextField
               fullWidth
-              label="Min Price"
+              label={t("filters.minPrice")}
               type="number"
-              placeholder="$"
               value={filters.priceFrom}
               onChange={(e) => set("priceFrom", e.target.value)}
             />
-            <Typography color="text.secondary" fontWeight={500}>
-              —
-            </Typography>
             <TextField
               fullWidth
-              label="Max Price"
+              label={t("filters.maxPrice")}
               type="number"
-              placeholder="$"
               value={filters.priceTo}
               onChange={(e) => set("priceTo", e.target.value)}
             />
@@ -271,34 +265,41 @@ const ListingsFilters = ({ filters, onChange, onReset }: Props) => {
         </Grid>
 
         {/* Mileage Range */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Stack direction="row" spacing={2} alignItems="center">
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Stack direction="row" spacing={1}>
             <TextField
               fullWidth
-              label="Min Mileage"
+              label={t("filters.minMileage")}
               type="number"
               value={filters.mileageFrom}
               onChange={(e) => set("mileageFrom", e.target.value)}
             />
-            <Typography color="text.secondary" fontWeight={500}>
-              —
-            </Typography>
             <TextField
               fullWidth
-              label="Max Mileage"
+              label={t("filters.maxMileage")}
               type="number"
               value={filters.mileageTo}
               onChange={(e) => set("mileageTo", e.target.value)}
             />
           </Stack>
         </Grid>
-      </Grid>
 
-      <Box display="flex" justifyContent="flex-end" mt={2}>
-        <Button variant="outlined" onClick={onReset}>
-          Reset Filters
-        </Button>
-      </Box>
+        {/* Reset */}
+        <Grid
+          size={{ xs: 12, sm: 6, md: 3 }}
+          display="flex"
+          alignItems="center"
+        >
+          <Button
+            variant="outlined"
+            onClick={onReset}
+            fullWidth
+            sx={{ height: "56px" }}
+          >
+            {t("filters.resetFilters")}
+          </Button>
+        </Grid>
+      </Grid>
     </Box>
   );
 };
