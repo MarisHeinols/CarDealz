@@ -257,7 +257,7 @@ exports.onLeadCreated = (0, firestore_1.onDocumentCreated)({
             ${buyerEmail ? `<p><strong>Buyer Email:</strong> <a href="mailto:${buyerEmail}">${buyerEmail}</a></p>` : ""}
           </div>
 
-          <p>You can view all details and manage this lead in your <a href="https://balticauto.com/admin" style="color: #6a1b9a; font-weight: bold; text-decoration: none;">Dealer Dashboard</a>.</p>
+          <p>You can view all details and manage this lead in your <a href="https://baltic-auto.net/admin" style="color: #6a1b9a; font-weight: bold; text-decoration: none;">Dealer Dashboard</a>.</p>
           
           <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"/>
           <p style="font-size: 12px; color: #999; text-align: center;">Sent by BalticAuto Marketplace</p>
