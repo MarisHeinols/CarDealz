@@ -47,6 +47,7 @@ export default function ContactDealerDialog({
   const [preferred, setPreferred] =
     useState<LeadPreferredContactMethod>("email");
   const [message, setMessage] = useState("");
+  const [honeypot, setHoneypot] = useState(""); // Bot-trap field
 
   // Pre-fill user data if logged in
   React.useEffect(() => {
@@ -75,6 +76,14 @@ export default function ContactDealerDialog({
 
   const submit = async () => {
     if (!canSubmit) return;
+
+    // Honeypot check: If the bot-trap field is filled, silently ignore
+    if (honeypot) {
+      console.warn("Spam bot detected via honeypot.");
+      onClose();
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
     try {
@@ -199,6 +208,18 @@ export default function ContactDealerDialog({
                 "Your contact details and message will be sent to the dealer by email notification and shown in their dashboard.",
             })}
           </Alert>
+
+          {/* Honeypot field - Visually hidden from users but seen by bots */}
+          <div style={{ opacity: 0, position: "absolute", top: 0, left: 0, height: 0, width: 0, zIndex: -1, overflow: "hidden" }}>
+             <input
+               tabIndex={-1}
+               type="text"
+               name="website"
+               value={honeypot}
+               onChange={(e) => setHoneypot(e.target.value)}
+               autoComplete="off"
+             />
+          </div>
         </Stack>
       </DialogContent>
 

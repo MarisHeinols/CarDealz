@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /login
+Disallow: /register
+Disallow: /profile
+
+Sitemap: https://baltic-auto.net/sitemap.xml
