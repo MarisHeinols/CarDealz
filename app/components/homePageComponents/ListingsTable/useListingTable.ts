@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
-import type { CarListingSummary, ListingsFiltersState  } from "~/types/types";
+import type { CarListingSummary, ListingsFiltersState } from "~/types/types";
 
-export const defaultFilters: ListingsFiltersState  = {
+export const defaultFilters: ListingsFiltersState = {
   search: "",
   brand: "all",
   year: "all",
@@ -13,6 +13,7 @@ export const defaultFilters: ListingsFiltersState  = {
   mileageTo: "",
   country: "all",
   city: "",
+  model: ""
 };
 
 export type SortKey =
@@ -31,7 +32,7 @@ const PAGE_SIZE = 10;
 
 export function useListingsTable(
   data: CarListingSummary[],
-  filters: ListingsFiltersState 
+  filters: ListingsFiltersState
 ) {
   const [sortKey, setSortKey] = useState<SortKey>("year");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -40,31 +41,31 @@ export function useListingsTable(
   const filtered = useMemo(() => {
     return data.filter((l) => {
       // 🔍 search
-    const searchTokens = filters.search
-      .toLowerCase()
-      .trim()
-      .split(/\s+/);
+      const searchTokens = filters.search
+        .toLowerCase()
+        .trim()
+        .split(/\s+/);
 
-    const searchMatch =
-      searchTokens.length === 0 ||
-      searchTokens.every((token) =>
-        [
-          l.make,
-          l.model,
-          l.year,
-          l.color,
-          l.conditionTier,
-          l.location,
-        ]
-          .join(" ")
-          .toLowerCase()
-          .includes(token)
-      );
+      const searchMatch =
+        searchTokens.length === 0 ||
+        searchTokens.every((token) =>
+          [
+            l.make,
+            l.model,
+            l.year,
+            l.color,
+            l.conditionTier,
+            l.location,
+          ]
+            .join(" ")
+            .toLowerCase()
+            .includes(token)
+        );
       if (!searchMatch) return false;
 
       if (
-        filters.brand && 
-        filters.brand.toLowerCase() !== "all" && 
+        filters.brand &&
+        filters.brand.toLowerCase() !== "all" &&
         l.make.toLowerCase() !== filters.brand.toLowerCase()
       )
         return false;
