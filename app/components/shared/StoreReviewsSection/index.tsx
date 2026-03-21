@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Alert,
   Box,
@@ -38,6 +39,7 @@ export default function StoreReviewsSection({
   onStatsChange,
   useStoreTheme = false,
 }: Props) {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const storefront = useStorefrontSettings();
   const theme = useStoreTheme ? storefront?.theme : null;
@@ -91,11 +93,11 @@ export default function StoreReviewsSection({
   const handleSave = async () => {
     if (!viewerUid) return;
     if (!mayAttemptReview) return;
-    const t = String(text || "").trim();
-    if (t.length < 3) {
+    const txt = String(text || "").trim();
+    if (txt.length < 3) {
       dispatch(
         showNotification({
-          message: "Please write a short review.",
+          message: t("reviews.write_short"),
           severity: "warning",
         }),
       );
@@ -108,7 +110,7 @@ export default function StoreReviewsSection({
       if (viewerProfile?.role && viewerProfile.role !== "individual") {
         dispatch(
           showNotification({
-            message: "Only individual accounts can leave reviews.",
+            message: t("reviews.only_individuals"),
             severity: "warning",
           }),
         );
@@ -124,12 +126,12 @@ export default function StoreReviewsSection({
         storeUid,
         reviewerUid: viewerUid,
         reviewerName,
-        text: t,
+        text: txt,
       });
 
       dispatch(
         showNotification({
-          message: myReview ? "Review updated!" : "Review submitted!",
+          message: myReview ? t("reviews.submitted") : t("reviews.submitted"),
           severity: "success",
         }),
       );
@@ -143,7 +145,7 @@ export default function StoreReviewsSection({
     } catch (e: any) {
       dispatch(
         showNotification({
-          message: e?.message || "Failed to save review",
+          message: e?.message || t("common.error"),
           severity: "error",
         }),
       );
@@ -167,7 +169,7 @@ export default function StoreReviewsSection({
             color: theme ? theme.heading || onCard.text : undefined,
           }}
         >
-          Reviews
+          {t("reviews.title")}
         </Typography>
         <Stack direction="row" spacing={1} alignItems="center">
           <Typography
@@ -176,7 +178,7 @@ export default function StoreReviewsSection({
               color: theme ? onCard.subtext : undefined,
             }}
           >
-            {reviews.length ? `(${reviews.length})` : "No reviews yet"}
+            {reviews.length ? `(${reviews.length})` : t("reviews.none")}
           </Typography>
         </Stack>
       </Stack>
@@ -187,19 +189,19 @@ export default function StoreReviewsSection({
 
       {!viewerUid ? (
         <Alert severity="info" sx={{ mb: 2 }}>
-          Log in to leave a review.
+          {t("reviews.login_required")}
         </Alert>
       ) : viewerUid === ownerUid ? (
         <Alert severity="info" sx={{ mb: 2 }}>
-          You can’t review your own page.
+          {t("reviews.own_page")}
         </Alert>
       ) : myReview ? (
         <Alert severity="success" sx={{ mb: 2 }}>
-          Thanks! Your review has been submitted.
+          {t("reviews.submitted")}
         </Alert>
       ) : viewerRole === "business" ? (
         <Alert severity="warning" sx={{ mb: 2 }}>
-          Only individual accounts can leave reviews.
+          {t("reviews.only_individuals")}
         </Alert>
       ) : null}
 
@@ -214,16 +216,16 @@ export default function StoreReviewsSection({
         >
           <CardContent>
             <Typography fontWeight={700} sx={{ mb: 1 }}>
-              Leave a review
+              {t("reviews.leave")}
             </Typography>
             <Stack spacing={1.5}>
               <TextField
-                label="Review"
+                label={t("reviews.label")}
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 multiline
                 minRows={3}
-                placeholder="Share your experience…"
+                placeholder={t("reviews.placeholder")}
                 sx={{
                   "& .MuiInputBase-root": {
                     bgcolor: theme
@@ -268,10 +270,10 @@ export default function StoreReviewsSection({
                   }
                 >
                   {saving
-                    ? "Saving…"
+                    ? t("reviews.saving")
                     : myReview
-                      ? "Update review"
-                      : "Submit review"}
+                      ? t("reviews.update")
+                      : t("reviews.submit")}
                 </Button>
               </Box>
             </Stack>

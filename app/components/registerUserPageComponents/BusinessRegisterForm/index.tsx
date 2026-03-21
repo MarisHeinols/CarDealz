@@ -61,7 +61,7 @@ const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
     if (!navigator.geolocation) {
       dispatch(
         showNotification({
-          message: "Geolocation is not supported by your browser.",
+          message: t("common.geolocationNotSupported", "Geolocation is not supported by your browser."),
           severity: "error",
         }),
       );
@@ -94,7 +94,7 @@ const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
         } catch {
           dispatch(
             showNotification({
-              message: "Could not determine your location.",
+              message: t("common.locationError", "Could not determine your location."),
               severity: "error",
             }),
           );
@@ -105,7 +105,7 @@ const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
       () => {
         dispatch(
           showNotification({
-            message: "Location access denied or failed.",
+            message: t("common.locationDenied", "Location access denied or failed."),
             severity: "error",
           }),
         );
@@ -119,7 +119,7 @@ const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
     if (!formData.storeName.trim()) {
       dispatch(
         showNotification({
-          message: "Business name is required.",
+          message: t("auth.businessNameRequired"),
           severity: "error",
         }),
       );
@@ -128,7 +128,7 @@ const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
     if (!formData.ownerName.trim() || !formData.ownerSurname.trim()) {
       dispatch(
         showNotification({
-          message: "Owner first name and surname are required.",
+          message: t("auth.ownerFieldsRequired"),
           severity: "error",
         }),
       );
@@ -139,7 +139,7 @@ const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
       if (!formData.ownerEmail.trim()) {
         dispatch(
           showNotification({
-            message: "Owner email is required.",
+            message: t("auth.emailRequired"),
             severity: "error",
           }),
         );
@@ -148,7 +148,7 @@ const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
       if (formData.password !== formData.confirmPassword) {
         dispatch(
           showNotification({
-            message: "Passwords do not match.",
+            message: t("auth.passwordsDontMatch"),
             severity: "error",
           }),
         );
@@ -159,7 +159,7 @@ const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
     if (!formData.acceptedTerms) {
       dispatch(
         showNotification({
-          message: t("auth.mustAcceptTerms", "You must accept the Terms of Service and Privacy Policy."),
+          message: t("auth.mustAcceptTerms"),
           severity: "error",
         }),
       );
@@ -179,8 +179,7 @@ const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
         );
         dispatch(
           showNotification({
-            message:
-              "Business profile created. Please verify your phone number.",
+            message: t("auth.profileCreated"),
             severity: "success",
           }),
         );
@@ -207,8 +206,7 @@ const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
 
       dispatch(
         showNotification({
-          message:
-            "Account created. Check your email to verify it, then verify your phone.",
+          message: t("auth.accountCreated"),
           severity: "success",
         }),
       );
@@ -248,16 +246,16 @@ const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
   return (
     <Box component="form" p={2} sx={{ height: "auto" }}>
       <Grid container spacing={2}>
-        {textField("ownerName", "Owner First Name")}
-        {textField("ownerSurname", "Owner Surname")}
-        {textField("ownerEmail", "Owner Email", "email")}
-        {textField("ownerPhone", "Owner Phone")}
-        {textField("password", "Password", "password")}
-        {textField("confirmPassword", "Confirm Password", "password")}
-        {textField("storeName", "Store / Business Name")}
-        {textField("businessEmail", "Business Email", "email")}
-        {textField("businessPhone", "Business Phone")}
-        {textField("address", "Address")}
+        {textField("ownerName", t("auth.firstName"))}
+        {textField("ownerSurname", t("auth.surname"))}
+        {textField("ownerEmail", t("auth.email"), "email")}
+        {textField("ownerPhone", t("auth.phone"))}
+        {textField("password", t("auth.password"), "password")}
+        {textField("confirmPassword", t("auth.confirmPassword"), "password")}
+        {textField("storeName", t("auth.businessName"))}
+        {textField("businessEmail", t("auth.businessEmail"), "email")}
+        {textField("businessPhone", t("auth.businessPhone"))}
+        {textField("address", t("auth.address"))}
 
         {/* Location (searchable dropdowns + optional precise coords) */}
         <Grid size={{ xs: 12 }}>
@@ -277,7 +275,7 @@ const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
                 }))
               }
               renderInput={(params) => (
-                <TextField {...params} label="Country" fullWidth />
+                <TextField {...params} label={t("auth.country")} fullWidth />
               )}
               sx={{ flex: 1 }}
             />
@@ -292,7 +290,7 @@ const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label={citiesLoading ? "Loading Cities…" : "City"}
+                  label={citiesLoading ? t("common.loading") : t("auth.city")}
                   fullWidth
                   InputProps={{
                     ...params.InputProps,
@@ -319,13 +317,13 @@ const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
               disabled={geoLoading}
               sx={{ height: 56, whiteSpace: "nowrap" }}
             >
-              {geoLoading ? "Detecting…" : "Use my location"}
+              {geoLoading ? t("common.loading") : t("common.useMyLocation", "Use my location")}
             </Button>
           </Stack>
         </Grid>
 
-        {textField("lat", "Latitude (optional)")}
-        {textField("lng", "Longitude (optional)")}
+        {textField("lat", t("auth.lat"))}
+        {textField("lng", t("auth.lng"))}
       </Grid>
 
       <FormControlLabel
@@ -339,13 +337,13 @@ const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
         }
         label={
           <Box component="span">
-            {t("auth.acceptTermsPart1", "I agree to the")}{" "}
+            {t("auth.acceptTermsPart1")}{" "}
             <Link component={RouterLink} to="/terms-of-service">
-              {t("footer.terms", "Terms of Service")}
+              {t("footer.terms")}
             </Link>{" "}
-            {t("auth.acceptTermsPart2", "and")}{" "}
+            {t("auth.acceptTermsPart2")}{" "}
             <Link component={RouterLink} to="/privacy-policy">
-              {t("footer.privacy", "Privacy Policy")}
+              {t("footer.privacy")}
             </Link>
           </Box>
         }
@@ -359,7 +357,7 @@ const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
         onClick={handleRegister}
         disabled={isLoading}
       >
-        {isLoading ? "Registering…" : "Register Business"}
+        {isLoading ? t("auth.registering") : t("auth.registerBusiness")}
       </Button>
     </Box>
   );

@@ -1,4 +1,4 @@
-// src/components/admin/store/settings/AppearanceSettings.tsx
+import { useTranslation } from "react-i18next";
 import {
   Box,
   TextField,
@@ -51,6 +51,7 @@ const ColorField = ({
 };
 
 const AppearanceSettings = () => {
+  const { t } = useTranslation();
   const theme = useSelector((s: RootState) => s.storeSettings.theme);
 
   const dispatch = useDispatch();
@@ -62,44 +63,44 @@ const AppearanceSettings = () => {
   return (
     <Box>
       <Typography variant="body1" sx={{ mb: 2 }}>
-        Customize the colors and layout of your store page.
+        {t("dashboard.settings.appearance.desc")}
       </Typography>
 
       <TextField
         select
-        label="Design Layout"
+        label={t("dashboard.settings.appearance.layoutTitle")}
         fullWidth
         value={theme.layout || "classic"}
         onChange={(e) => handleChange("layout", e.target.value)}
         sx={{ mb: 3 }}
       >
-        <MenuItem value="classic">Classic</MenuItem>
-        <MenuItem value="modern">Modern</MenuItem>
-        <MenuItem value="minimal">Minimal</MenuItem>
+        <MenuItem value="classic">{t("dashboard.settings.appearance.layoutClassic")}</MenuItem>
+        <MenuItem value="modern">{t("dashboard.settings.appearance.layoutModern")}</MenuItem>
+        <MenuItem value="minimal">{t("dashboard.settings.appearance.layoutMinimal")}</MenuItem>
       </TextField>
 
       <ColorField
-        label="Primary"
+        label={t("dashboard.settings.appearance.colorPrimary")}
         value={theme.primary}
         onChange={(v) => handleChange("primary", v)}
       />
       <ColorField
-        label="Secondary"
+        label={t("dashboard.settings.appearance.colorSecondary")}
         value={theme.secondary}
         onChange={(v) => handleChange("secondary", v)}
       />
       <ColorField
-        label="Accent"
+        label={t("dashboard.settings.appearance.colorAccent")}
         value={theme.accent}
         onChange={(v) => handleChange("accent", v)}
       />
       <ColorField
-        label="Heading"
+        label={t("dashboard.settings.appearance.colorHeading")}
         value={theme.heading}
         onChange={(v) => handleChange("heading", v)}
       />
       <ColorField
-        label="Background"
+        label={t("dashboard.settings.appearance.colorBg")}
         value={theme.background}
         onChange={(v) => handleChange("background", v)}
       />
@@ -112,7 +113,7 @@ const AppearanceSettings = () => {
             }}
           />
         }
-        label="Light text"
+        label={t("dashboard.settings.appearance.lightText")}
       />
     </Box>
   );

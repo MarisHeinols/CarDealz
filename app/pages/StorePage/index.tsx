@@ -1,5 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import { Box, Container, LinearProgress, Pagination, Typography } from "@mui/material";
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  Container,
+  LinearProgress,
+  Pagination,
+  Typography,
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useAppDispatch } from "~/redux/hooks";
 import { loadStoreSettingsFromDb } from "~/services/storeSettingsService";
 import { getStoreHandleForUid, resolveStoreUidByHandle } from "~/services/storeHandleService";
@@ -78,23 +88,28 @@ function IndividualProfileListings({
       {refreshing ? <LinearProgress sx={{ mb: 2 }} /> : null}
       {isLoading ? <LinearProgress sx={{ mb: 2 }} /> : null}
 
-      <Typography variant="h5" fontWeight={800} sx={{ mb: 2 }}>
+      <Typography variant="h5" fontWeight={800} sx={{ mb: 3 }}>
         {title}
       </Typography>
 
-      {canManage ? (
-        <ListingsFilters
-          filters={filters}
-          onChange={(f) => {
-            setFilters(f);
-            table.setPage(1);
-          }}
-          onReset={() => {
-            setFilters(defaultFilters);
-            table.setPage(1);
-          }}
-        />
-      ) : null}
+      <Accordion defaultExpanded={false} variant="outlined" sx={{ mb: 3, borderRadius: '8px !important' }}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography fontWeight={600}>{t("store.search_and_filter")}</Typography>
+        </AccordionSummary>
+        <AccordionDetails sx={{ p: 0 }}>
+          <ListingsFilters
+            filters={filters}
+            onChange={(f) => {
+              setFilters(f);
+              table.setPage(1);
+            }}
+            onReset={() => {
+              setFilters(defaultFilters);
+              table.setPage(1);
+            }}
+          />
+        </AccordionDetails>
+      </Accordion>
 
       <ListingsTable
         rows={table.rows}
@@ -251,6 +266,10 @@ export default function StorePage({ handle }: { handle: string }) {
     return { listingsCount, viewsCount };
   }, [owner.listings]);
 
+  // Business storefront filtering
+  const [filters, setFilters] = useState<ListingsFiltersState>(defaultFilters);
+  const table = useListingsTable(owner.listings, filters);
+
   if (notFound) {
     return (
       <Container maxWidth="md" sx={{ py: 6 }}>
@@ -342,8 +361,57 @@ export default function StorePage({ handle }: { handle: string }) {
             <StoreMap />
           </Box>
 
-          <Box sx={{ mt: 3 }}>
-            <StoreListingsGrid listings={owner.listings} isOwner={isOwner} />
+          <Box sx={{ mt: 4 }}>
+            <Accordion 
+              defaultExpanded={false} 
+              variant="outlined"
+              sx={{ 
+                mb: 3, 
+                bgcolor: theme?.secondary || 'transparent', 
+                color: theme?.isTextLight ? 'white' : 'inherit',
+                borderRadius: '8px !important',
+                borderColor: theme?.isTextLight ? 'rgba(255,255,255,0.2)' : 'divider'
+              }}
+            >
+              <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: theme?.isTextLight ? 'white' : 'inherit' }} />}>
+                <Typography fontWeight={600}>{t("store.search_and_filter")}</Typography>
+              </AccordionSummary>
+              <AccordionDetails sx={{ p: 0 }}>
+                <ListingsFilters
+                  filters={filters}
+                  onChange={(f) => {
+                    setFilters(f);
+                    table.setPage(1);
+                  }}
+                  onReset={() => {
+                    setFilters(defaultFilters);
+                    table.setPage(1);
+                  }}
+                />
+              </AccordionDetails>
+            </Accordion>
+
+            <Typography variant="h6" fontWeight={800} sx={{ mb: 2, color: theme?.heading || "inherit" }}>
+              {t("store.inventory")}
+            </Typography>
+            
+            <StoreListingsGrid listings={table.rows} isOwner={isOwner} />
+            
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 4 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ color: theme?.isTextLight ? "rgba(255,255,255,0.7)" : "text.secondary" }}>
+                {t("businesses.resultsCount", { count: table.total })}
+              </Typography>
+              <Pagination
+                page={table.page}
+                count={table.pageCount}
+                onChange={(_, p) => table.setPage(p)}
+                sx={{
+                  "& .MuiPaginationItem-root": {
+                    color: theme?.isTextLight ? "white" : "inherit",
+                  }
+                }}
+              />
+            </Box>
           </Box>
 
           {ownerId ? (

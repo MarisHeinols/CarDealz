@@ -7,6 +7,7 @@ import {
   Avatar,
 } from "@mui/material";
 import type { StoreTheme } from "~/redux/slices/storeSettingsSlice";
+import { useTranslation } from "react-i18next";
 
 type Review = {
   id: string | number;
@@ -22,6 +23,7 @@ type Props = {
 };
 
 export function PreviewReviews({ theme, reviews }: Props) {
+  const { t } = useTranslation();
   return (
     <Box sx={{ mt: 3 }}>
       <Typography
@@ -32,11 +34,11 @@ export function PreviewReviews({ theme, reviews }: Props) {
           color: theme.isTextLight ? "white" : theme.heading || "text.primary",
         }}
       >
-        Customer Reviews
+        {t("reviews.customer_reviews")}
       </Typography>
       {reviews.length === 0 ? (
-        <Typography variant="body2" color="text.secondary">
-          No reviews yet.
+        <Typography variant="body2" color="text.secondary" sx={{ color: theme.isTextLight ? "rgba(255,255,255,0.7)" : "text.secondary" }}>
+          {t("reviews.none")}
         </Typography>
       ) : null}
       <Stack spacing={2}>

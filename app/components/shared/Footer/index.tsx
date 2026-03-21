@@ -70,7 +70,7 @@ const Footer = () => {
         </Grid>
         <Box mt={5}>
           <Typography variant="body2" color="text.secondary" align="center">
-            {"Copyright \u00A9 "}
+            {t("footer.copyright", "Copyright")} {"\u00A9 "}
             <Link color="inherit" href="https://baltic-auto.net/">
               BalticAuto
             </Link>{" "}

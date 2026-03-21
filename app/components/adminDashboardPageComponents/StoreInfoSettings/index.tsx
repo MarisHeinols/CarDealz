@@ -1,4 +1,4 @@
-// src/components/admin/store/settings/StoreInfoSettings.tsx
+import { useTranslation } from "react-i18next";
 import { Box, TextField, Typography, Stack, Grid, Checkbox, FormControlLabel, CircularProgress, Button, Divider } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -16,9 +16,18 @@ import { doc, getDoc } from "firebase/firestore";
 import { useAppDispatch } from "~/redux/hooks";
 import { showNotification } from "~/redux/slices/uiSlice";
 
-const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const DAYS_OF_WEEK = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+];
 
 const StoreInfoSettings = () => {
+  const { t } = useTranslation();
   const { name, description, contact, workTime, location } = useSelector(
     (s: RootState) => s.storeSettings,
   );
@@ -41,11 +50,11 @@ const StoreInfoSettings = () => {
         if (data.storeName && data.storeName !== name) {
           dispatch(setStoreName(data.storeName));
         }
-        dispatch(showNotification({ message: "Store data reloaded from account!", severity: "success" }));
+        dispatch(showNotification({ message: t("dashboard.settings.storeInfo.reloadedSuccess"), severity: "success" }));
       }
     } catch (error) {
       console.error("Failed to fetch user data", error);
-      dispatch(showNotification({ message: "Failed to fetch user data", severity: "error" }));
+      dispatch(showNotification({ message: t("dashboard.settings.storeInfo.reloadError"), severity: "error" }));
     } finally {
       setLoadingUserData(false);
     }
@@ -84,14 +93,14 @@ const StoreInfoSettings = () => {
     <Box>
       <Stack spacing={3}>
         <TextField
-          label="Store name"
+          label={t("dashboard.settings.storeInfo.name")}
           fullWidth
           value={name}
           onChange={(e) => dispatch(setStoreName(e.target.value))}
         />
 
         <TextField
-          label="Description"
+          label={t("dashboard.settings.storeInfo.description")}
           fullWidth
           multiline
           minRows={3}
@@ -102,24 +111,24 @@ const StoreInfoSettings = () => {
         <Divider />
 
         <Box>
-          <Typography variant="subtitle2" sx={{ mb: 2 }}>Location Settings</Typography>
+          <Typography variant="subtitle2" sx={{ mb: 2 }}>{t("dashboard.settings.storeInfo.locationTitle")}</Typography>
           <Stack spacing={2}>
             <TextField
-              label="Street Address"
+              label={t("dashboard.settings.storeInfo.address")}
               fullWidth
               value={location?.adress || ""}
               onChange={(e) => handleLocationChange("adress", e.target.value)}
             />
             <Stack direction="row" spacing={2}>
               <TextField
-                label="Latitude"
+                label={t("dashboard.settings.storeInfo.lat")}
                 fullWidth
                 type="number"
                 value={location?.cords?.lat ?? ""}
                 onChange={(e) => handleLocationChange("lat", e.target.value)}
               />
               <TextField
-                label="Longitude"
+                label={t("dashboard.settings.storeInfo.lng")}
                 fullWidth
                 type="number"
                 value={location?.cords?.lng ?? ""}
@@ -133,14 +142,14 @@ const StoreInfoSettings = () => {
 
         <Box>
           <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-            <Typography variant="subtitle2">Contact Information</Typography>
+            <Typography variant="subtitle2">{t("dashboard.settings.storeInfo.contactTitle")}</Typography>
             <Button size="small" variant="text" onClick={handleFetchUserData} disabled={loadingUserData}>
-              {loadingUserData ? <CircularProgress size={16} /> : "Reload from Account"}
+              {loadingUserData ? <CircularProgress size={16} /> : t("dashboard.settings.storeInfo.reloadCta")}
             </Button>
           </Stack>
           <Stack spacing={2}>
             <TextField
-              label="Phone"
+              label={t("dashboard.settings.storeInfo.phone")}
               fullWidth
               value={contact.phone}
               onChange={(e) =>
@@ -154,7 +163,7 @@ const StoreInfoSettings = () => {
               }
             />
             <TextField
-              label="Email"
+              label={t("dashboard.settings.storeInfo.email")}
               fullWidth
               value={contact.email}
               onChange={(e) =>
@@ -173,14 +182,14 @@ const StoreInfoSettings = () => {
         <Divider />
 
         <Box>
-          <Typography variant="subtitle2" sx={{ mb: 2 }}>Work Time</Typography>
+          <Typography variant="subtitle2" sx={{ mb: 2 }}>{t("dashboard.settings.storeInfo.workTimeTitle")}</Typography>
           <Stack spacing={1.5}>
             {DAYS_OF_WEEK.map((day) => {
                const wt = workTime[day] || { open: "09:00", close: "18:00", isClosed: false };
                return (
                 <Grid container spacing={1} alignItems="center" key={day}>
                   <Grid size={{ xs: 3 }}>
-                    <Typography variant="body2">{day}</Typography>
+                    <Typography variant="body2">{t(`dashboard.settings.storeInfo.days.${day}`)}</Typography>
                   </Grid>
                   <Grid size={{ xs: 3 }}>
                     <TextField
@@ -209,7 +218,7 @@ const StoreInfoSettings = () => {
                           onChange={(e) => handleWorkTimeChange(day, "isClosed", e.target.checked)}
                         />
                       }
-                      label="Closed"
+                      label={t("dashboard.settings.storeInfo.closed")}
                     />
                   </Grid>
                 </Grid>

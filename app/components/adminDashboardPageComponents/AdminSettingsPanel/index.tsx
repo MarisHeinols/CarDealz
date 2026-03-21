@@ -1,4 +1,4 @@
-// src/components/adminDashboardPageComponents/AdminSettingsPanel.tsx
+import { useTranslation } from "react-i18next";
 import {
   Accordion,
   AccordionSummary,
@@ -14,6 +14,7 @@ import AppearanceSettings from "../AppearenceSettings";
 import BrandingSettings from "../BrandingSettings";
 import LocationSettings from "../LocationSettings";
 import StoreInfoSettings from "../StoreInfoSettings";
+import AccountPrivacySettings from "../AccountPrivacySettings";
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "~/redux/store";
@@ -27,6 +28,7 @@ import { useAppDispatch } from "~/redux/hooks";
 import { showNotification } from "~/redux/slices/uiSlice";
 
 const AdminSettingsPanel = () => {
+  const { t } = useTranslation();
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const storeSettings = useSelector((s: RootState) => s.storeSettings);
@@ -57,11 +59,11 @@ const AdminSettingsPanel = () => {
     try {
       await saveStoreSettings(user.uid, storeSettings);
       appDispatch(
-        showNotification({ message: "Settings saved successfully!", severity: "success" })
+        showNotification({ message: t("common.save_success") || "Settings saved successfully!", severity: "success" })
       );
     } catch (err) {
       appDispatch(
-        showNotification({ message: "Failed to save settings.", severity: "error" })
+        showNotification({ message: t("common.save_error") || "Failed to save settings.", severity: "error" })
       );
     } finally {
       setSaving(false);
@@ -73,7 +75,7 @@ const AdminSettingsPanel = () => {
       <Stack alignItems="center" py={4}>
         <CircularProgress />
         <Typography mt={1} color="text.secondary">
-          Loading settings…
+          {t("common.loading")}
         </Typography>
       </Stack>
     );
@@ -83,7 +85,7 @@ const AdminSettingsPanel = () => {
     <>
       <Accordion defaultExpanded>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography fontWeight={600}>Appearance</Typography>
+          <Typography fontWeight={600}>{t("dashboard.settings.appearance.title")}</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <AppearanceSettings />
@@ -92,7 +94,7 @@ const AdminSettingsPanel = () => {
 
       <Accordion>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography fontWeight={600}>Branding</Typography>
+          <Typography fontWeight={600}>{t("dashboard.settings.branding.title")}</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <BrandingSettings />
@@ -101,39 +103,13 @@ const AdminSettingsPanel = () => {
 
       <Accordion>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography fontWeight={600}>Store Info</Typography>
+          <Typography fontWeight={600}>{t("dashboard.settings.storeInfo.title")}</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <StoreInfoSettings />
         </AccordionDetails>
       </Accordion>
 
-      <Accordion>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography fontWeight={600}>Plan & Billing</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Stack spacing={2}>
-            <Typography variant="body2" color="text.secondary">
-              Managing your subscription status, payment methods, and invoices via Stripe Secure Portal.
-            </Typography>
-            <Button
-              variant="outlined"
-              fullWidth
-              onClick={async () => {
-                try {
-                  const { goToCustomerPortal } = await import("~/services/billingService");
-                  await goToCustomerPortal();
-                } catch (err: any) {
-                  appDispatch(showNotification({ message: err.message, severity: "error" }));
-                }
-              }}
-            >
-              Manage & Cancel Subscription
-            </Button>
-          </Stack>
-        </AccordionDetails>
-      </Accordion>
 
       <Stack direction="row" justifyContent="flex-end" mt={3}>
         <Button
@@ -143,7 +119,7 @@ const AdminSettingsPanel = () => {
           onClick={handleSave}
           disabled={saving}
         >
-          {saving ? "Saving…" : "Save All Settings"}
+          {saving ? t("common.saving") || "Saving…" : t("common.save") || "Save All Settings"}
         </Button>
       </Stack>
     </>

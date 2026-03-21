@@ -59,10 +59,9 @@ export default function BusinessAnalytics() {
   // Bar chart data: Active Condition distribution
   const conditionCounts: Record<string, number> = {};
   activeListings.forEach((l) => {
-    const cond =
-      String(l.conditionTier || "")
-        .charAt(0)
-        .toUpperCase() + String(l.conditionTier || "").slice(1);
+    const cond = l.conditionTier 
+      ? t(`carValues.condition_${l.conditionTier}`, { defaultValue: l.conditionTier })
+      : t("common.no_data");
     conditionCounts[cond] = (conditionCounts[cond] || 0) + 1;
   });
 
@@ -271,7 +270,7 @@ export default function BusinessAnalytics() {
             }}
           >
             <Typography variant="body1" color="text.secondary" fontWeight={500}>
-              {t("dashboard.tabs.leads")} {t("nav.listings")}
+              {t("dashboard.analytics.total_leads")}
             </Typography>
             <Typography
               variant="h3"
@@ -424,7 +423,7 @@ export default function BusinessAnalytics() {
                 },
                 series: [
                   {
-                    name: t("nav.listings"),
+                    name: t("dashboard.tabs.leads", { defaultValue: "Leads" }),
                     type: "line",
                     data: lineValues,
                     smooth: true,
@@ -697,7 +696,7 @@ export default function BusinessAnalytics() {
       <Grid container spacing={3} sx={{ mt: 1, mb: 1 }}>
         <Grid size={{ xs: 12 }}>
           <Typography variant="h5" sx={{ fontWeight: 700 }}>
-            {t("listing.owner.leads", { defaultValue: "Leads Intelligence" })}
+            {t("dashboard.analytics.leads_intelligence", { defaultValue: "Leads Intelligence" })}
           </Typography>
         </Grid>
         
@@ -738,7 +737,7 @@ export default function BusinessAnalytics() {
                 },
                 series: [
                   {
-                    name: "Leads",
+                    name: t("dashboard.tabs.leads", { defaultValue: "Leads" }),
                     type: "line",
                     data: leadsLineValues,
                     smooth: true,
@@ -807,10 +806,10 @@ export default function BusinessAnalytics() {
                   },
                   axisLine: { lineStyle: { color: axisLineColor } },
                 },
-                series: [
-                  {
-                    name: "Leads",
-                    data: topLeadModels.map((m) => m[1]).reverse(),
+                  series: [
+                    {
+                      name: t("dashboard.analytics.leads"),
+                      data: topLeadModels.map((m) => m[1]).reverse(),
                     type: "bar",
                     itemStyle: {
                       color: theme.palette.warning.main,
@@ -842,7 +841,7 @@ export default function BusinessAnalytics() {
                 tooltip: {
                   trigger: "item",
                   formatter: (params: any) =>
-                    `<strong>${params.data[2]}</strong><br/>${t("table.price")}: €${params.data[0]}<br/>Leads: ${params.data[1]}`,
+                    `<strong>${params.data[2]}</strong><br/>${t("table.price")}: €${params.data[0]}<br/>${t("dashboard.analytics.leads")}: ${params.data[1]}`,
                 },
                 grid: {
                   left: "3%",
@@ -861,7 +860,7 @@ export default function BusinessAnalytics() {
                 },
                 yAxis: {
                   type: "value",
-                  name: "Total Leads",
+                  name: t("dashboard.analytics.total_leads"),
                   axisLabel: { color: textColor },
                   splitLine: {
                     lineStyle: { color: axisLineColor, type: "dashed" },

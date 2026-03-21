@@ -41,7 +41,7 @@ const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
       if (formData.password !== formData.confirmPassword) {
         dispatch(
           showNotification({
-            message: "Passwords do not match.",
+            message: t("auth.passwordsDontMatch"),
             severity: "error",
           }),
         );
@@ -50,7 +50,7 @@ const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
       if (!formData.email.trim()) {
         dispatch(
           showNotification({
-            message: "Email is required.",
+            message: t("auth.emailRequired"),
             severity: "error",
           }),
         );
@@ -61,7 +61,7 @@ const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
     if (!formData.name.trim() || !formData.surname.trim()) {
       dispatch(
         showNotification({
-          message: "First name and surname are required.",
+          message: t("auth.fieldsRequired"),
           severity: "error",
         }),
       );
@@ -71,7 +71,7 @@ const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
     if (!formData.acceptedTerms) {
       dispatch(
         showNotification({
-          message: t("auth.mustAcceptTerms", "You must accept the Terms of Service and Privacy Policy."),
+          message: t("auth.mustAcceptTerms"),
           severity: "error",
         }),
       );
@@ -95,7 +95,7 @@ const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
 
         dispatch(
           showNotification({
-            message: "Profile created. Please verify your phone number.",
+            message: t("auth.profileCreated"),
             severity: "success",
           }),
         );
@@ -125,8 +125,7 @@ const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
 
       dispatch(
         showNotification({
-          message:
-            "Account created. Check your email to verify it, then verify your phone.",
+          message: t("auth.accountCreated"),
           severity: "success",
         }),
       );
@@ -144,7 +143,7 @@ const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
     <Box component="form" sx={{ height: "auto" }}>
       <TextField
         name="name"
-        label="First Name"
+        label={t("auth.firstName")}
         value={formData.name}
         onChange={handleChange}
         fullWidth
@@ -152,7 +151,7 @@ const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
       />
       <TextField
         name="surname"
-        label="Surname"
+        label={t("auth.surname")}
         value={formData.surname}
         onChange={handleChange}
         fullWidth
@@ -160,7 +159,7 @@ const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
       />
       <TextField
         name="email"
-        label="Email"
+        label={t("auth.email")}
         type="email"
         value={formData.email}
         onChange={handleChange}
@@ -170,17 +169,17 @@ const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
       />
       <TextField
         name="phone"
-        label="Phone"
+        label={t("auth.phone")}
         value={formData.phone}
         onChange={handleChange}
         fullWidth
         margin="normal"
       />
       <FormControl fullWidth margin="normal">
-        <InputLabel id="country-label">Country</InputLabel>
+        <InputLabel id="country-label">{t("auth.country")}</InputLabel>
         <Select
           labelId="country-label"
-          label="Country"
+          label={t("auth.country")}
           value={formData.country}
           onChange={(e) =>
             setFormData({ ...formData, country: e.target.value })
@@ -195,7 +194,7 @@ const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
       </FormControl>
       <TextField
         name="password"
-        label="Password"
+        label={t("auth.password")}
         type="password"
         value={formData.password}
         onChange={handleChange}
@@ -205,7 +204,7 @@ const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
       />
       <TextField
         name="confirmPassword"
-        label="Confirm Password"
+        label={t("auth.confirmPassword")}
         type="password"
         value={formData.confirmPassword}
         onChange={handleChange}
@@ -224,13 +223,13 @@ const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
         }
         label={
           <Box component="span">
-            {t("auth.acceptTermsPart1", "I agree to the")}{" "}
+            {t("auth.acceptTermsPart1")}{" "}
             <Link component={RouterLink} to="/terms-of-service">
-              {t("footer.terms", "Terms of Service")}
+              {t("footer.terms")}
             </Link>{" "}
-            {t("auth.acceptTermsPart2", "and")}{" "}
+            {t("auth.acceptTermsPart2")}{" "}
             <Link component={RouterLink} to="/privacy-policy">
-              {t("footer.privacy", "Privacy Policy")}
+              {t("footer.privacy")}
             </Link>
           </Box>
         }
@@ -245,10 +244,10 @@ const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
         disabled={isLoading}
       >
         {isLoading
-          ? "Registering…"
+          ? t("auth.registering")
           : socialMode
-            ? "Complete Registration"
-            : "Register Individual"}
+            ? t("auth.completeReg")
+            : t("auth.registerIndividual")}
       </Button>
     </Box>
   );

@@ -13,7 +13,7 @@ type Props = {
   viewsCount?: number;
 };
 
-const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const DAYS_OF_WEEK = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
 const StoreInfo = ({ reviewStats, listingsCount, viewsCount }: Props) => {
   const { t } = useTranslation();
@@ -39,7 +39,8 @@ const StoreInfo = ({ reviewStats, listingsCount, viewsCount }: Props) => {
     let currentGroup = null;
 
     for (const day of DAYS_OF_WEEK) {
-      const wt = workTime[day];
+      // Keys in workTime might be capitalized from DB, normalize to lower for lookup
+      const wt = workTime[day] || (workTime as any)[day.charAt(0).toUpperCase() + day.slice(1)];
       if (!wt) continue;
 
       if (!currentGroup) {
@@ -68,8 +69,8 @@ const StoreInfo = ({ reviewStats, listingsCount, viewsCount }: Props) => {
     <Paper sx={{ p: 3, bgcolor: theme.secondary, color: onCard.text }}>
       <Stack spacing={2}>
         <Stack spacing={1}>
-          <Typography variant="body2" sx={{ color: onCard.text }}>
-            <LocationOnIcon /> {location.adress || t("listing.noAddress")}
+          <Typography variant="body2" sx={{ color: onCard.text, display: "flex", alignItems: "center", gap: 1 }}>
+            <LocationOnIcon fontSize="small" /> {location.adress || t("listing.noAddress")}
           </Typography>
 
           <Box
@@ -87,8 +88,8 @@ const StoreInfo = ({ reviewStats, listingsCount, viewsCount }: Props) => {
               </Typography>
               {workGroups ? (
                 workGroups.map((g, idx) => {
-                  const startTrans = t(`days.${g.startDay.toLowerCase().slice(0, 3)}`, { defaultValue: g.startDay.slice(0, 3) });
-                  const endTrans = t(`days.${g.endDay.toLowerCase().slice(0, 3)}`, { defaultValue: g.endDay.slice(0, 3) });
+                  const startTrans = t(`days.${g.startDay}`);
+                  const endTrans = t(`days.${g.endDay}`);
                   const dayLabel = g.startDay === g.endDay ? startTrans : `${startTrans}-${endTrans}`;
                   
                   return (
@@ -107,12 +108,12 @@ const StoreInfo = ({ reviewStats, listingsCount, viewsCount }: Props) => {
             </Box>
           </Box>
 
-          <Typography variant="body2" sx={{ color: onCard.text }}>
-            <PhoneIcon /> {contact.phone || t("listing.noPhone")}
+          <Typography variant="body2" sx={{ color: onCard.text, display: "flex", alignItems: "center", gap: 1 }}>
+            <PhoneIcon fontSize="small" /> {contact.phone || t("listing.noPhone")}
           </Typography>
 
-          <Typography variant="body2" sx={{ color: onCard.text }}>
-            <EmailIcon /> {contact.email || t("listing.noEmail")}
+          <Typography variant="body2" sx={{ color: onCard.text, display: "flex", alignItems: "center", gap: 1 }}>
+            <EmailIcon fontSize="small" /> {contact.email || t("listing.noEmail")}
           </Typography>
         </Stack>
 

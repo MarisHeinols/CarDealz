@@ -6,6 +6,7 @@ import AdminSettingsPanel from "~/components/adminDashboardPageComponents/AdminS
 import AppContainer from "~/components/shared/AppContainer";
 import BusinessAnalytics from "~/components/adminDashboardPageComponents/BusinessAnalytics";
 import LeadsPanel from "~/components/adminDashboardPageComponents/LeadsPanel";
+import AccountSettingsPanel from "~/components/adminDashboardPageComponents/AccountSettingsPanel";
 import { useLocation } from "react-router";
 
 const AdminDashboardPage = () => {
@@ -36,6 +37,7 @@ const AdminDashboardPage = () => {
           <Tab label={t("dashboard.tabs.analytics")} />
           <Tab label={t("dashboard.tabs.leads")} />
           <Tab label={t("dashboard.tabs.store_editor")} />
+          <Tab label={t("dashboard.tabs.account", { defaultValue: "Account" })} />
         </Tabs>
       </Box>
 
@@ -71,6 +73,8 @@ const AdminDashboardPage = () => {
           </Grid>
         </Grid>
       )}
+
+      {tabIndex === 3 && <AccountSettingsPanel />}
     </AppContainer>
   );
 };

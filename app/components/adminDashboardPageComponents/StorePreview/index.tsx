@@ -21,10 +21,12 @@ import { PreviewChrome } from "./PreviewChrome";
 import { PreviewReviews } from "./PreviewReviews";
 import { useEffect, useState } from "react";
 import { useAllListingsCached, useOwnerListingsCached } from "~/hooks/useCachedListings";
+import { useTranslation } from "react-i18next";
 
 const PREVIEW_LISTINGS_COUNT = 4;
 
 const StorePreview = () => {
+  const { t } = useTranslation();
   const theme = useAppSelector((state) => state.storeSettings.theme);
   
   const [ownerId, setOwnerId] = useState<string | null>(null);
@@ -89,7 +91,7 @@ const StorePreview = () => {
               }}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography fontWeight={600}>Search &amp; Filters</Typography>
+                <Typography fontWeight={600}>{t("store.search_and_filter")}</Typography>
               </AccordionSummary>
               <AccordionDetails>
                 <Box
@@ -100,7 +102,13 @@ const StorePreview = () => {
                     opacity: 0.6,
                   }}
                 >
-                  {["Make", "Year", "Condition", "Price Range", "Color"].map(
+                  {[
+                    t("store.filters.make"),
+                    t("store.filters.year"),
+                    t("store.filters.condition"),
+                    t("store.filters.price"),
+                    t("store.filters.color"),
+                  ].map(
                     (f) => (
                       <Chip
                         key={f}
@@ -130,10 +138,10 @@ const StorePreview = () => {
                 color: theme.isTextLight ? "white" : "text.primary",
               }}
             >
-              Our Inventory
+              {t("store.inventory")}
             </Typography>
             <Box>
-              <Chip label="Sort: Date Uploaded" size="small" variant="outlined" sx={{ color: theme.isTextLight ? "white" : "text.primary", borderColor: "divider" }} />
+              <Chip label={t("store.sort_date")} size="small" variant="outlined" sx={{ color: theme.isTextLight ? "white" : "text.primary", borderColor: "divider" }} />
             </Box>
           </Box>
           <Box>

@@ -1,4 +1,4 @@
-// src/components/admin/store/settings/BrandingSettings.tsx
+import { useTranslation } from "react-i18next";
 import { Box, Typography, Stack, Button } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { setBannerImage, setLogo } from "~/redux/slices/storeSettingsSlice";
@@ -7,6 +7,7 @@ import { fileToBase64 } from "~/services/fileToBase64";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 const BrandingSettings = () => {
+  const { t } = useTranslation();
   const { bannerImage, logo } = useSelector((s: RootState) => s.storeSettings);
   const dispatch = useDispatch();
 
@@ -27,12 +28,12 @@ const BrandingSettings = () => {
   return (
     <Box>
       <Typography variant="body1" sx={{ mb: 2 }}>
-        Configure your logo and banner image.
+        {t("dashboard.settings.branding.desc")}
       </Typography>
 
       <Stack spacing={3}>
         <Box>
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>Store Logo</Typography>
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>{t("dashboard.settings.branding.logoTitle")}</Typography>
           <Stack direction="row" spacing={2} alignItems="center">
             {logo && (
               <Box
@@ -48,7 +49,7 @@ const BrandingSettings = () => {
               startIcon={<CloudUploadIcon />}
               sx={{ width: 180, justifyContent: "flex-start" }}
             >
-              Upload Logo
+              {t("dashboard.settings.branding.logoUpload")}
               <input
                 type="file"
                 hidden
@@ -58,14 +59,14 @@ const BrandingSettings = () => {
             </Button>
             {logo && (
               <Button color="error" onClick={() => dispatch(setLogo(null))}>
-                Remove
+                {t("dashboard.settings.branding.remove")}
               </Button>
             )}
           </Stack>
         </Box>
 
         <Box>
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>Store Banner</Typography>
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>{t("dashboard.settings.branding.bannerTitle")}</Typography>
           <Stack direction="column" spacing={2}>
             {bannerImage && (
               <Box
@@ -82,7 +83,7 @@ const BrandingSettings = () => {
                 startIcon={<CloudUploadIcon />}
                 sx={{ width: 180, justifyContent: "flex-start" }}
               >
-                Upload Banner
+                {t("dashboard.settings.branding.bannerUpload")}
                 <input
                   type="file"
                   hidden
@@ -92,7 +93,7 @@ const BrandingSettings = () => {
               </Button>
               {bannerImage && (
                 <Button color="error" onClick={() => dispatch(setBannerImage(null))}>
-                  Remove
+                  {t("dashboard.settings.branding.remove")}
                 </Button>
               )}
             </Stack>
