@@ -36,6 +36,7 @@ interface Props {
   filters: ListingsFiltersState;
   onChange: (filters: ListingsFiltersState) => void;
   onReset: () => void;
+  noBorder?: boolean;
 }
 
 const YEARS = Array.from({ length: 30 }, (_, i) =>
@@ -58,7 +59,7 @@ const DISPLAY_COLORS = [
   "Purple",
 ];
 
-const ListingsFilters = ({ filters, onChange, onReset }: Props) => {
+const ListingsFilters = ({ filters, onChange, onReset, noBorder }: Props) => {
   const { t } = useTranslation();
   const set = (key: keyof ListingsFiltersState, value: string) =>
     onChange({ ...filters, [key]: value });
@@ -75,11 +76,11 @@ const ListingsFilters = ({ filters, onChange, onReset }: Props) => {
   return (
     <Box
       sx={{
-        p: 3,
-        border: "1px solid",
+        p: noBorder ? 0 : 3,
+        border: noBorder ? "none" : "1px solid",
         borderColor: "divider",
-        borderRadius: 2,
-        mb: 3,
+        borderRadius: noBorder ? 0 : 2,
+        mb: noBorder ? 0 : 3,
       }}
     >
       <Typography fontWeight={600} mb={1}>

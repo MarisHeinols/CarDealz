@@ -39,12 +39,15 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { Menu, MenuItem, IconButton, Dialog, DialogTitle, DialogContent, TextField, DialogActions, Button } from "@mui/material";
 import { deleteListingFromDb, markListingAsSold, updateListingPrice } from "~/services/listingsService";
 import { useNavigate } from "react-router";
+import { useAppDispatch } from "~/redux/hooks";
+import { showNotification } from "~/redux/slices/uiSlice";
 
 type Props = {
   id: string;
 };
 
 const ListingPage = ({ id }: Props) => {
+  const dispatch = useAppDispatch();
   const {
     listing: car,
     loading,
@@ -56,6 +59,18 @@ const ListingPage = ({ id }: Props) => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !car) {
+      dispatch(
+        showNotification({
+          message: t("carValues.carNotFound"),
+          severity: "error",
+        }),
+      );
+      navigate("/");
+    }
+  }, [loading, car, navigate, dispatch, t]);
 
   const isOwner = Boolean(user?.uid && car?.sellerId && user.uid === car.sellerId);
 
@@ -178,7 +193,7 @@ const ListingPage = ({ id }: Props) => {
   }
 
   if (!car) {
-    return <Typography>{t("carValues.carNotFound")}</Typography>;
+    return null;
   }
 
   const specScore = calculateSpecScore(car.features);

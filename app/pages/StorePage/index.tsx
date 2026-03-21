@@ -92,13 +92,23 @@ function IndividualProfileListings({
         {title}
       </Typography>
 
-      <Accordion defaultExpanded={false} variant="outlined" sx={{ mb: 3, borderRadius: '8px !important' }}>
+      <Accordion 
+        defaultExpanded={false} 
+        variant="outlined" 
+        sx={{ 
+          mb: 3, 
+          borderRadius: '12px !important', 
+          '&:before': { display: 'none' },
+          overflow: 'hidden'
+        }}
+      >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Typography fontWeight={600}>{t("store.search_and_filter")}</Typography>
         </AccordionSummary>
-        <AccordionDetails sx={{ p: 0 }}>
+        <AccordionDetails sx={{ p: 3, pt: 1 }}>
           <ListingsFilters
             filters={filters}
+            noBorder
             onChange={(f) => {
               setFilters(f);
               table.setPage(1);
@@ -369,16 +379,19 @@ export default function StorePage({ handle }: { handle: string }) {
                 mb: 3, 
                 bgcolor: theme?.secondary || 'transparent', 
                 color: theme?.isTextLight ? 'white' : 'inherit',
-                borderRadius: '8px !important',
-                borderColor: theme?.isTextLight ? 'rgba(255,255,255,0.2)' : 'divider'
+                borderRadius: '12px !important',
+                borderColor: theme?.isTextLight ? 'rgba(255,255,255,0.2)' : 'divider',
+                '&:before': { display: 'none' },
+                overflow: 'hidden'
               }}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: theme?.isTextLight ? 'white' : 'inherit' }} />}>
                 <Typography fontWeight={600}>{t("store.search_and_filter")}</Typography>
               </AccordionSummary>
-              <AccordionDetails sx={{ p: 0 }}>
+              <AccordionDetails sx={{ p: 3, pt: 1 }}>
                 <ListingsFilters
                   filters={filters}
+                  noBorder
                   onChange={(f) => {
                     setFilters(f);
                     table.setPage(1);
