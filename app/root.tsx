@@ -6,6 +6,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import { Box, CircularProgress, Typography, Button } from "@mui/material";
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -14,6 +15,8 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider } from "@mui/material/styles";
 import theme from "./mui/theme";
 import Header from "./components/shared/Header";
+import Footer from "./components/shared/Footer";
+import CookieBanner from "./components/shared/CookieBanner";
 import { store } from "./redux/store";
 import { Provider } from "react-redux";
 import { FirebaseAuthProvider } from "./provider/FirebaseAuthProvider";
@@ -30,9 +33,23 @@ export const links: Route.LinksFunction = () => [
     rel: "stylesheet",
     href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
   },
+  { rel: "icon", type: "image/svg+xml", href: "/favicon.svg?v=2" },
 ];
 
 import GlobalSnackbar from "./components/shared/GlobalSnackbar";
+
+function GlobalProviders({ children }: { children: React.ReactNode }) {
+  return (
+    <Provider store={store}>
+      <ThemeProvider theme={theme}>
+        <UserPreferencesProvider>
+          <CssBaseline />
+          {children}
+        </UserPreferencesProvider>
+      </ThemeProvider>
+    </Provider>
+  );
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -42,9 +59,32 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        <script dangerouslySetInnerHTML={{ __html: `
+          // Silence known browser extension background errors (common in Brave/Chrome extensions)
+          window.addEventListener('unhandledrejection', function(event) {
+            const reason = event.reason;
+            const msg = (reason && (reason.message || reason)) || "";
+            if (typeof msg === 'string' && msg.includes('tabs:outgoing.message.ready')) {
+              event.preventDefault();
+              event.stopImmediatePropagation();
+              return false;
+            }
+          });
+          // Also catch generic Error thrown by extensions
+          window.addEventListener('error', function(event) {
+             const msg = (event.error && event.error.message) || event.message || "";
+             if (typeof msg === 'string' && msg.includes('tabs:outgoing.message.ready')) {
+               event.preventDefault();
+               event.stopImmediatePropagation();
+               return false;
+             }
+          });
+        ` }} />
       </head>
       <body>
-        {children}
+        <GlobalProviders>
+          {children}
+        </GlobalProviders>
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -54,18 +94,44 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <Provider store={store}>
-      <ThemeProvider theme={theme}>
-        <FirebaseAuthProvider>
-          <UserPreferencesProvider>
-            <CssBaseline />
-            <Header />
-            <Outlet />
-            <GlobalSnackbar />
-          </UserPreferencesProvider>
-        </FirebaseAuthProvider>
-      </ThemeProvider>
-    </Provider>
+    <FirebaseAuthProvider>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          minHeight: "100vh",
+        }}
+      >
+        <Header />
+        <Box component="main" sx={{ flexGrow: 1 }}>
+          <Outlet />
+        </Box>
+        <Footer />
+        <CookieBanner />
+        <GlobalSnackbar />
+      </Box>
+    </FirebaseAuthProvider>
+  );
+}
+
+/**
+ * HydrateFallback is rendered while the page is being hydrated on the client.
+ */
+export function HydrateFallback() {
+  return (
+    <Box 
+      sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        flexDirection: 'column',
+        gap: 2
+      }}
+    >
+      <CircularProgress />
+      <Typography variant="body2" color="text.secondary">Loading app…</Typography>
+    </Box>
   );
 }
 
@@ -87,13 +153,22 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 
   return (
     <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
-      {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
-          <code>{stack}</code>
-        </pre>
-      )}
+      <Box sx={{ p: 4, bgcolor: 'error.light', borderRadius: 2 }}>
+        <Typography variant="h4" gutterBottom>{message}</Typography>
+        <Typography variant="body1">{details}</Typography>
+        {stack && (
+          <Box component="pre" sx={{ mt: 2, p: 2, bgcolor: 'rgba(0,0,0,0.05)', overflow: 'auto' }}>
+            <code>{stack}</code>
+          </Box>
+        )}
+        <Button 
+          variant="contained" 
+          onClick={() => window.location.href = '/'}
+          sx={{ mt: 3 }}
+        >
+          Go Home
+        </Button>
+      </Box>
     </main>
   );
 }

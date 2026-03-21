@@ -4,8 +4,8 @@ import {
   cacheKeyAllListings,
   cacheKeyOwnerListings,
   getCache,
+  getOrFetch,
   isFresh,
-  setCache,
 } from "~/services/listingsCache";
 import { getAllListings, getListingsByOwner } from "~/services/listingsService";
 
@@ -14,6 +14,7 @@ type Result = {
   loading: boolean;
   refreshing: boolean;
   lastUpdatedAt: number | null;
+  error: string | null;
 };
 
 const DEFAULT_TTL_MS = 60 * 1000; // 1 minute: keeps UI fast but stays reasonably up-to-date
@@ -33,7 +34,7 @@ export function useOwnerListingsCached(
   );
   return useCachedListings(
     cacheKey,
-    () => (userId ? getListingsByOwner(userId) : Promise.resolve([])),
+    () => (userId ? getListingsByOwner(userId!) : Promise.resolve([])),
     ttlMs
   );
 }
@@ -43,15 +44,11 @@ function useCachedListings(
   fetcher: () => Promise<CarListingSummary[]>,
   ttlMs: number
 ): Result {
-  const cached = cacheKey ? getCache<CarListingSummary[]>(cacheKey) : null;
-  const [listings, setListings] = useState<CarListingSummary[]>(
-    cached?.value ?? []
-  );
-  const [loading, setLoading] = useState<boolean>(!cached);
+  const [listings, setListings] = useState<CarListingSummary[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(
-    cached?.ts ?? null
-  );
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!cacheKey) {
@@ -59,34 +56,39 @@ function useCachedListings(
       setLoading(false);
       setRefreshing(false);
       setLastUpdatedAt(null);
+      setError(null);
       return;
     }
 
-    const existing = getCache<CarListingSummary[]>(cacheKey);
-    if (existing?.value) {
-      setListings(existing.value);
-      setLastUpdatedAt(existing.ts);
+    const cached = getCache<CarListingSummary[]>(cacheKey);
+    if (cached) {
+      setListings(cached.value);
+      setLastUpdatedAt(cached.ts);
       setLoading(false);
-    } else {
-      setLoading(true);
+      
+      // If fresh, we don't need to refresh
+      if (isFresh(cached, ttlMs)) {
+        setRefreshing(false);
+        return;
+      }
     }
-
-    // If cache is fresh, skip immediate re-fetch.
-    if (isFresh(existing, ttlMs)) return;
 
     let cancelled = false;
     setRefreshing(true);
-    fetcher()
+    
+    // getOrFetch handles deduplication if multiple components call this simultaneously
+    getOrFetch(cacheKey, fetcher, ttlMs)
       .then((data) => {
         if (cancelled) return;
         setListings(data);
-        setCache(cacheKey, data);
         const updated = getCache<CarListingSummary[]>(cacheKey);
         setLastUpdatedAt(updated?.ts ?? Date.now());
+        setError(null);
       })
       .catch((err) => {
-        // Non-fatal: keep cached data if any.
-        console.error(err);
+        if (cancelled) return;
+        console.error(`Error fetching for ${cacheKey}:`, err);
+        setError(err instanceof Error ? err.message : "Failed to fetch data");
       })
       .finally(() => {
         if (!cancelled) {
@@ -98,9 +100,8 @@ function useCachedListings(
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cacheKey, ttlMs]);
+  }, [cacheKey, ttlMs, fetcher]);
 
-  return { listings, loading, refreshing, lastUpdatedAt };
+  return { listings, loading, refreshing, lastUpdatedAt, error };
 }
 

@@ -6,6 +6,7 @@ export const et = {
       save: "Salvesta",
       edit: "Muuda",
       loading: "Laadimine…",
+      closed: "Suletud",
       no_data: "Andmed puuduvad",
       mileage: "Läbisõit",
       price: "Hind",

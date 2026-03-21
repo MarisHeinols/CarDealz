@@ -148,8 +148,8 @@ const Header = () => {
             <Box
               component="img"
               src="/logo.svg"
-              alt="CarDealz"
-              sx={{ height: 60, width: "auto" }}
+              alt="BalticAuto"
+              sx={{ height: 80, width: "auto" }}
             />
           </Box>
 
@@ -212,8 +212,8 @@ const Header = () => {
             <Box
               component="img"
               src="/logo.svg"
-              alt="CarDealz"
-              sx={{ height: 28, width: "auto" }}
+              alt="BalticAuto"
+              sx={{ height: 48, width: "auto" }}
             />
           </Box>
           <Box

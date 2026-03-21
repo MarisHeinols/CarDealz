@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Avatar,
   Box,
+  Button,
   Card,
   CardActionArea,
   CardContent,
@@ -59,11 +60,13 @@ type SortDir = "asc" | "desc";
 const PAGE_SIZE = 10;
 
 export default function BusinessesPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const prefs = useUserPreferences();
   const listingsStats = useAllListingsForStatsCached();
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<BusinessRow[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const [filtersTouched, setFiltersTouched] = useState(false);
   const [search, setSearch] = useState("");
@@ -95,56 +98,78 @@ export default function BusinessesPage() {
     });
   }, [prefs.location, filtersTouched]);
 
+  const BIZ_TTL = 5 * 60 * 1000; // 5 minutes cache for businesses
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setError(null);
 
-    getBusinessUsers()
-      .then(async (biz) => {
-        const out: BusinessRow[] = [];
-        await Promise.all(
-          biz.map(async (b) => {
-            const uid = b.uid;
-            const settings = await loadStoreSettingsFromDb(uid).catch(
-              () => null,
-            );
-            const name =
-              b.storeName || b.businessName || settings?.name || t("auth.business");
-            const handleOrUid = b.storeHandle || uid;
-            const locationText =
-              settings?.location?.adress || b.address || b.city || "";
-            const lat = settings?.location?.cords?.lat ?? null;
-            const lng = settings?.location?.cords?.lng ?? null;
-            const logoUrl = settings?.logo ?? null;
+    import("~/services/listingsCache").then(({ getOrFetch, cacheKeyBusinessUsers, cacheKeyStoreSettings, cacheKeyStoreReviews }) => {
+      getOrFetch(cacheKeyBusinessUsers(), () => getBusinessUsers(), BIZ_TTL)
+        .then(async (biz) => {
+          if (cancelled) return;
+          const out: BusinessRow[] = [];
+          
+          // Process businesses in parallel batches to be fast but smart
+          // Using getOrFetch for settings and reviews ensures we use cache if available
+          await Promise.all(
+            biz.map(async (b) => {
+              const uid = b.uid;
+              const settings = await getOrFetch(
+                cacheKeyStoreSettings(uid), 
+                () => loadStoreSettingsFromDb(uid), 
+                BIZ_TTL
+              ).catch(() => null);
 
-            const reviews = await getStoreReviews(uid).catch(() => []);
-            const reviewCount = reviews.length;
+              const reviews = await getOrFetch(
+                cacheKeyStoreReviews(uid), 
+                () => getStoreReviews(uid), 
+                BIZ_TTL
+              ).catch(() => []);
 
-            out.push({
-              uid,
-              name,
-              handleOrUid,
-              locationText,
-              logoUrl,
-              lat,
-              lng,
-              viewsTotal: 0,
-              soldLast30d: 0,
-              reviewCount,
-            });
-          }),
-        );
-        if (cancelled) return;
-        setRows(out);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+              const name = b.storeName || b.businessName || settings?.name || t("auth.business");
+              const handleOrUid = b.storeHandle || uid;
+              const locationText = settings?.location?.adress || b.address || b.city || "";
+              const lat = settings?.location?.cords?.lat ?? null;
+              const lng = settings?.location?.cords?.lng ?? null;
+              const logoUrl = settings?.logo ?? null;
+              const reviewCount = reviews.length;
+
+              out.push({
+                uid,
+                name,
+                handleOrUid,
+                locationText,
+                logoUrl,
+                lat,
+                lng,
+                viewsTotal: 0,
+                soldLast30d: 0,
+                reviewCount,
+              });
+            }),
+          );
+          
+          if (!cancelled) {
+            setRows(out);
+            setError(null);
+          }
+        })
+        .catch((err) => {
+          if (cancelled) return;
+          console.error("Error loading businesses:", err);
+          setError(err instanceof Error ? err.message : "Failed to load businesses");
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
+        });
+    });
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   const rowsWithStats = useMemo(() => {
     const now = Date.now();
@@ -213,6 +238,8 @@ export default function BusinessesPage() {
   const top5 = useMemo(() => sorted.slice(0, 5), [sorted]);
 
   const mapMarkers = useMemo(() => {
+    const top5Ids = new Set(top5.map(t => t.uid));
+    
     return filtered
       .filter((r) => typeof r.lat === "number" && typeof r.lng === "number")
       .map((r) => ({
@@ -221,8 +248,9 @@ export default function BusinessesPage() {
         lat: r.lat as number,
         lng: r.lng as number,
         subtitle: r.locationText,
+        isTop5: top5Ids.has(r.uid)
       }));
-  }, [filtered]);
+  }, [filtered, top5]);
 
   useEffect(() => {
     setPage(1);
@@ -244,7 +272,6 @@ export default function BusinessesPage() {
     }
   };
 
-  const { t } = useTranslation();
   const busy = loading || listingsStats.loading;
 
   return (
@@ -259,6 +286,28 @@ export default function BusinessesPage() {
           {t("businesses.subtitle")}
         </Typography>
       </Stack>
+
+      {error && (
+        <Box sx={{ mb: 4, p: 3, bgcolor: "error.light", borderRadius: 2, border: "1px solid", borderColor: "error.main" }}>
+          <Stack spacing={1}>
+            <Typography color="error.dark" fontWeight="bold">
+              {t("common.error_fetching")}
+            </Typography>
+            <Typography variant="body2" color="error.dark">
+              {error}
+            </Typography>
+            <Button 
+              variant="contained" 
+              color="error" 
+              size="small" 
+              onClick={() => window.location.reload()} 
+              sx={{ alignSelf: "flex-start", mt: 1 }}
+            >
+              {t("common.retry")}
+            </Button>
+          </Stack>
+        </Box>
+      )}
 
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 8 }}>
@@ -408,7 +457,7 @@ export default function BusinessesPage() {
                           <Chip
                             size="small"
                             variant="outlined"
-                            label={t("carValues.viewCount", {
+                            label={t("carValues.views", {
                               count: b.viewsTotal,
                             })}
                           />

@@ -62,11 +62,18 @@ export default function StoreMap() {
 
   const { MapContainer, TileLayer, Marker, customIcon } = components;
 
+  const lat = location?.cords?.lat || 56.9496; // Fallback to Riga
+  const lng = location?.cords?.lng || 24.1052;
+
+  // Key is required so the map remounts and recenters if async data updates coordinates later
+  const mapKey = `${lat}-${lng}`;
+
   return (
     <Paper sx={{ height: "100%", overflow: "hidden" }}>
       <Box sx={{ height: "100%" }}>
         <MapContainer
-          center={[location.cords.lat || 0, location.cords.lng || 0]}
+          key={mapKey}
+          center={[lat, lng]}
           zoom={13}
           style={{ height: "100%", width: "100%" }}
         >
@@ -74,9 +81,9 @@ export default function StoreMap() {
             attribution="&copy; OpenStreetMap contributors"
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          {location && (
+          {location?.cords?.lat && location?.cords?.lng && (
             <Marker
-              position={[location.cords.lat || 0, location.cords.lng || 0]}
+              position={[lat, lng]}
               icon={customIcon}
             ></Marker>
           )}

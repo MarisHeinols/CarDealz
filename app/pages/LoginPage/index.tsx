@@ -11,14 +11,12 @@ import {
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import GoogleIcon from "@mui/icons-material/Google";
-import FacebookIcon from "@mui/icons-material/Facebook";
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
 import {
   formatAuthError,
   isEmailVerified,
   login,
-  loginWithFacebook,
   loginWithGoogle,
   needsPhoneVerification,
   refreshCurrentUser,
@@ -127,11 +125,10 @@ const LoginPage = () => {
     }
   };
 
-  const socialLogin = async (provider: "google" | "facebook") => {
+  const socialLogin = async () => {
     setIsLoading(true);
     try {
-      if (provider === "google") await loginWithGoogle();
-      else await loginWithFacebook();
+      await loginWithGoogle();
 
       await refreshCurrentUser();
       const user = auth.currentUser;
@@ -210,25 +207,13 @@ const LoginPage = () => {
           <Button
             fullWidth
             variant="outlined"
-            onClick={() => socialLogin("google")}
+            onClick={() => socialLogin()}
             disabled={isLoading}
             startIcon={<GoogleIcon />}
             sx={{ height: 44, textTransform: "none", fontWeight: 700 }}
           >
             {t("auth.continueWithGoogle", {
               defaultValue: "Continue with Google",
-            })}
-          </Button>
-          <Button
-            fullWidth
-            variant="outlined"
-            onClick={() => socialLogin("facebook")}
-            disabled={isLoading}
-            startIcon={<FacebookIcon />}
-            sx={{ height: 44, textTransform: "none", fontWeight: 700 }}
-          >
-            {t("auth.continueWithFacebook", {
-              defaultValue: "Continue with Facebook",
             })}
           </Button>
         </Stack>

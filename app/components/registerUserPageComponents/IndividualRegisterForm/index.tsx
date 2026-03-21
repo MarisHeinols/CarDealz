@@ -1,13 +1,7 @@
 import React, { useState } from "react";
-import {
-  Box,
-  TextField,
-  Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-} from "@mui/material";
+import { Box, TextField, Button, FormControl, InputLabel, Select, MenuItem, FormControlLabel, Checkbox, Link } from "@mui/material";
+import { useTranslation } from "react-i18next";
+import { Link as RouterLink } from "react-router";
 import type { IndividualRegisterData } from "~/types/types";
 import {
   completeSocialRegistration,
@@ -21,6 +15,7 @@ import { showNotification } from "~/redux/slices/uiSlice";
 import { COUNTRIES } from "~/constants/countries";
 
 const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState<IndividualRegisterData>({
@@ -31,6 +26,7 @@ const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
     country: "",
     password: "",
     confirmPassword: "",
+    acceptedTerms: false,
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -72,6 +68,16 @@ const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
       return;
     }
 
+    if (!formData.acceptedTerms) {
+      dispatch(
+        showNotification({
+          message: t("auth.mustAcceptTerms", "You must accept the Terms of Service and Privacy Policy."),
+          severity: "error",
+        }),
+      );
+      return;
+    }
+
     setIsLoading(true);
     try {
       if (socialMode) {
@@ -81,6 +87,8 @@ const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
             surname: formData.surname,
             phone: formData.phone,
             country: formData.country,
+            acceptedTerms: true,
+            acceptedTermsAt: new Date().toISOString(),
           },
           "individual",
         );
@@ -103,6 +111,8 @@ const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
           surname: formData.surname,
           phone: formData.phone,
           country: formData.country,
+          acceptedTerms: true,
+          acceptedTermsAt: new Date().toISOString(),
         },
         "individual",
       );
@@ -202,6 +212,29 @@ const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
         fullWidth
         margin="normal"
         disabled={Boolean(socialMode)}
+      />
+      <FormControlLabel
+        control={
+          <Checkbox
+            checked={formData.acceptedTerms}
+            onChange={(e) =>
+              setFormData({ ...formData, acceptedTerms: e.target.checked })
+            }
+          />
+        }
+        label={
+          <Box component="span">
+            {t("auth.acceptTermsPart1", "I agree to the")}{" "}
+            <Link component={RouterLink} to="/terms-of-service">
+              {t("footer.terms", "Terms of Service")}
+            </Link>{" "}
+            {t("auth.acceptTermsPart2", "and")}{" "}
+            <Link component={RouterLink} to="/privacy-policy">
+              {t("footer.privacy", "Privacy Policy")}
+            </Link>
+          </Box>
+        }
+        sx={{ mt: 1 }}
       />
 
       <Button

@@ -7,7 +7,11 @@ import {
   Autocomplete,
   CircularProgress,
   Stack,
+  FormControlLabel,
+  Checkbox,
+  Link,
 } from "@mui/material";
+import { Link as RouterLink } from "react-router";
 import type { BusinessRegisterData } from "~/types/types";
 import {
   completeSocialRegistration,
@@ -15,6 +19,7 @@ import {
   registerUser,
   sendVerificationEmail,
 } from "../../../services/auth";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import { useAppDispatch } from "~/redux/hooks";
 import { showNotification } from "~/redux/slices/uiSlice";
@@ -23,6 +28,7 @@ import { useCities } from "~/hooks/useCities";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
 
 const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<BusinessRegisterData>({
     ownerName: "",
@@ -39,6 +45,7 @@ const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
     country: "",
     lat: "",
     lng: "",
+    acceptedTerms: false,
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -149,10 +156,27 @@ const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
       }
     }
 
+    if (!formData.acceptedTerms) {
+      dispatch(
+        showNotification({
+          message: t("auth.mustAcceptTerms", "You must accept the Terms of Service and Privacy Policy."),
+          severity: "error",
+        }),
+      );
+      return;
+    }
+
     setIsLoading(true);
     try {
       if (socialMode) {
-        await completeSocialRegistration({ ...formData }, "business");
+        await completeSocialRegistration(
+          {
+            ...formData,
+            acceptedTerms: true,
+            acceptedTermsAt: new Date().toISOString(),
+          },
+          "business",
+        );
         dispatch(
           showNotification({
             message:
@@ -167,7 +191,11 @@ const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
       const cred = await registerUser(
         formData.ownerEmail,
         formData.password,
-        { ...formData },
+        {
+          ...formData,
+          acceptedTerms: true,
+          acceptedTermsAt: new Date().toISOString(),
+        },
         "business",
       );
 
@@ -299,6 +327,30 @@ const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
         {textField("lat", "Latitude (optional)")}
         {textField("lng", "Longitude (optional)")}
       </Grid>
+
+      <FormControlLabel
+        control={
+          <Checkbox
+            checked={formData.acceptedTerms}
+            onChange={(e) =>
+              setFormData({ ...formData, acceptedTerms: e.target.checked })
+            }
+          />
+        }
+        label={
+          <Box component="span">
+            {t("auth.acceptTermsPart1", "I agree to the")}{" "}
+            <Link component={RouterLink} to="/terms-of-service">
+              {t("footer.terms", "Terms of Service")}
+            </Link>{" "}
+            {t("auth.acceptTermsPart2", "and")}{" "}
+            <Link component={RouterLink} to="/privacy-policy">
+              {t("footer.privacy", "Privacy Policy")}
+            </Link>
+          </Box>
+        }
+        sx={{ mt: 2 }}
+      />
 
       <Button
         fullWidth

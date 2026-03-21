@@ -1,5 +1,5 @@
 // src/components/admin/store/settings/StoreInfoSettings.tsx
-import { Box, TextField, Typography, Stack, Grid, Checkbox, FormControlLabel, CircularProgress, Button } from "@mui/material";
+import { Box, TextField, Typography, Stack, Grid, Checkbox, FormControlLabel, CircularProgress, Button, Divider } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -7,6 +7,7 @@ import {
   setDescription,
   setContactInfo,
   setWorkTime,
+  setLocation,
 } from "~/redux/slices/storeSettingsSlice";
 import type { RootState } from "~/redux/store";
 import { auth } from "~/firebase/auth";
@@ -15,8 +16,10 @@ import { doc, getDoc } from "firebase/firestore";
 import { useAppDispatch } from "~/redux/hooks";
 import { showNotification } from "~/redux/slices/uiSlice";
 
+const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
 const StoreInfoSettings = () => {
-  const { name, description, contact, workTime } = useSelector(
+  const { name, description, contact, workTime, location } = useSelector(
     (s: RootState) => s.storeSettings,
   );
   const dispatch = useAppDispatch();
@@ -66,6 +69,17 @@ const StoreInfoSettings = () => {
     );
   };
 
+  const handleLocationChange = (field: "adress" | "lat" | "lng", value: string) => {
+    const newLoc = { ...location, cords: { ...location.cords } };
+    if (field === "adress") {
+      newLoc.adress = value;
+    } else {
+      const val = value.trim() === "" ? null : Number(value);
+      newLoc.cords[field] = val;
+    }
+    dispatch(setLocation(newLoc));
+  };
+
   return (
     <Box>
       <Stack spacing={3}>
@@ -85,6 +99,38 @@ const StoreInfoSettings = () => {
           onChange={(e) => dispatch(setDescription(e.target.value))}
         />
 
+        <Divider />
+
+        <Box>
+          <Typography variant="subtitle2" sx={{ mb: 2 }}>Location Settings</Typography>
+          <Stack spacing={2}>
+            <TextField
+              label="Street Address"
+              fullWidth
+              value={location?.adress || ""}
+              onChange={(e) => handleLocationChange("adress", e.target.value)}
+            />
+            <Stack direction="row" spacing={2}>
+              <TextField
+                label="Latitude"
+                fullWidth
+                type="number"
+                value={location?.cords?.lat ?? ""}
+                onChange={(e) => handleLocationChange("lat", e.target.value)}
+              />
+              <TextField
+                label="Longitude"
+                fullWidth
+                type="number"
+                value={location?.cords?.lng ?? ""}
+                onChange={(e) => handleLocationChange("lng", e.target.value)}
+              />
+            </Stack>
+          </Stack>
+        </Box>
+
+        <Divider />
+
         <Box>
           <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
             <Typography variant="subtitle2">Contact Information</Typography>
@@ -102,6 +148,7 @@ const StoreInfoSettings = () => {
                   setContactInfo({
                     ...contact,
                     phone: e.target.value,
+                    email: contact.email,
                   })
                 )
               }
@@ -114,6 +161,7 @@ const StoreInfoSettings = () => {
                 dispatch(
                   setContactInfo({
                     ...contact,
+                    phone: contact.phone,
                     email: e.target.value,
                   })
                 )
@@ -122,11 +170,13 @@ const StoreInfoSettings = () => {
           </Stack>
         </Box>
 
+        <Divider />
+
         <Box>
           <Typography variant="subtitle2" sx={{ mb: 2 }}>Work Time</Typography>
           <Stack spacing={1.5}>
-            {Object.keys(workTime).map((day) => {
-               const wt = workTime[day];
+            {DAYS_OF_WEEK.map((day) => {
+               const wt = workTime[day] || { open: "09:00", close: "18:00", isClosed: false };
                return (
                 <Grid container spacing={1} alignItems="center" key={day}>
                   <Grid size={{ xs: 3 }}>

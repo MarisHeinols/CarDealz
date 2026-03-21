@@ -63,7 +63,6 @@ export async function analyzeCarImages(
     if (parsed && typeof parsed === "object") {
       return {
         ...parsed,
-        description: `AI Analysis complete. We detected a ${parsed.year || ""} ${parsed.make || ""} ${parsed.model || ""} in ${parsed.color || "an unknown color"}. Please verify these details.`,
       };
     }
   } catch (err) {
@@ -73,10 +72,8 @@ export async function analyzeCarImages(
   // Fallback to local
   try {
     const dominant = await estimateDominantColorName(first);
-    const description = `Photos uploaded. We detected an estimated exterior color: ${dominant} (AI key missing/failed). Please confirm key details to complete your listing.`;
     return {
       color: dominant,
-      description,
     };
   } catch {
     return {};

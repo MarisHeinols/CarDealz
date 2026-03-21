@@ -32,6 +32,7 @@ import {
   deleteListingFromDb,
   markListingAsSold,
 } from "~/services/listingsService";
+import { invalidateCache, cacheKeyOwnerListings, cacheKeyAllListings } from "~/services/listingsCache";
 import { useAppDispatch } from "~/redux/hooks";
 import { showNotification } from "~/redux/slices/uiSlice";
 import { useAppSelector } from "~/redux/hooks";
@@ -93,7 +94,7 @@ const ListingCard = ({
 
   const openLeads = (e: React.MouseEvent) => {
     handleClose(e);
-    navigate("/admin", { state: { tabIndex: 2 } });
+    navigate("/admin", { state: { tabIndex: 1 } });
   };
 
   const openEditPrice = (e: React.MouseEvent) => {
@@ -134,6 +135,10 @@ const ListingCard = ({
     setBusy(true);
     try {
       await deleteListingFromDb(listing.id);
+      if (listing.sellerId) {
+        invalidateCache(cacheKeyOwnerListings(listing.sellerId));
+      }
+      invalidateCache(cacheKeyAllListings());
       dispatch(showNotification({ message: t("pricing.listingDeleted"), severity: "success" }));
     } catch (e) {
       dispatch(showNotification({ message: t("pricing.listingDeleteFailed"), severity: "error" }));
@@ -148,6 +153,10 @@ const ListingCard = ({
     setBusy(true);
     try {
       await markListingAsSold(listing.id, n);
+      if (listing.sellerId) {
+        invalidateCache(cacheKeyOwnerListings(listing.sellerId));
+      }
+      invalidateCache(cacheKeyAllListings());
       dispatch(showNotification({ message: t("listingControl.soldSuccess"), severity: "success" }));
       setSoldOpen(false);
     } catch (e) {

@@ -74,7 +74,10 @@ export async function getAllListingsForStats(): Promise<CarListingSummary[]> {
   return results;
 }
 
-export async function getListingsByOwner(userId: string): Promise<CarListingSummary[]> {
+export async function getListingsByOwner(
+  userId: string,
+  options: { includeSold?: boolean } = { includeSold: false }
+): Promise<CarListingSummary[]> {
   const listingsRef = collection(db, "listings");
   // In Firebase, we can't easily compound != and == without an index and possibly logic issues.
   // Best to query by sellerId and filter out deleted locally.
@@ -85,19 +88,25 @@ export async function getListingsByOwner(userId: string): Promise<CarListingSumm
   snapshot.forEach(doc => {
     const data = doc.data();
     if (!data.deleted) {
-      // Check if sold > 12 months ago
-      if (data.isSold && data.soldAt) {
-        const soldDateMs = data.soldAt.toDate ? data.soldAt.toDate().getTime() : new Date(data.soldAt).getTime();
-        const twelveMonthsMs = 12 * 30 * 24 * 60 * 60 * 1000;
-        if (Date.now() - soldDateMs > twelveMonthsMs) {
-          // Asynchronously flag as deleted for next time
-          deleteListingFromDb(doc.id).catch(console.error);
-          return; // Skip adding to results
+      if (data.isSold) {
+        if (!options.includeSold) return; // Hide from normal views
+
+        // Check if sold > 12 months ago
+        if (data.soldAt) {
+          const soldDateMs = data.soldAt.toDate ? data.soldAt.toDate().getTime() : new Date(data.soldAt).getTime();
+          const twelveMonthsMs = 12 * 30 * 24 * 60 * 60 * 1000;
+          if (Date.now() - soldDateMs > twelveMonthsMs) {
+            // Asynchronously flag as deleted for next time
+            deleteListingFromDb(doc.id).catch(console.error);
+            return; // Skip adding to results
+          }
         }
       }
       results.push(mapListingToSummary(doc.id, data));
     }
   });
+
+  results.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
   return results;
 }
 
@@ -172,7 +181,7 @@ export async function recordUniqueListingView(listingId: string, viewerUid?: str
 
   const anonKey = getOrCreateAnonViewerId();
   const viewerKey = viewerUid || anonKey;
-  const storageKey = `cardealz.viewed.${listingId}.${viewerKey}`;
+  const storageKey = `balticauto.viewed.${listingId}.${viewerKey}`;
 
   const lastRaw = window.localStorage.getItem(storageKey);
   const last = lastRaw ? Number(lastRaw) : 0;
@@ -192,7 +201,7 @@ export async function recordUniqueListingView(listingId: string, viewerUid?: str
 
 function getOrCreateAnonViewerId(): string {
   try {
-    const key = "cardealz.anonViewerId";
+    const key = "balticauto.anonViewerId";
     const existing = window.localStorage.getItem(key);
     if (existing) return existing;
     const id = `anon_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;

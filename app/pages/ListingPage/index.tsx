@@ -285,7 +285,7 @@ const ListingPage = ({ id }: Props) => {
                       open={Boolean(manageAnchor)}
                       onClose={closeManage}
                     >
-                      <MenuItem onClick={() => { closeManage(); navigate("/admin", { state: { tabIndex: 2 } }); }} disabled={busy}>
+                      <MenuItem onClick={() => { closeManage(); navigate("/admin", { state: { tabIndex: 1 } }); }} disabled={busy}>
                         <PeopleIcon fontSize="small" sx={{ mr: 1 }} />
                         {t("listing.owner.leads", { defaultValue: "Go to leads" })}
                       </MenuItem>

@@ -11,6 +11,7 @@ type BizMarker = {
   lat: number;
   lng: number;
   subtitle?: string;
+  isTop5?: boolean;
 };
 
 export default function BusinessesMap({ markers }: { markers: BizMarker[] }) {
@@ -19,7 +20,8 @@ export default function BusinessesMap({ markers }: { markers: BizMarker[] }) {
     TileLayer: React.ComponentType<any>;
     Marker: React.ComponentType<any>;
     Popup: React.ComponentType<any>;
-    customIcon: any;
+    iconTop5: any;
+    iconNormal: any;
   }>(null);
 
   useEffect(() => {
@@ -28,19 +30,31 @@ export default function BusinessesMap({ markers }: { markers: BizMarker[] }) {
       await import("leaflet/dist/leaflet.css");
       const { MapContainer, TileLayer, Marker, Popup } = await import("react-leaflet");
       const { default: LocationOnIcon } = await import("@mui/icons-material/LocationOn");
-      const iconSvg = renderToString(<LocationOnIcon color="primary" />);
-      const customIcon = L.divIcon({
-        html: `<div style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;">${iconSvg}</div>`,
+      
+      const iconSvgTop5 = renderToString(<LocationOnIcon sx={{ color: "#9c27b0" }} fontSize="large" />);
+      const iconSvgNormal = renderToString(<LocationOnIcon sx={{ color: "#757575" }} />);
+
+      const iconTop5 = L.divIcon({
+        html: `<div style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;">${iconSvgTop5}</div>`,
         className: "",
         iconSize: [36, 36],
         iconAnchor: [18, 36],
       });
+
+      const iconNormal = L.divIcon({
+        html: `<div style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;">${iconSvgNormal}</div>`,
+        className: "",
+        iconSize: [36, 36],
+        iconAnchor: [18, 36],
+      });
+
       setComponents({
         MapContainer: MapContainer as React.ComponentType<any>,
         TileLayer: TileLayer as React.ComponentType<any>,
         Marker: Marker as React.ComponentType<any>,
         Popup: Popup as React.ComponentType<any>,
-        customIcon,
+        iconTop5,
+        iconNormal,
       });
     })();
   }, []);
@@ -53,7 +67,7 @@ export default function BusinessesMap({ markers }: { markers: BizMarker[] }) {
   }, [markers]);
 
   if (!components) return null;
-  const { MapContainer, TileLayer, Marker, Popup, customIcon } = components;
+  const { MapContainer, TileLayer, Marker, Popup, iconTop5, iconNormal } = components;
 
   return (
     <Paper sx={{ height: 420, overflow: "hidden" }}>
@@ -61,7 +75,7 @@ export default function BusinessesMap({ markers }: { markers: BizMarker[] }) {
         <MapContainer center={center} zoom={6} style={{ height: "100%", width: "100%" }}>
           <TileLayer attribution="&copy; OpenStreetMap contributors" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           {markers.map((m) => (
-            <Marker key={m.id} position={[m.lat, m.lng]} icon={customIcon}>
+            <Marker key={m.id} position={[m.lat, m.lng]} icon={m.isTop5 ? iconTop5 : iconNormal} zIndexOffset={m.isTop5 ? 1000 : 0}>
               <Popup>
                 <strong>{m.name}</strong>
                 {m.subtitle ? <div>{m.subtitle}</div> : null}

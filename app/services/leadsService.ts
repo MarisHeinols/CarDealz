@@ -1,6 +1,7 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDocs,
   increment,
@@ -121,4 +122,19 @@ export async function getLeadsByListing(listingId: string): Promise<LeadDoc[]> {
 
   items.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
   return items;
+}
+
+export async function deleteLead(leadId: string, listingId?: string): Promise<void> {
+  const leadRef = doc(db, "leads", leadId);
+  await deleteDoc(leadRef);
+
+  if (listingId) {
+    try {
+      await updateDoc(doc(db, "listings", listingId), {
+        leadCount: increment(-1),
+      } as any);
+    } catch (e) {
+      console.error("Failed to decrement leadCount", e);
+    }
+  }
 }

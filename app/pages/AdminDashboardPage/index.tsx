@@ -34,14 +34,16 @@ const AdminDashboardPage = () => {
           indicatorColor="primary"
         >
           <Tab label={t("dashboard.tabs.analytics")} />
-          <Tab label={t("dashboard.tabs.store_editor")} />
           <Tab label={t("dashboard.tabs.leads")} />
+          <Tab label={t("dashboard.tabs.store_editor")} />
         </Tabs>
       </Box>
 
       {tabIndex === 0 && <BusinessAnalytics />}
 
-      {tabIndex === 1 && (
+      {tabIndex === 1 && <LeadsPanel />}
+
+      {tabIndex === 2 && (
         <Grid container spacing={3} alignItems="flex-start">
           {/* LEFT — full store preview */}
           <Grid size={{ xs: 12, md: 8 }}>
@@ -69,8 +71,6 @@ const AdminDashboardPage = () => {
           </Grid>
         </Grid>
       )}
-
-      {tabIndex === 2 && <LeadsPanel />}
     </AppContainer>
   );
 };

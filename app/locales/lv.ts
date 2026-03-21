@@ -6,6 +6,7 @@ export const lv = {
       save: "Saglabāt",
       edit: "Rediģēt",
       loading: "Ielādē…",
+      closed: "Slēgts",
       no_data: "Nav datu",
       mileage: "Nobraukums",
       price: "Cena",

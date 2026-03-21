@@ -13,6 +13,8 @@ type Props = {
   viewsCount?: number;
 };
 
+const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
 const StoreInfo = ({ reviewStats, listingsCount, viewsCount }: Props) => {
   const { t } = useTranslation();
   const storeSettings = useStorefrontSettings();
@@ -28,6 +30,39 @@ const StoreInfo = ({ reviewStats, listingsCount, viewsCount }: Props) => {
     if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, "")}k`;
     return String(n);
   };
+
+  // Group identical consecutive days (e.g., Mon-Fri: 09:00 - 18:00)
+  const groupedWorkTimes = () => {
+    if (!workTime || typeof workTime !== "object") return null;
+
+    const groups: { startDay: string; endDay: string; wt: any }[] = [];
+    let currentGroup = null;
+
+    for (const day of DAYS_OF_WEEK) {
+      const wt = workTime[day];
+      if (!wt) continue;
+
+      if (!currentGroup) {
+        currentGroup = { startDay: day, endDay: day, wt };
+        groups.push(currentGroup);
+      } else {
+        const prevWt = currentGroup.wt;
+        const isSame =
+          prevWt.isClosed === wt.isClosed &&
+          (wt.isClosed || (prevWt.open === wt.open && prevWt.close === wt.close));
+
+        if (isSame) {
+          currentGroup.endDay = day;
+        } else {
+          currentGroup = { startDay: day, endDay: day, wt };
+          groups.push(currentGroup);
+        }
+      }
+    }
+    return groups;
+  };
+
+  const workGroups = groupedWorkTimes();
 
   return (
     <Paper sx={{ p: 3, bgcolor: theme.secondary, color: onCard.text }}>
@@ -50,17 +85,22 @@ const StoreInfo = ({ reviewStats, listingsCount, viewsCount }: Props) => {
               <Typography variant="body2" fontWeight={600}>
                 {t("listing.hours")}
               </Typography>
-              {workTime && typeof workTime === "object" ? (
-                Object.entries(workTime).map(([day, wt]) => (
-                  <Typography
-                    key={day}
-                    variant="caption"
-                    sx={{ display: "block" }}
-                  >
-                    {t(`days.${day.toLowerCase().slice(0, 3)}`, { defaultValue: day.slice(0, 3) })}:{" "}
-                    {wt.isClosed ? t("common.closed") : `${wt.open} - ${wt.close}`}
-                  </Typography>
-                ))
+              {workGroups ? (
+                workGroups.map((g, idx) => {
+                  const startTrans = t(`days.${g.startDay.toLowerCase().slice(0, 3)}`, { defaultValue: g.startDay.slice(0, 3) });
+                  const endTrans = t(`days.${g.endDay.toLowerCase().slice(0, 3)}`, { defaultValue: g.endDay.slice(0, 3) });
+                  const dayLabel = g.startDay === g.endDay ? startTrans : `${startTrans}-${endTrans}`;
+                  
+                  return (
+                    <Typography
+                      key={idx}
+                      variant="caption"
+                      sx={{ display: "block" }}
+                    >
+                      {dayLabel}: {g.wt.isClosed ? t("common.closed") : `${g.wt.open} - ${g.wt.close}`}
+                    </Typography>
+                  );
+                })
               ) : (
                 <Typography variant="body2">{String(workTime)}</Typography>
               )}

@@ -131,6 +131,8 @@ export interface IndividualRegisterData {
   country: string;
   password: string;
   confirmPassword: string;
+  acceptedTerms: boolean;
+  acceptedTermsAt?: string;
 }
 
 export interface BusinessRegisterData {
@@ -148,6 +150,8 @@ export interface BusinessRegisterData {
   country: string;
   lat: string;
   lng: string;
+  acceptedTerms: boolean;
+  acceptedTermsAt?: string;
 }
 
 export interface ListingImage {

@@ -81,7 +81,7 @@ export default function NewListingForm() {
 
       // Individuals: limit 3 listings per calendar year
       if (role === "individual") {
-        const existing = await getListingsByOwner(user.uid);
+        const existing = await getListingsByOwner(user.uid, { includeSold: true });
         const year = new Date().getFullYear();
         const countThisYear = existing.filter((l) => {
           const createdAt =

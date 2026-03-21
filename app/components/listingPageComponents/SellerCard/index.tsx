@@ -73,7 +73,7 @@ const SellerCard = ({ seller, sellerId, listingId, compact }: Props) => {
 
   const goToLeads = () => {
     closeManage();
-    navigate("/admin", { state: { tabIndex: 2 } });
+    navigate("/admin", { state: { tabIndex: 1 } });
   };
 
   const openEditPrice = () => {

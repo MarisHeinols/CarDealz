@@ -25,7 +25,7 @@ import { useAllListingsCached } from "~/hooks/useCachedListings";
 import { useUserPreferences } from "~/context/UserPreferencesContext";
 
 const Listings = () => {
-  const { listings, loading, refreshing } = useAllListingsCached();
+  const { listings, loading, refreshing, error } = useAllListingsCached();
   const [filters, setFilters] = useState<ListingsFiltersState>(defaultFilters);
   const [filtersTouched, setFiltersTouched] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -83,6 +83,28 @@ const Listings = () => {
         </Box>
       )}
 
+      {error && (
+        <Box sx={{ mb: 4, p: 3, bgcolor: "error.light", borderRadius: 2, border: "1px solid", borderColor: "error.main" }}>
+          <Stack spacing={1}>
+            <Typography color="error.dark" fontWeight="bold">
+              {t("common.error_fetching")}
+            </Typography>
+            <Typography variant="body2" color="error.dark">
+              {error}
+            </Typography>
+            <Button 
+              variant="contained" 
+              color="error" 
+              size="small" 
+              onClick={() => window.location.reload()} 
+              sx={{ alignSelf: "flex-start", mt: 1 }}
+            >
+              {t("common.retry")}
+            </Button>
+          </Stack>
+        </Box>
+      )}
+
       <ListingsFilters
         filters={filters}
         onChange={(f) => {
@@ -95,7 +117,7 @@ const Listings = () => {
         }}
       />
       <TopListings carListings={table.rows} />
-      {loading && listings.length === 0 ? (
+      {loading && listings.length === 0 && !error ? (
         <Box sx={{ mt: 2 }}>
           <LinearProgress />
         </Box>

@@ -286,6 +286,7 @@ export default function AboutPage() {
                       </Typography>
                       {t("about.dealer.plans.free.price")}
                       <Typography
+                        component="span"
                         variant="subtitle1"
                         sx={{ opacity: 0.6, fontWeight: 700 }}
                       >

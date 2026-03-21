@@ -28,9 +28,14 @@ function normalizeLang(raw: string | null | undefined): Lang | null {
 }
 
 function detectDefaultLanguage(): Lang {
-  const stored = normalizeLang(
-    typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null,
-  );
+  let stored: Lang | null = null;
+  try {
+    stored = normalizeLang(
+      typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null,
+    );
+  } catch (e) {
+    console.warn("Language detection: Storage blocked or inaccessible");
+  }
   if (stored) return stored;
 
   const nav = typeof navigator !== "undefined" ? navigator : null;

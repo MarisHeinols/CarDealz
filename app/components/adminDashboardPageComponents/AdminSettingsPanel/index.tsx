@@ -110,10 +110,28 @@ const AdminSettingsPanel = () => {
 
       <Accordion>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography fontWeight={600}>Location</Typography>
+          <Typography fontWeight={600}>Plan & Billing</Typography>
         </AccordionSummary>
         <AccordionDetails>
-          <LocationSettings />
+          <Stack spacing={2}>
+            <Typography variant="body2" color="text.secondary">
+              Managing your subscription status, payment methods, and invoices via Stripe Secure Portal.
+            </Typography>
+            <Button
+              variant="outlined"
+              fullWidth
+              onClick={async () => {
+                try {
+                  const { goToCustomerPortal } = await import("~/services/billingService");
+                  await goToCustomerPortal();
+                } catch (err: any) {
+                  appDispatch(showNotification({ message: err.message, severity: "error" }));
+                }
+              }}
+            >
+              Manage & Cancel Subscription
+            </Button>
+          </Stack>
         </AccordionDetails>
       </Accordion>
 

@@ -2,7 +2,6 @@ import { auth } from "~/firebase/auth";
 import { db } from "../firebase/fireStore";
 import {
   createUserWithEmailAndPassword,
-  FacebookAuthProvider,
   GoogleAuthProvider,
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -234,11 +233,6 @@ export const login = async (email: string, password: string) => {
 export async function loginWithGoogle() {
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
-  return await signInWithPopup(auth, provider);
-}
-
-export async function loginWithFacebook() {
-  const provider = new FacebookAuthProvider();
   return await signInWithPopup(auth, provider);
 }
 

@@ -25,3 +25,10 @@ export async function selectFreeIndividualPlan(uid: string) {
     { merge: true }
   );
 }
+export async function goToCustomerPortal() {
+  const call = httpsCallable(functions, "createPortalSession");
+  const res = await call();
+  const url = (res.data as any)?.url;
+  if (!url || typeof url !== "string") throw new Error("Stripe portal URL missing.");
+  window.location.assign(url);
+}

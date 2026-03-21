@@ -6,6 +6,7 @@ export const lt = {
       save: "Išsaugoti",
       edit: "Redaguoti",
       loading: "Kraunama…",
+      closed: "Uždaryta",
       no_data: "Nėra duomenų",
       mileage: "Rida",
       price: "Kaina",

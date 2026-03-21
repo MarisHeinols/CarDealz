@@ -13,5 +13,7 @@ export default [
   route("choose-tier","routes/chooseTier.tsx"),
   route("login","routes/login.tsx"),
   route("register","routes/registerUser.tsx"),
-  route("verify-phone","routes/verifyPhone.tsx")
+  route("verify-phone","routes/verifyPhone.tsx"),
+  route("privacy-policy", "routes/privacyPolicy.tsx"),
+  route("terms-of-service", "routes/termsOfService.tsx")
 ] satisfies RouteConfig;
