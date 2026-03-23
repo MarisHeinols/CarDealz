@@ -7,6 +7,9 @@ const handler = createPagesFunctionHandler({ build });
 
 export const onRequest = async (context: any) => {
   const url = new URL(context.request.url);
+  if (url.pathname === "/_worker_check") {
+    return new Response("Worker is active: " + new Date().toISOString());
+  }
   console.log("[pages]", context.request.method, url.pathname);
 
   const response = await handler(context);
