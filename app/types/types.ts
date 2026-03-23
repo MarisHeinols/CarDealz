@@ -87,7 +87,8 @@ export type SortKey =
   | "price"
   | "conditionTier"
   | "color"
-  | "location";
+  | "location"
+  | "createdAt";
 
 export type SortDir = "asc" | "desc";
 
@@ -150,6 +151,8 @@ export interface BusinessRegisterData {
   country: string;
   lat: string;
   lng: string;
+  registrationNumber: string;
+  website?: string;
   acceptedTerms: boolean;
   acceptedTermsAt?: string;
 }
@@ -166,7 +169,7 @@ export interface CarListingDetails {
   id: string;
 
   // Vehicle identity
-  vin: number;
+  vin: string;
   ta: string;
   plateNumber?: string;
 
@@ -201,6 +204,7 @@ export interface CarListingDetails {
 
   // Location
   location: string;
+  address?: string;
 
   // Media
   images: ListingImage[];
@@ -225,7 +229,7 @@ export interface CarListingDetails {
 
 export type CarListingDetailsJson = {
   id: string;
-  vin:number;
+  vin: string;
   ta:string;
   plateNumber?: string;
   make: string;
@@ -244,6 +248,7 @@ export type CarListingDetailsJson = {
   status: ListingStatus;
   color: string;
   location: string;
+  address?: string;
   marketRange: { min: number; max: number };
 
   /**

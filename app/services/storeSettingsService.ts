@@ -16,6 +16,7 @@ export async function saveStoreSettings(
   // Omit isEditMode — that's UI-only state
   const { isEditMode, ...settingsToSave } = settings;
   await setDoc(settingsRef, settingsToSave, { merge: true });
+  setCachedValue(cacheKeyStoreSettings(uid), settingsToSave);
 }
 
 /**

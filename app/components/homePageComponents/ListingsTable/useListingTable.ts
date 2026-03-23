@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { CarListingSummary, ListingsFiltersState } from "~/types/types";
+import type { CarListingSummary, ListingsFiltersState, SortKey, SortDir } from "~/types/types";
 
 export const defaultFilters: ListingsFiltersState = {
   search: "",
@@ -16,26 +16,25 @@ export const defaultFilters: ListingsFiltersState = {
   model: ""
 };
 
-export type SortKey =
-  | "make"
-  | "model"
-  | "year"
-  | "mileage"
-  | "price"
-  | "conditionTier"
-  | "color"
-  | "location";
-
-export type SortDir = "asc" | "desc";
+// Removed local SortKey/SortDir types in favor of global ones in ~/types/types
 
 const PAGE_SIZE = 10;
 
 export function useListingsTable(
   data: CarListingSummary[],
-  filters: ListingsFiltersState
+  filters: ListingsFiltersState,
+  options?: {
+    sortKey: SortKey;
+    sortDir: SortDir;
+    onSort: (key: SortKey, dir: SortDir) => void;
+  }
 ) {
-  const [sortKey, setSortKey] = useState<SortKey>("year");
-  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [internalSortKey, setInternalSortKey] = useState<SortKey>("year");
+  const [internalSortDir, setInternalSortDir] = useState<SortDir>("desc");
+  
+  const sortKey = options?.sortKey ?? internalSortKey;
+  const sortDir = options?.sortDir ?? internalSortDir;
+  
   const [page, setPage] = useState(1);
 
   const filtered = useMemo(() => {
@@ -142,11 +141,13 @@ export function useListingsTable(
 
   function toggleSort(key: SortKey) {
     setPage(1);
-    if (key === sortKey) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    const newDir = key === sortKey && sortDir === "asc" ? "desc" : "asc";
+    
+    if (options?.onSort) {
+      options.onSort(key, newDir);
     } else {
-      setSortKey(key);
-      setSortDir("asc");
+      setInternalSortKey(key);
+      setInternalSortDir(newDir);
     }
   }
 

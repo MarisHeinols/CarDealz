@@ -26,25 +26,42 @@ const ColorField = ({
   useEffect(() => setDraft(value), [value]);
   return (
     <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
-      <Box sx={{ minWidth: 100 }}>
-        <Typography>{label}</Typography>
+      <Box sx={{ minWidth: { xs: 120, sm: 160 }, pr: 1, flexShrink: 0 }}>
+        <Typography variant="body2" fontWeight={500} noWrap>
+          {label}
+        </Typography>
+      </Box>
+
+      <Box sx={{ width: 48, flexShrink: 0 }}>
+        <TextField
+          type="color"
+          size="small"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={() => onChange(draft)}
+          sx={{
+            "& .MuiInputBase-input": {
+              p: "4px",
+              height: "32px",
+              cursor: "pointer",
+            },
+          }}
+          fullWidth
+        />
       </Box>
 
       <TextField
-        type="color"
         size="small"
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         onBlur={() => onChange(draft)}
-        sx={{ width: 60 }}
-      />
-
-      <TextField
-        size="small"
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={() => onChange(draft)}
-        sx={{ flex: 1 }}
+        sx={{
+          flex: 1,
+          "& .MuiInputBase-input": {
+            fontFamily: "monospace",
+            fontSize: "0.9rem",
+          },
+        }}
       />
     </Stack>
   );
@@ -80,27 +97,22 @@ const AppearanceSettings = () => {
       </TextField>
 
       <ColorField
-        label={t("dashboard.settings.appearance.colorPrimary")}
+        label={t("dashboard.settings.appearance.colorPrimary") || "Primary Color"}
         value={theme.primary}
         onChange={(v) => handleChange("primary", v)}
       />
       <ColorField
-        label={t("dashboard.settings.appearance.colorSecondary")}
-        value={theme.secondary}
-        onChange={(v) => handleChange("secondary", v)}
-      />
-      <ColorField
-        label={t("dashboard.settings.appearance.colorAccent")}
+        label={t("dashboard.settings.appearance.colorAccent") || "Accent Color"}
         value={theme.accent}
         onChange={(v) => handleChange("accent", v)}
       />
       <ColorField
-        label={t("dashboard.settings.appearance.colorHeading")}
+        label={t("dashboard.settings.appearance.colorHeading") || "Heading Color"}
         value={theme.heading}
         onChange={(v) => handleChange("heading", v)}
       />
       <ColorField
-        label={t("dashboard.settings.appearance.colorBg")}
+        label={t("dashboard.settings.appearance.colorBg") || "Background Color"}
         value={theme.background}
         onChange={(v) => handleChange("background", v)}
       />

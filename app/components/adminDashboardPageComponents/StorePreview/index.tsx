@@ -85,31 +85,65 @@ const StorePreview = () => {
           {/* Search & Filters stub */}
           <Box sx={{ mt: 4 }}>
             <Accordion
+              variant="outlined"
+              defaultExpanded={false}
               sx={{
-                bgcolor: theme.secondary || "",
+                bgcolor: theme.primary || "transparent",
                 color: theme.isTextLight ? "white" : "black",
+                border: "1px solid",
+                borderColor: "divider",
+                borderRadius: 2,
+                boxShadow: "none",
+                '&:before': { display: 'none' },
+                overflow: 'hidden'
               }}
             >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography fontWeight={600}>{t("store.search_and_filter")}</Typography>
+              <AccordionSummary 
+                expandIcon={<ExpandMoreIcon sx={{ color: theme.isTextLight ? "white" : (theme.secondary || "primary.main") }} />}
+              >
+                <Typography fontWeight={600} sx={{ color: theme.heading || (theme.isTextLight ? "white" : "inherit") }}>
+                  {t("store.search_and_filter")}
+                </Typography>
               </AccordionSummary>
-              <AccordionDetails>
+              <AccordionDetails sx={{ p: { xs: 2, md: 3 } }}>
                 <Box
                   sx={{
                     display: "flex",
-                    gap: 1,
-                    flexWrap: "wrap",
-                    opacity: 0.6,
+                    flexDirection: "column",
+                    gap: 2,
+                    opacity: 0.8,
                   }}
                 >
-                  {[
-                    t("store.filters.make"),
-                    t("store.filters.year"),
-                    t("store.filters.condition"),
-                    t("store.filters.price"),
-                    t("store.filters.color"),
-                  ].map(
-                    (f) => (
+                  <Box
+                    sx={{
+                      height: 48,
+                      border: "1px solid",
+                      borderColor: "divider",
+                      borderRadius: 1,
+                      bgcolor: "rgba(255,255,255,0.05)",
+                      display: "flex",
+                      alignItems: "center",
+                      px: 2,
+                    }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      {t("filters.searchPlaceholder")}
+                    </Typography>
+                  </Box>
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      gap: 1,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    {[
+                      t("filters.brand"),
+                      t("filters.year"),
+                      t("filters.condition"),
+                      t("filters.price"),
+                    ].map((f) => (
                       <Chip
                         key={f}
                         label={f}
@@ -120,10 +154,12 @@ const StorePreview = () => {
                           borderColor: theme.isTextLight
                             ? "rgba(255,255,255,0.4)"
                             : "divider",
+                          // Use the secondary (Action) color for the chip label in preview
+                          "&:hover": { bgcolor: theme.secondary }
                         }}
                       />
-                    )
-                  )}
+                    ))}
+                  </Box>
                 </Box>
               </AccordionDetails>
             </Accordion>
@@ -135,7 +171,7 @@ const StorePreview = () => {
               variant="h6"
               fontWeight={700}
               sx={{
-                color: theme.isTextLight ? "white" : "text.primary",
+                color: theme.heading || (theme.isTextLight ? "white" : "text.primary"),
               }}
             >
               {t("store.inventory")}
@@ -150,7 +186,17 @@ const StorePreview = () => {
 
           {/* Pagination stub */}
           <Box sx={{ display: "flex", justifyContent: "center", mt: 3, mb: 1 }}>
-            <Pagination count={3} page={1} size="small" />
+            <Pagination 
+              count={3} 
+              page={1} 
+              size="small" 
+              sx={{
+                "& .Mui-selected": {
+                  bgcolor: (theme.secondary || "secondary.main") + " !important",
+                  color: "white !important",
+                }
+              }}
+            />
           </Box>
 
           <PreviewReviews theme={theme} reviews={[]} />

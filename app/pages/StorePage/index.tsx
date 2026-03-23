@@ -1,14 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Box,
+  Typography,
+  Stack,
+  Tabs,
+  Tab,
+  Pagination,
+  Button,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
   Container,
   LinearProgress,
-  Pagination,
-  Typography,
+  ThemeProvider,
+  createTheme,
+  Divider,
+  Link,
 } from "@mui/material";
+import { Link as RouterLink } from "react-router";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useAppDispatch } from "~/redux/hooks";
 import { loadStoreSettingsFromDb } from "~/services/storeSettingsService";
@@ -29,13 +38,13 @@ import {
   defaultFilters,
   useListingsTable,
 } from "~/components/homePageComponents/ListingsTable/useListingTable";
-import type { ListingsFiltersState } from "~/types/types";
+import type { ListingsFiltersState, CarListingSummary } from "~/types/types";
 import { useTranslation } from "react-i18next";
 import { updateListingPrice, deleteListingFromDb } from "~/services/listingsService";
 import { showNotification } from "~/redux/slices/uiSlice";
-import type { CarListingSummary } from "~/types/types";
 import StoreReviewsSection from "~/components/shared/StoreReviewsSection";
 import AppContainer from "~/components/shared/AppContainer";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
 function IndividualProfileListings({
   title,
@@ -43,12 +52,14 @@ function IndividualProfileListings({
   isLoading,
   refreshing,
   canManage,
+  onRefresh,
 }: {
   title: string;
   listings: CarListingSummary[];
   isLoading: boolean;
   refreshing: boolean;
   canManage: boolean;
+  onRefresh?: () => void;
 }) {
   const { t } = useTranslation();
   const [filters, setFilters] = useState<ListingsFiltersState>(defaultFilters);
@@ -68,6 +79,7 @@ function IndividualProfileListings({
         prev.map((l) => (l.id === listingId ? { ...l, price: newPrice, isOnSale: false, salePrice: undefined } : l))
       );
       dispatch(showNotification({ message: t("pricing.priceUpdated"), severity: "success" }));
+      onRefresh?.();
     } catch (e: any) {
       dispatch(showNotification({ message: e?.message || t("pricing.priceUpdateFailed"), severity: "error" }));
     }
@@ -78,6 +90,7 @@ function IndividualProfileListings({
       await deleteListingFromDb(listingId);
       setLocalListings((prev) => prev.filter((l) => l.id !== listingId));
       dispatch(showNotification({ message: t("pricing.listingDeleted"), severity: "info" }));
+      onRefresh?.();
     } catch (e: any) {
       dispatch(showNotification({ message: e?.message || t("pricing.listingDeleteFailed"), severity: "error" }));
     }
@@ -88,7 +101,7 @@ function IndividualProfileListings({
       {refreshing ? <LinearProgress sx={{ mb: 2 }} /> : null}
       {isLoading ? <LinearProgress sx={{ mb: 2 }} /> : null}
 
-      <Typography variant="h5" fontWeight={800} sx={{ mb: 3 }}>
+      <Typography variant="h5" fontWeight={900} sx={{ mb: 3 }}>
         {title}
       </Typography>
 
@@ -97,9 +110,11 @@ function IndividualProfileListings({
         variant="outlined" 
         sx={{ 
           mb: 3, 
-          borderRadius: '12px !important', 
+          borderRadius: 2, 
           '&:before': { display: 'none' },
-          overflow: 'hidden'
+          overflow: 'hidden',
+          borderColor: "divider",
+          boxShadow: "none"
         }}
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -129,6 +144,7 @@ function IndividualProfileListings({
         showOwnerActions={canManage}
         onChangePrice={canManage ? handleChangePrice : undefined}
         onDelete={canManage ? handleDelete : undefined}
+        onRefresh={onRefresh}
       />
 
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 2 }}>
@@ -152,13 +168,17 @@ export default function StorePage({ handle }: { handle: string }) {
   const [loadingStore, setLoadingStore] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [viewerUid, setViewerUid] = useState<string | null>(null);
+  const [viewerVerified, setViewerVerified] = useState(false);
   const [lookupError, setLookupError] = useState<string | null>(null);
   const [storefront, setStorefront] = useState<StorefrontSettings | null>(null);
   const [profile, setProfile] = useState<UserProfileDoc | null>(null);
   const [reviewStats, setReviewStats] = useState<{ avg: number; count: number } | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => setViewerUid(u?.uid || null));
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      setViewerUid(u?.uid || null);
+      setViewerVerified(Boolean(u?.phoneNumber));
+    });
     return () => unsubscribe();
   }, []);
 
@@ -204,15 +224,26 @@ export default function StorePage({ handle }: { handle: string }) {
         ]);
         if (cancelled) return;
         setProfile(userProfile);
-        if (!userProfile) {
+        
+        // Handle disabled accounts
+        const isOwner = Boolean(uid && viewerUid === uid);
+        if (userProfile?.status === "disabled" && !isOwner) {
           setNotFound(true);
           setLoadingStore(false);
           return;
         }
 
-        // Businesses get a full storefront; individuals get a simple profile page.
-        if (settings) setStorefront(settings);
-        setLoadingStore(false);
+        if (userProfile) {
+          if (!userProfile) {
+            setNotFound(true);
+            setLoadingStore(false);
+            return;
+          }
+
+          // Businesses get a full storefront; individuals get a simple profile page.
+          if (settings) setStorefront(settings);
+          setLoadingStore(false);
+        }
       })
       .catch((e) => {
         console.error(e);
@@ -267,23 +298,42 @@ export default function StorePage({ handle }: { handle: string }) {
 
   const theme = storefront?.theme;
 
+  const muiTheme = useMemo(() => {
+    if (!theme) return null;
+    return createTheme({
+      palette: {
+        primary: {
+          main: theme.accent || "#1976d2", // Accent is the main ACTION color
+        },
+        background: {
+          paper: theme.primary || "#ffffff", // Primary is the component background
+        },
+      },
+    });
+  }, [theme]);
+
   const isLoading = loadingStore || !profile || (owner.loading && owner.listings.length === 0);
   const isOwner = Boolean(viewerUid && ownerId && viewerUid === ownerId);
 
+  const visibleListings = useMemo(() => {
+    if (isOwner) return owner.listings;
+    return owner.listings.filter((l) => (l as any).status !== "draft");
+  }, [owner.listings, isOwner]);
+
   const listingStats = useMemo(() => {
-    const listingsCount = owner.listings.length;
-    const viewsCount = owner.listings.reduce((sum, l) => sum + (Number(l.viewCount) || 0), 0);
+    const listingsCount = visibleListings.length;
+    const viewsCount = visibleListings.reduce((sum, l) => sum + (Number(l.viewCount) || 0), 0);
     return { listingsCount, viewsCount };
-  }, [owner.listings]);
+  }, [visibleListings]);
 
   // Business storefront filtering
   const [filters, setFilters] = useState<ListingsFiltersState>(defaultFilters);
-  const table = useListingsTable(owner.listings, filters);
+  const table = useListingsTable(visibleListings, filters);
 
   if (notFound) {
     return (
       <Container maxWidth="md" sx={{ py: 6 }}>
-        <Typography variant="h5" fontWeight={700} sx={{ mb: 1 }}>
+        <Typography variant="h5" fontWeight={900} sx={{ mb: 1 }}>
           {t("about.store.notFound")}
         </Typography>
         <Typography color="text.secondary">
@@ -304,15 +354,26 @@ export default function StorePage({ handle }: { handle: string }) {
       <>
         <IndividualProfileListings
           title={displayName}
-          listings={owner.listings}
+          listings={visibleListings}
           isLoading={isLoading}
           refreshing={owner.refreshing}
-          canManage={isOwner}
+          canManage={isOwner && viewerVerified}
+          onRefresh={owner.refresh}
         />
+        {isOwner && !viewerVerified && (
+          <Container maxWidth="xl" sx={{ mt: 1 }}>
+            <Box p={2} mb={2} sx={{ bgcolor: "warning.light", borderRadius: 2, display: "flex", alignItems: "center", gap: 1 }}>
+              <ErrorOutlineIcon color="warning" />
+              <Typography variant="body2" fontWeight={600}>
+                Please <Link component={RouterLink} to="/verify-phone" sx={{ color: "info.main", textDecoration: "underline" }}>verify your phone</Link> to enable listing management.
+              </Typography>
+            </Box>
+          </Container>
+        )}
         {ownerId ? (
           <Container maxWidth="xl" sx={{ pb: 6 }}>
             <StoreReviewsSection
-              storeUid={ownerId}
+              storeUid={handle}
               ownerUid={ownerId}
               viewerUid={viewerUid}
               onStatsChange={setReviewStats}
@@ -329,7 +390,7 @@ export default function StorePage({ handle }: { handle: string }) {
     return (
       <Container maxWidth="md" sx={{ py: 6 }}>
         <LinearProgress sx={{ mb: 2 }} />
-        <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>
+        <Typography variant="h6" fontWeight={800} sx={{ mb: 1 }}>
           {t("about.store.loadingStore")}
         </Typography>
         <Typography color="text.secondary">
@@ -343,7 +404,7 @@ export default function StorePage({ handle }: { handle: string }) {
   if (!storefront) {
     return (
       <Container maxWidth="md" sx={{ py: 6 }}>
-        <Typography variant="h5" fontWeight={700} sx={{ mb: 1 }}>
+        <Typography variant="h5" fontWeight={900} sx={{ mb: 1 }}>
           {t("about.store.notPublished")}
         </Typography>
         <Typography color="text.secondary">
@@ -353,40 +414,43 @@ export default function StorePage({ handle }: { handle: string }) {
     );
   }
 
-  return (
-    <StorefrontContext.Provider value={storefront}>
-      <Box sx={{ bgcolor: theme?.background || "transparent", minHeight: "calc(100vh - 64px)" }}>
-        <AppContainer sx={{ py: 4 }}>
-          {owner.refreshing ? <LinearProgress sx={{ mb: 2 }} /> : null}
-          {isLoading ? <LinearProgress sx={{ mb: 2 }} /> : null}
+  const content = (
+    <Box sx={{ bgcolor: theme?.background || "transparent", minHeight: "calc(100vh - 64px)" }}>
+      <AppContainer sx={{ py: 4 }}>
+        {owner.refreshing ? <LinearProgress sx={{ mb: 2 }} /> : null}
+        {isLoading ? <LinearProgress sx={{ mb: 2 }} /> : null}
 
-          <StoreHeader />
+        <StoreHeader />
 
-          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "5fr 7fr" }, gap: 3, mt: 1 }}>
-            <StoreInfo
-              reviewStats={reviewStats}
-              listingsCount={listingStats.listingsCount}
-              viewsCount={listingStats.viewsCount}
-            />
-            <StoreMap />
-          </Box>
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "5fr 7fr" }, gap: 3, mt: 1 }}>
+          <StoreInfo
+            reviewStats={reviewStats}
+            listingsCount={listingStats.listingsCount}
+            viewsCount={listingStats.viewsCount}
+          />
+          <StoreMap />
+        </Box>
 
-          <Box sx={{ mt: 4 }}>
-            <Accordion 
-              defaultExpanded={false} 
-              variant="outlined"
-              sx={{ 
-                mb: 3, 
-                bgcolor: theme?.secondary || 'transparent', 
-                color: theme?.isTextLight ? 'white' : 'inherit',
-                borderRadius: '12px !important',
-                borderColor: theme?.isTextLight ? 'rgba(255,255,255,0.2)' : 'divider',
+        {/* Inventory Section — Search & Filter */}
+        <Box sx={{ mt: 5 }}>
+          <Box sx={{ mt: 1 }}>
+            <Accordion
+              defaultExpanded={false}
+              sx={{
+                bgcolor: theme?.primary || "transparent",
+                color: theme?.isTextLight ? "white" : "inherit",
+                border: "1px solid",
+                borderColor: "divider",
+                boxShadow: "none",
+                borderRadius: 2,
                 '&:before': { display: 'none' },
                 overflow: 'hidden'
               }}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: theme?.isTextLight ? 'white' : 'inherit' }} />}>
-                <Typography fontWeight={600}>{t("store.search_and_filter")}</Typography>
+                <Typography fontWeight={600} sx={{ color: "inherit" }}>
+                  {t("store.search_and_filter")}
+                </Typography>
               </AccordionSummary>
               <AccordionDetails sx={{ p: 3, pt: 1 }}>
                 <ListingsFilters
@@ -404,41 +468,65 @@ export default function StorePage({ handle }: { handle: string }) {
               </AccordionDetails>
             </Accordion>
 
-            <Typography variant="h6" fontWeight={800} sx={{ mb: 2, color: theme?.heading || "inherit" }}>
-              {t("store.inventory")}
-            </Typography>
-            
-            <StoreListingsGrid listings={table.rows} isOwner={isOwner} />
-            
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 4 }}>
-              <Typography variant="body2" color="text.secondary" sx={{ color: theme?.isTextLight ? "rgba(255,255,255,0.7)" : "text.secondary" }}>
-                {t("businesses.resultsCount", { count: table.total })}
+            <Box sx={{ mt: 4 }}>
+              <Typography variant="h6" fontWeight={800} sx={{ mb: 2, color: theme?.heading || "inherit" }}>
+                {t("store.inventory")}
               </Typography>
-              <Pagination
-                page={table.page}
-                count={table.pageCount}
-                onChange={(_, p) => table.setPage(p)}
-                sx={{
-                  "& .MuiPaginationItem-root": {
-                    color: theme?.isTextLight ? "white" : "inherit",
-                  }
-                }}
-              />
+              
+              {isOwner && !viewerVerified && (
+                <Box p={2} mb={3} sx={{ bgcolor: "warning.light", borderRadius: 2, display: "flex", alignItems: "center", gap: 1 }}>
+                  <ErrorOutlineIcon color="warning" />
+                  <Typography variant="body2" fontWeight={600}>
+                    Please <Link component={RouterLink} to="/verify-phone" sx={{ color: "info.main", textDecoration: "underline" }}>verify your phone</Link> to enable store management.
+                  </Typography>
+                </Box>
+              )}
+              
+              <StoreListingsGrid listings={table.rows} isOwner={isOwner && viewerVerified} onRefresh={owner.refresh} />
+
+              <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+                <Pagination
+                  page={table.page}
+                  count={table.pageCount}
+                  onChange={(_, p) => table.setPage(p)}
+                  sx={{
+                    "& .MuiPaginationItem-root": {
+                      color: theme?.isTextLight ? "white" : "inherit",
+                    },
+                    "& .Mui-selected": {
+                      bgcolor: (theme?.accent || "primary.main") + " !important",
+                      color: "white !important",
+                    }
+                  }}
+                />
+              </Box>
             </Box>
           </Box>
+        </Box>
 
-          {ownerId ? (
-            <StoreReviewsSection
-              storeUid={ownerId}
-              ownerUid={ownerId}
-              viewerUid={viewerUid}
-              onStatsChange={setReviewStats}
-              useStoreTheme
-            />
-          ) : null}
-        </AppContainer>
-      </Box>
+        <Divider sx={{ my: 5 }} />
+
+        {/* Reviews Section */}
+        <StoreReviewsSection
+          storeUid={handle}
+          viewerUid={auth.currentUser?.uid || null}
+          ownerUid={profile?.uid || handle}
+          useStoreTheme={true}
+          onStatsChange={setReviewStats}
+        />
+      </AppContainer>
+    </Box>
+  );
+
+  return (
+    <StorefrontContext.Provider value={storefront}>
+      {muiTheme ? (
+        <ThemeProvider theme={muiTheme}>
+          {content}
+        </ThemeProvider>
+      ) : (
+        content
+      )}
     </StorefrontContext.Provider>
   );
 }
-

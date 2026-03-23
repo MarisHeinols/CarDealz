@@ -15,6 +15,7 @@ type Result = {
   refreshing: boolean;
   lastUpdatedAt: number | null;
   error: string | null;
+  refresh: () => Promise<void>;
 };
 
 const DEFAULT_TTL_MS = 60 * 1000; // 1 minute: keeps UI fast but stays reasonably up-to-date
@@ -102,6 +103,21 @@ function useCachedListings(
     };
   }, [cacheKey, ttlMs, fetcher]);
 
-  return { listings, loading, refreshing, lastUpdatedAt, error };
+  const refresh = async () => {
+    if (!cacheKey) return;
+    setRefreshing(true);
+    try {
+      const data = await fetcher();
+      setListings(data);
+      setError(null);
+      setLastUpdatedAt(Date.now());
+    } catch (err: any) {
+      setError(err instanceof Error ? err.message : "Failed to fetch data");
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  return { listings, loading, refreshing, lastUpdatedAt, error, refresh };
 }
 

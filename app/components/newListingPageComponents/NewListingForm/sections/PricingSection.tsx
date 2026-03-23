@@ -66,8 +66,12 @@ export default function PricingSection({ listing, setListing }: Props) {
           fullWidth
           value={listing.price}
           onChange={(e) =>
-            setListing((prev) => ({ ...prev, price: Number(e.target.value) }))
+            setListing((prev) => ({
+              ...prev,
+              price: Math.max(0, Number(e.target.value)),
+            }))
           }
+          inputProps={{ min: 0 }}
         />
       </Grid>
 
@@ -80,9 +84,10 @@ export default function PricingSection({ listing, setListing }: Props) {
           onChange={(e) =>
             setListing((prev) => ({
               ...prev,
-              selfCost: Number(e.target.value),
+              selfCost: Math.max(0, Number(e.target.value)),
             }))
           }
+          inputProps={{ min: 0 }}
         />
       </Grid>
 

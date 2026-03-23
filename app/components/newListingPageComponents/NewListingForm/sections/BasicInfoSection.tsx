@@ -44,13 +44,21 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
   const handleChange =
     (field: keyof CarListingDetailsJson) =>
     (e: React.ChangeEvent<HTMLInputElement>) => {
+      const val = e.target.value;
       setListing((prev) => {
-        const payload = { ...prev, [field]: e.target.value };
+        const payload = { ...prev, [field]: val };
 
-        // Parse year as number since AI estimation relies on the number
-        if (field === "year") {
-          const y = Number(e.target.value);
-          if (!isNaN(y)) payload.year = y;
+        // Handle numeric fields
+        if (field === "year" || field === "mileage") {
+          const numVal = Math.max(0, Number(val));
+          if (!isNaN(numVal)) {
+            (payload as any)[field] = numVal;
+          }
+        }
+
+        // Handle alphanumeric VIN in uppercase
+        if (field === "vin") {
+          payload.vin = val.toUpperCase();
         }
 
         return payload;
@@ -136,13 +144,20 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
           options={models}
           loading={modelsLoading}
           value={listing.model}
+          disabled={!listing.make}
           onInputChange={(_, newValue) =>
             setListing((prev) => ({ ...prev, model: newValue }))
           }
           renderInput={(params) => (
             <TextField
               {...params}
-              label={modelsLoading ? t("form.loadingModels") : t("form.model")}
+              label={
+                !listing.make
+                  ? t("form.select_make_first", { defaultValue: "Select maker first" })
+                  : modelsLoading
+                  ? t("form.loadingModels")
+                  : t("form.model")
+              }
               fullWidth
               InputProps={{
                 ...params.InputProps,
@@ -166,6 +181,7 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
           fullWidth
           value={listing.year}
           onChange={handleChange("year")}
+          inputProps={{ min: 1900, max: new Date().getFullYear() + 1 }}
         />
       </Grid>
       <Grid size={{ xs: 4 }}>
@@ -175,6 +191,7 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
           fullWidth
           value={listing.mileage}
           onChange={handleChange("mileage")}
+          inputProps={{ min: 0 }}
         />
       </Grid>
       <Grid size={{ xs: 4 }}>
@@ -240,7 +257,6 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
         >
           <MenuItem value="draft">{t("form.status_draft")}</MenuItem>
           <MenuItem value="published">{t("form.status_published")}</MenuItem>
-          <MenuItem value="closed">{t("form.status_closed")}</MenuItem>
         </TextField>
       </Grid>
 
@@ -268,12 +284,19 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
             options={cities}
             loading={citiesLoading}
             value={city}
+            disabled={!country}
             onInputChange={(_, newValue) => handleCityChange(newValue)}
             sx={{ flex: 1 }}
             renderInput={(params) => (
               <TextField
                 {...params}
-                label={citiesLoading ? t("form.loadingCities") : t("form.city")}
+                label={
+                  !country 
+                    ? t("form.select_country_first", { defaultValue: "Select country first" })
+                    : citiesLoading 
+                      ? t("form.loadingCities") 
+                      : t("form.city")
+                }
                 placeholder={t("form.cityPlaceholder")}
                 InputProps={{
                   ...params.InputProps,
@@ -299,9 +322,20 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
             }
             sx={{ height: 56, whiteSpace: "nowrap" }}
           >
-            {geoLoading ? t("form.detecting") : t("form.myLocation")}
+            {geoLoading ? t("form.detecting") : t("common.useMyLocation", { defaultValue: "Use my location" })}
           </Button>
         </Stack>
+        
+        {/* Full Address */}
+        <TextField
+          fullWidth
+          label={t("fields.address", { defaultValue: "Full Address" })}
+          placeholder={t("form.addressPlaceholder", { defaultValue: "e.g. Brīvības iela 123" })}
+          value={listing.address || ""}
+          onChange={handleChange("address")}
+          disabled={!country}
+          sx={{ mt: 2 }}
+        />
         {geoError && (
           <Typography
             variant="caption"

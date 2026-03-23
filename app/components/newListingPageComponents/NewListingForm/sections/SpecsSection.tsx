@@ -13,8 +13,16 @@ export default function SpecsSection({ listing, setListing }: Props) {
 
   const handleChange =
     (field: keyof CarListingDetailsJson) =>
-    (e: React.ChangeEvent<HTMLInputElement>) =>
-      setListing((prev) => ({ ...prev, [field]: e.target.value }));
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      let value: string | number = e.target.value;
+      if (
+        (field === "horsepower" || field === "displacement") &&
+        e.target.type === "number"
+      ) {
+        value = Math.max(0, Number(e.target.value));
+      }
+      setListing((prev) => ({ ...prev, [field]: value }));
+    };
 
   return (
     <Grid container spacing={2}>
@@ -39,6 +47,7 @@ export default function SpecsSection({ listing, setListing }: Props) {
           fullWidth
           value={listing.horsepower}
           onChange={handleChange("horsepower")}
+          inputProps={{ min: 0 }}
         />
       </Grid>
       <Grid size={{ xs: 4 }}>
@@ -48,6 +57,7 @@ export default function SpecsSection({ listing, setListing }: Props) {
           fullWidth
           value={listing.displacement}
           onChange={handleChange("displacement")}
+          inputProps={{ min: 0 }}
         />
       </Grid>
       <Grid size={{ xs: 6 }}>

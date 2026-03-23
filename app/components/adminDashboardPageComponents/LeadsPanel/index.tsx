@@ -28,6 +28,14 @@ import { getLeadsByDealer, updateLeadStatus, deleteLead } from "~/services/leads
 import { getListingsByOwner } from "~/services/listingsService";
 import { useTranslation } from "react-i18next";
 import type { CarListingSummary, LeadDoc, LeadStatus } from "~/types/types";
+import { showNotification } from "~/redux/slices/uiSlice";
+import { useAppDispatch } from "~/redux/hooks";
+import { 
+  invalidateCache, 
+  cacheKeyOwnerListings, 
+  cacheKeyAllListings,
+  cacheKeyListingDetails
+} from "~/services/listingsCache";
 
 function statusColor(status: LeadStatus): "default" | "primary" | "success" | "warning" {
   if (status === "new") return "warning";
@@ -44,6 +52,8 @@ export default function LeadsPanel() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<LeadStatus | "all">("all");
   const [leadToDelete, setLeadToDelete] = useState<{ leadId: string, listingId: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     let cancelled = false;
@@ -103,11 +113,33 @@ export default function LeadsPanel() {
   };
 
   const confirmDelete = async () => {
-    if (!leadToDelete) return;
+    if (!leadToDelete || !user) return;
     const { leadId, listingId } = leadToDelete;
-    await deleteLead(leadId, listingId);
-    setLeads((prev) => prev.filter((l) => l.id !== leadId));
-    setLeadToDelete(null);
+    
+    setDeleting(true);
+    try {
+      await deleteLead(leadId, listingId);
+      
+      // Invalidate caches so the lead count updates in other parts of the dashboard
+      invalidateCache(cacheKeyOwnerListings(user.uid));
+      invalidateCache(cacheKeyAllListings());
+      invalidateCache(cacheKeyListingDetails(listingId));
+      
+      setLeads((prev) => prev.filter((l) => l.id !== leadId));
+      dispatch(showNotification({ 
+        message: t("leads.deleted_success", { defaultValue: "Lead deleted successfully." }), 
+        severity: "success" 
+      }));
+      setLeadToDelete(null);
+    } catch (err: any) {
+      console.error("Failed to delete lead", err);
+      dispatch(showNotification({ 
+        message: t("leads.delete_failed", { defaultValue: "Failed to delete lead." }), 
+        severity: "error" 
+      }));
+    } finally {
+      setDeleting(false);
+    }
   };
 
   if (!user) {
@@ -134,7 +166,7 @@ export default function LeadsPanel() {
   return (
     <Box>
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }} sx={{ mb: 2 }}>
-        <Typography variant="h6" fontWeight={700}>
+        <Typography variant="h6" fontWeight={800}>
           {t("leads.title")}
         </Typography>
 
@@ -303,8 +335,15 @@ export default function LeadsPanel() {
           <Button onClick={() => setLeadToDelete(null)} color="inherit" sx={{ textTransform: "none" }}>
             {t("common.cancel", { defaultValue: "Cancel" })}
           </Button>
-          <Button onClick={confirmDelete} color="error" variant="contained" sx={{ textTransform: "none" }}>
-            {t("common.delete", { defaultValue: "Delete" })}
+          <Button 
+            onClick={confirmDelete} 
+            color="error" 
+            variant="contained" 
+            sx={{ textTransform: "none" }}
+            disabled={deleting}
+            startIcon={deleting ? <CircularProgress size={16} color="inherit" /> : null}
+          >
+            {deleting ? t("common.deleting", { defaultValue: "Deleting..." }) : t("common.delete", { defaultValue: "Delete" })}
           </Button>
         </DialogActions>
       </Dialog>

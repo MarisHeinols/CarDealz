@@ -2,6 +2,7 @@ import PleaseLogin from "~/components/shared/PleaseLogin";
 import { useAuth } from "~/hooks/userStore/useAuth";
 import NewListingPage from "~/pages/NewListingPage";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import { getUserProfile } from "~/services/usersService";
 import { Box, CircularProgress, Typography } from "@mui/material";
 
@@ -14,6 +15,7 @@ export function meta() {
 
 export default function NewListingRoute() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [allowed, setAllowed] = useState<boolean | null>(null);
 
   if (!user) {
@@ -22,6 +24,13 @@ export default function NewListingRoute() {
 
   useEffect(() => {
     let cancelled = false;
+    
+    // Strict phone verification check
+    if (!user.phoneNumber) {
+      navigate("/verify-phone");
+      return;
+    }
+
     setAllowed(null);
     getUserProfile(user.uid)
       .then((profile) => {
@@ -34,7 +43,7 @@ export default function NewListingRoute() {
     return () => {
       cancelled = true;
     };
-  }, [user.uid]);
+  }, [user.uid, user.phoneNumber, navigate]);
 
   if (allowed === null) {
     return (

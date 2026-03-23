@@ -11,7 +11,7 @@ import {
   Checkbox,
   Link,
 } from "@mui/material";
-import { Link as RouterLink } from "react-router";
+import { Link as RouterLink, useNavigate } from "react-router";
 import type { BusinessRegisterData } from "~/types/types";
 import {
   completeSocialRegistration,
@@ -20,33 +20,48 @@ import {
   sendVerificationEmail,
 } from "../../../services/auth";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router";
 import { useAppDispatch } from "~/redux/hooks";
 import { showNotification } from "~/redux/slices/uiSlice";
 import { COUNTRIES } from "~/constants/countries";
 import { useCities } from "~/hooks/useCities";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
+import { auth } from "~/firebase/auth";
 
-const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
+const BusinessRegisterForm = ({ socialMode, onRegisterSuccess }: { socialMode?: boolean; onRegisterSuccess: () => void }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<BusinessRegisterData>({
-    ownerName: "",
-    ownerSurname: "",
-    ownerEmail: "",
+    ownerName: auth.currentUser?.displayName?.split(" ")[0] || "",
+    ownerSurname: auth.currentUser?.displayName?.split(" ").slice(1).join(" ") || "",
+    ownerEmail: auth.currentUser?.email || "",
     ownerPhone: "",
     password: "",
     confirmPassword: "",
     storeName: "",
-    businessEmail: "",
+    businessEmail: auth.currentUser?.email || "",
     businessPhone: "",
     address: "",
     city: "",
     country: "",
     lat: "",
     lng: "",
+    registrationNumber: "",
+    website: "",
     acceptedTerms: false,
   });
+
+  // Sync social data in case it arrived after initial mount
+  React.useEffect(() => {
+    if (socialMode && auth.currentUser) {
+       setFormData(prev => ({
+         ...prev,
+         ownerName: prev.ownerName || auth.currentUser?.displayName?.split(" ")[0] || "",
+         ownerSurname: prev.ownerSurname || auth.currentUser?.displayName?.split(" ").slice(1).join(" ") || "",
+         ownerEmail: prev.ownerEmail || auth.currentUser?.email || "",
+         businessEmail: prev.businessEmail || auth.currentUser?.email || "",
+       }));
+    }
+  }, [socialMode]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [geoLoading, setGeoLoading] = useState(false);
@@ -125,10 +140,41 @@ const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
       );
       return;
     }
+    if (!formData.registrationNumber.trim()) {
+      dispatch(
+        showNotification({
+          message: t("auth.registrationNumberRequired", { defaultValue: "Registration Number is required for business accounts." }),
+          severity: "error",
+        }),
+      );
+      return;
+    }
     if (!formData.ownerName.trim() || !formData.ownerSurname.trim()) {
       dispatch(
         showNotification({
           message: t("auth.ownerFieldsRequired"),
+          severity: "error",
+        }),
+      );
+      return;
+    }
+
+    // Phone validation
+    const oPhone = formData.ownerPhone.trim();
+    const bPhone = formData.businessPhone.trim();
+    if (!oPhone.startsWith("+") || oPhone.length < 8) {
+      dispatch(
+        showNotification({
+          message: t("auth.invalidOwnerPhone", "Owner phone must start with '+' and have at least 8 characters."),
+          severity: "error",
+        }),
+      );
+      return;
+    }
+    if (bPhone && (!bPhone.startsWith("+") || bPhone.length < 8)) {
+       dispatch(
+        showNotification({
+          message: t("auth.invalidBusinessPhone", "Business phone must start with '+' and have at least 8 characters."),
           severity: "error",
         }),
       );
@@ -177,40 +223,26 @@ const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
           },
           "business",
         );
-        dispatch(
-          showNotification({
-            message: t("auth.profileCreated"),
-            severity: "success",
-          }),
+      } else {
+        const cred = await registerUser(
+          formData.ownerEmail,
+          formData.password,
+          {
+            ...formData,
+            acceptedTerms: true,
+            acceptedTermsAt: new Date().toISOString(),
+          },
+          "business",
         );
-        navigate("/verify-phone");
-        return;
+
+        try {
+          await sendVerificationEmail(cred.user);
+        } catch {
+          // ignore
+        }
       }
 
-      const cred = await registerUser(
-        formData.ownerEmail,
-        formData.password,
-        {
-          ...formData,
-          acceptedTerms: true,
-          acceptedTermsAt: new Date().toISOString(),
-        },
-        "business",
-      );
-
-      try {
-        await sendVerificationEmail(cred.user);
-      } catch {
-        // ignore
-      }
-
-      dispatch(
-        showNotification({
-          message: t("auth.accountCreated"),
-          severity: "success",
-        }),
-      );
-      navigate("/verify-phone");
+      onRegisterSuccess();
     } catch (err: any) {
       dispatch(
         showNotification({ message: formatAuthError(err), severity: "error" }),
@@ -218,6 +250,11 @@ const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleRegister();
   };
 
   const textField = (
@@ -244,7 +281,7 @@ const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
   );
 
   return (
-    <Box component="form" p={2} sx={{ height: "auto" }}>
+    <Box component="form" onSubmit={handleSubmit} p={2} sx={{ height: "auto" }}>
       <Grid container spacing={2}>
         {textField("ownerName", t("auth.firstName"))}
         {textField("ownerSurname", t("auth.surname"))}
@@ -324,6 +361,10 @@ const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
 
         {textField("lat", t("auth.lat"))}
         {textField("lng", t("auth.lng"))}
+
+        {/* Business specific verification fields */}
+        {textField("registrationNumber", t("auth.registrationNumber", { defaultValue: "Registration Number / VAT ID" }))}
+        {textField("website", t("auth.website", { defaultValue: "Business Website (Optional)" }))}
       </Grid>
 
       <FormControlLabel
@@ -354,11 +395,16 @@ const BusinessRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
         fullWidth
         variant="contained"
         sx={{ mt: 3, alignSelf: "end" }}
-        onClick={handleRegister}
+        type="submit"
         disabled={isLoading}
       >
-        {isLoading ? t("auth.registering") : t("auth.registerBusiness")}
+        {isLoading
+          ? t("auth.registering")
+          : socialMode
+            ? t("auth.completeReg")
+            : t("auth.registerBusiness")}
       </Button>
+
     </Box>
   );
 };

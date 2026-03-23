@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Box, Typography, Grid, Paper, CircularProgress } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import ReactECharts from "echarts-for-react";
@@ -40,166 +40,173 @@ export default function BusinessAnalytics() {
   }
 
   // Active listings vs Sold listings
-  const activeListings = listings.filter((l) => !l.isSold);
-  const soldListings = listings.filter((l) => l.isSold);
+  const { activeListings, soldListings } = useMemo(() => ({
+    activeListings: listings.filter((l) => !l.isSold),
+    soldListings: listings.filter((l) => l.isSold)
+  }), [listings]);
 
   // Calc top metrics
   const totalListings = activeListings.length;
-  const totalViews = listings.reduce((sum, l) => sum + (l.viewCount || 0), 0);
+  const totalViews = useMemo(() => listings.reduce((sum, l) => sum + (l.viewCount || 0), 0), [listings]);
 
   // Pie chart data: Active listings Brand distribution
-  const makeCounts: Record<string, number> = {};
-  activeListings.forEach((l) => {
-    makeCounts[l.make] = (makeCounts[l.make] || 0) + 1;
-  });
-  const pieData = Object.entries(makeCounts)
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value);
+  const pieData = useMemo(() => {
+    const makeCounts: Record<string, number> = {};
+    activeListings.forEach((l) => {
+      makeCounts[l.make] = (makeCounts[l.make] || 0) + 1;
+    });
+    return Object.entries(makeCounts)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
+  }, [activeListings]);
 
   // Bar chart data: Active Condition distribution
-  const conditionCounts: Record<string, number> = {};
-  activeListings.forEach((l) => {
-    const cond = l.conditionTier 
-      ? t(`carValues.condition_${l.conditionTier}`, { defaultValue: l.conditionTier })
-      : t("common.no_data");
-    conditionCounts[cond] = (conditionCounts[cond] || 0) + 1;
-  });
+  const conditionCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    activeListings.forEach((l) => {
+      const cond = l.conditionTier 
+        ? t(`carValues.condition_${l.conditionTier}`, { defaultValue: l.conditionTier })
+        : t("common.no_data");
+      counts[cond] = (counts[cond] || 0) + 1;
+    });
+    return counts;
+  }, [activeListings, t]);
 
   // Line chart data: Active Listings Growth Over Time
-  const timeData: Record<string, number> = {};
-  activeListings.forEach((l) => {
-    if (l.createdAt) {
-      const date = new Date(l.createdAt);
-      if (!isNaN(date.getTime())) {
-        const monthYear = `${date.getFullYear()}-${String(
-          date.getMonth() + 1,
-        ).padStart(2, "0")}`;
-        timeData[monthYear] = (timeData[monthYear] || 0) + 1;
+  const { sortedMonths, lineValues } = useMemo(() => {
+    const timeData: Record<string, number> = {};
+    activeListings.forEach((l) => {
+      if (l.createdAt) {
+        const date = new Date(l.createdAt);
+        if (!isNaN(date.getTime())) {
+          const monthYear = `${date.getFullYear()}-${String(
+            date.getMonth() + 1,
+          ).padStart(2, "0")}`;
+          timeData[monthYear] = (timeData[monthYear] || 0) + 1;
+        }
       }
-    }
-  });
-  const sortedMonths = Object.keys(timeData).sort();
-  const lineValues = sortedMonths.map((m) => timeData[m]);
+    });
+    const months = Object.keys(timeData).sort();
+    const values = months.map((m) => timeData[m]);
+    return { sortedMonths: months, lineValues: values };
+  }, [activeListings]);
 
   // Scatter data: Price vs Mileage
-  const scatterData = activeListings.map((l) => [l.mileage, l.price]);
+  const scatterData = useMemo(() => activeListings.map((l) => [l.mileage, l.price]), [activeListings]);
 
   // Heatmap: Months Cars Sold
-  const monthsStr = [
-    t("months.jan"),
-    t("months.feb"),
-    t("months.mar"),
-    t("months.apr"),
-    t("months.may"),
-    t("months.jun"),
-    t("months.jul"),
-    t("months.aug"),
-    t("months.sep"),
-    t("months.oct"),
-    t("months.nov"),
-    t("months.dec"),
-  ];
-  const yearsSet = new Set<string>();
-  soldListings.forEach((l) => {
-    if (l.soldAt) {
-      const d = new Date(l.soldAt);
-      if (!isNaN(d.getTime())) {
-        yearsSet.add(d.getFullYear().toString());
-      }
-    }
-  });
-  const yearsStr = Array.from(yearsSet).sort();
-  if (yearsStr.length === 0) yearsStr.push(new Date().getFullYear().toString());
-
-  const heatmapData: [number, number, number][] = [];
-  let maxSalesInMonth = 0;
-  yearsStr.forEach((y, yIdx) => {
-    monthsStr.forEach((m, mIdx) => {
-      const count = soldListings.filter((l) => {
-        if (!l.soldAt) return false;
+  const { monthsStr, yearsStr, heatmapData, maxSalesInMonth } = useMemo(() => {
+    const months = [
+      t("months.jan"), t("months.feb"), t("months.mar"), t("months.apr"),
+      t("months.may"), t("months.jun"), t("months.jul"), t("months.aug"),
+      t("months.sep"), t("months.oct"), t("months.nov"), t("months.dec"),
+    ];
+    
+    const soldCounts: Record<string, Record<number, number>> = {};
+    const years = new Set<string>();
+    
+    soldListings.forEach((l) => {
+      if (l.soldAt) {
         const d = new Date(l.soldAt);
-        return d.getFullYear().toString() === y && d.getMonth() === mIdx;
-      }).length;
-      if (count > maxSalesInMonth) maxSalesInMonth = count;
-      heatmapData.push([mIdx, yIdx, count]);
+        if (!isNaN(d.getTime())) {
+          const y = d.getFullYear().toString();
+          const m = d.getMonth();
+          years.add(y);
+          if (!soldCounts[y]) soldCounts[y] = {};
+          soldCounts[y][m] = (soldCounts[y][m] || 0) + 1;
+        }
+      }
     });
-  });
+    
+    const sortedYears = Array.from(years).sort();
+    if (sortedYears.length === 0) sortedYears.push(new Date().getFullYear().toString());
+    
+    const data: [number, number, number][] = [];
+    let max = 0;
+    
+    sortedYears.forEach((y, yIdx) => {
+      for (let mIdx = 0; mIdx < 12; mIdx++) {
+        const count = soldCounts[y]?.[mIdx] || 0;
+        if (count > max) max = count;
+        data.push([mIdx, yIdx, count]);
+      }
+    });
+    
+    return { monthsStr: months, yearsStr: sortedYears, heatmapData: data, maxSalesInMonth: max };
+  }, [soldListings, t]);
 
   // What Brands have most cells (sells):
-  const soldBrands: Record<string, number> = {};
-  soldListings.forEach((l) => {
-    soldBrands[l.make] = (soldBrands[l.make] || 0) + 1;
-  });
-  const topSoldBrands = Object.entries(soldBrands)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10); // Top 10
+  const topSoldBrands = useMemo(() => {
+    const soldBrands: Record<string, number> = {};
+    soldListings.forEach((l) => {
+      soldBrands[l.make] = (soldBrands[l.make] || 0) + 1;
+    });
+    return Object.entries(soldBrands)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10);
+  }, [soldListings]);
 
   // What Models have most clicks (views):
-  const viewsByModel: Record<string, number> = {};
-  listings.forEach((l) => {
-    const key = `${l.make} ${l.model}`;
-    viewsByModel[key] = (viewsByModel[key] || 0) + (l.viewCount || 0);
-  });
-  const topViewedModels = Object.entries(viewsByModel)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10);
+  const topViewedModels = useMemo(() => {
+    const viewsByModel: Record<string, number> = {};
+    listings.forEach((l) => {
+      const key = `${l.make} ${l.model}`;
+      viewsByModel[key] = (viewsByModel[key] || 0) + (l.viewCount || 0);
+    });
+    return Object.entries(viewsByModel)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10);
+  }, [listings]);
 
   // --- LEADS INTELLIGENCE METRICS ---
-  const listingsMap = new Map<string, CarListingSummary>();
-  listings.forEach((l) => listingsMap.set(l.id, l));
+  const { sortedLeadMonths, leadsLineValues, topLeadModels, priceVsLeadsScatter } = useMemo(() => {
+    const listingsMap = new Map<string, CarListingSummary>();
+    listings.forEach((l) => listingsMap.set(l.id, l));
 
-  // 1. Leads Growth Over Time
-  const leadsTime: Record<string, number> = {};
-  leads.forEach((ld) => {
-    if (!ld.createdAt) return;
-    const d = new Date(ld.createdAt);
-    if (isNaN(d.getTime())) return;
-    const monthYear = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
-      2,
-      "0",
-    )}`;
-    leadsTime[monthYear] = (leadsTime[monthYear] || 0) + 1;
-  });
-  const sortedLeadMonths = Object.keys(leadsTime).sort();
-  const leadsLineValues = sortedLeadMonths.map((m) => leadsTime[m]);
+    // 1. Leads Growth Over Time
+    const leadsTime: Record<string, number> = {};
+    leads.forEach((ld) => {
+      if (!ld.createdAt) return;
+      const d = new Date(ld.createdAt);
+      if (isNaN(d.getTime())) return;
+      const monthYear = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      leadsTime[monthYear] = (leadsTime[monthYear] || 0) + 1;
+    });
+    const sLeadMonths = Object.keys(leadsTime).sort();
+    const lLineValues = sLeadMonths.map((m) => leadsTime[m]);
 
-  // 2. Leads by Make/Model
-  const leadsByModel: Record<string, number> = {};
-  leads.forEach((ld) => {
-    const listing = listingsMap.get(ld.listingId);
-    if (listing) {
-      const key = `${listing.make} ${listing.model}`;
-      leadsByModel[key] = (leadsByModel[key] || 0) + 1;
-    }
-  });
-  const topLeadModels = Object.entries(leadsByModel)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10);
-
-  // 3. Leads vs Price Correlation
-  const leadsAggByListing: Record<
-    string,
-    { price: number; leads: number; name: string }
-  > = {};
-
-  leads.forEach((ld) => {
-    const listing = listingsMap.get(ld.listingId);
-    if (listing && typeof listing.price === "number") {
-      if (!leadsAggByListing[ld.listingId]) {
-        leadsAggByListing[ld.listingId] = {
-          price: listing.price,
-          leads: 0,
-          name: `${listing.make} ${listing.model}`,
-        };
+    // 2. Leads by Make/Model
+    const lByModel: Record<string, number> = {};
+    leads.forEach((ld) => {
+      const listing = listingsMap.get(ld.listingId);
+      if (listing) {
+        const key = `${listing.make} ${listing.model}`;
+        lByModel[key] = (lByModel[key] || 0) + 1;
       }
-      leadsAggByListing[ld.listingId].leads += 1;
-    }
-  });
-  const priceVsLeadsScatter = Object.values(leadsAggByListing).map((v) => [
-    v.price,
-    v.leads,
-    v.name,
-  ]);
+    });
+    const tLeadModels = Object.entries(lByModel)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10);
+
+    // 3. Leads vs Price Correlation
+    const leadsAggByListing: Record<string, { price: number; leads: number; name: string }> = {};
+    leads.forEach((ld) => {
+      const listing = listingsMap.get(ld.listingId);
+      if (listing && typeof listing.price === "number") {
+        if (!leadsAggByListing[ld.listingId]) {
+          leadsAggByListing[ld.listingId] = {
+            price: listing.price,
+            leads: 0,
+            name: `${listing.make} ${listing.model}`,
+          };
+        }
+        leadsAggByListing[ld.listingId].leads += 1;
+      }
+    });
+    const pVsLScatter = Object.values(leadsAggByListing).map((v) => [v.price, v.leads, v.name]);
+
+    return { sortedLeadMonths: sLeadMonths, leadsLineValues: lLineValues, topLeadModels: tLeadModels, priceVsLeadsScatter: pVsLScatter };
+  }, [listings, leads]);
 
   // Styling helpers
   const textColor = theme.palette.text.primary;
@@ -285,7 +292,7 @@ export default function BusinessAnalytics() {
       </Grid>
 
       {/* Overview Charts (from before) */}
-      <Typography variant="h5" sx={{ mb: 2, fontWeight: 700 }}>
+      <Typography variant="h5" fontWeight={900} sx={{ mb: 2 }}>
         {t("dashboard.analytics.overview")}
       </Typography>
       <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -297,7 +304,7 @@ export default function BusinessAnalytics() {
               boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
             }}
           >
-            <Typography variant="h6" fontWeight={700} gutterBottom>
+            <Typography variant="h6" fontWeight={800} gutterBottom>
               {t("dashboard.analytics.brand_dist")}
             </Typography>
             {pieData.length === 0 ? renderNoData() : (
@@ -321,10 +328,7 @@ export default function BusinessAnalytics() {
                       label: { show: true, fontSize: 20, fontWeight: "bold" },
                     },
                     labelLine: { show: false },
-                    data:
-                      pieData.length > 0
-                        ? pieData
-                        : [{ name: t("common.no_data"), value: 0 }],
+                    data: pieData,
                   },
                 ],
               }}
@@ -342,7 +346,7 @@ export default function BusinessAnalytics() {
               boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
             }}
           >
-            <Typography variant="h6" fontWeight={700} gutterBottom>
+            <Typography variant="h6" fontWeight={800} gutterBottom>
               {t("dashboard.analytics.cond_dist")}
             </Typography>
             {Object.keys(conditionCounts).length === 0 ? renderNoData() : (
@@ -394,7 +398,7 @@ export default function BusinessAnalytics() {
               boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
             }}
           >
-            <Typography variant="h6" fontWeight={700} gutterBottom>
+            <Typography variant="h6" fontWeight={800} gutterBottom>
               {t("dashboard.analytics.growth")}
             </Typography>
             {sortedMonths.length === 0 ? renderNoData() : (
@@ -423,7 +427,7 @@ export default function BusinessAnalytics() {
                 },
                 series: [
                   {
-                    name: t("dashboard.tabs.leads", { defaultValue: "Leads" }),
+                    name: t("dashboard.analytics.vehicles_added", { defaultValue: "Added" }),
                     type: "line",
                     data: lineValues,
                     smooth: true,
@@ -462,7 +466,7 @@ export default function BusinessAnalytics() {
               boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
             }}
           >
-            <Typography variant="h6" fontWeight={700} gutterBottom>
+            <Typography variant="h6" fontWeight={800} gutterBottom>
               {t("dashboard.analytics.price_mileage")}
             </Typography>
             {scatterData.length === 0 ? renderNoData() : (
@@ -471,7 +475,7 @@ export default function BusinessAnalytics() {
                 tooltip: {
                   trigger: "item",
                   formatter: (params: any) =>
-                    `${t("table.mileage")}: ${params.data[0]} km<br/>${t("table.price")}: €${params.data[1]}`,
+                    params?.data ? `${t("table.mileage")}: ${params.data[0]} km<br/>${t("table.price")}: €${params.data[1]}` : "",
                 },
                 grid: {
                   left: "3%",
@@ -516,7 +520,7 @@ export default function BusinessAnalytics() {
       </Grid>
 
       {/* New Requested Charts for Sales & Viewers */}
-      <Typography variant="h5" sx={{ mb: 2, fontWeight: 700 }}>
+      <Typography variant="h5" fontWeight={900} sx={{ mb: 2 }}>
         {t("dashboard.analytics.sales_insights")}
       </Typography>
       <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -528,7 +532,7 @@ export default function BusinessAnalytics() {
               boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
             }}
           >
-            <Typography variant="h6" fontWeight={700} gutterBottom>
+            <Typography variant="h6" fontWeight={800} gutterBottom>
               {t("dashboard.analytics.heatmap")}
             </Typography>
             { heatmapData.length === 0 ? renderNoData(350) : (
@@ -590,7 +594,7 @@ export default function BusinessAnalytics() {
               boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
             }}
           >
-            <Typography variant="h6" fontWeight={700} gutterBottom>
+            <Typography variant="h6" fontWeight={800} gutterBottom>
               {t("dashboard.analytics.top_sold_brands")}
             </Typography>
             {topSoldBrands.length === 0 ? renderNoData() : (
@@ -643,7 +647,7 @@ export default function BusinessAnalytics() {
               boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
             }}
           >
-            <Typography variant="h6" fontWeight={700} gutterBottom>
+            <Typography variant="h6" fontWeight={800} gutterBottom>
               {t("dashboard.analytics.top_viewed_models")}
             </Typography>
             {topViewedModels.length === 0 ? renderNoData() : (
@@ -695,7 +699,7 @@ export default function BusinessAnalytics() {
       {/* INTELLIGENCE ROW: Leads & Inquiries */}
       <Grid container spacing={3} sx={{ mt: 1, mb: 1 }}>
         <Grid size={{ xs: 12 }}>
-          <Typography variant="h5" sx={{ fontWeight: 700 }}>
+          <Typography variant="h5" fontWeight={900}>
             {t("dashboard.analytics.leads_intelligence", { defaultValue: "Leads Intelligence" })}
           </Typography>
         </Grid>
@@ -708,7 +712,7 @@ export default function BusinessAnalytics() {
               boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
             }}
           >
-            <Typography variant="h6" fontWeight={700} gutterBottom>
+            <Typography variant="h6" fontWeight={800} gutterBottom>
               {t("dashboard.analytics.leads_time", { defaultValue: "Leads Over Time" })}
             </Typography>
             {sortedLeadMonths.length === 0 ? renderNoData() : (
@@ -776,7 +780,7 @@ export default function BusinessAnalytics() {
               boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
             }}
           >
-            <Typography variant="h6" fontWeight={700} gutterBottom>
+            <Typography variant="h6" fontWeight={800} gutterBottom>
               {t("dashboard.analytics.leads_by_model", { defaultValue: "Most Inquired Models" })}
             </Typography>
             {topLeadModels.length === 0 ? renderNoData() : (
@@ -832,7 +836,7 @@ export default function BusinessAnalytics() {
               boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
             }}
           >
-            <Typography variant="h6" fontWeight={700} gutterBottom>
+            <Typography variant="h6" fontWeight={800} gutterBottom>
               {t("dashboard.analytics.price_leads_scatter", { defaultValue: "Vehicle Price vs. Lead Volume" })}
             </Typography>
             {priceVsLeadsScatter.length === 0 ? renderNoData(350) : (

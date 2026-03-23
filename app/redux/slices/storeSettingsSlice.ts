@@ -32,6 +32,7 @@ export interface StoreSettingsState {
   contact: {
     phone: string;
     email: string;
+    website?: string;
   };
   workTime: WorkTime;
   bannerImage: string | null;
@@ -49,6 +50,7 @@ const initialState: StoreSettingsState = {
   contact: {
     phone: "",
     email: "",
+    website: "",
   },
   workTime: {
     Monday: { ...defaultDay },
@@ -69,13 +71,13 @@ const initialState: StoreSettingsState = {
     },
   },
   theme: {
-    primary: "rgb(122, 0, 129)",
-    secondary: "#ffffff",
-    background: "#ffffff",
-    accent: "#4caf50",
-    heading: "#111827",
+    primary: "#ffffff",
+    secondary: "#f8fafc",
+    background: "#f1f5f9",
+    accent: "#2563eb",
+    heading: "#0f172a",
     isTextLight: false,
-    layout: "classic",
+    layout: "modern",
   },
   isEditMode: false,
 };
@@ -92,7 +94,7 @@ export const storeSettingsSlice = createSlice({
     },
     setContactInfo: (
       state,
-      action: PayloadAction<{ phone: string; email: string }>
+      action: PayloadAction<{ phone: string; email: string; website?: string }>
     ) => {
       state.contact = action.payload;
     },

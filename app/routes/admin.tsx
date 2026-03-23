@@ -16,6 +16,7 @@ export default function AdminDashboardRoute() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [allowed, setAllowed] = useState<boolean | null>(null);
+  const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -23,10 +24,12 @@ export default function AdminDashboardRoute() {
       navigate("/login");
       return;
     }
+    
     setAllowed(null);
     getUserProfile(user.uid)
       .then((profile) => {
         if (cancelled) return;
+        setRole(profile?.role || null);
         setAllowed(profile?.role === "business");
       })
       .catch(() => {
@@ -46,7 +49,7 @@ export default function AdminDashboardRoute() {
     );
   }
 
-  if (!allowed) {
+  if (!allowed && !(!user?.phoneNumber && role === "business")) {
     return (
       <Box p={6}>
         <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>
@@ -59,5 +62,5 @@ export default function AdminDashboardRoute() {
     );
   }
 
-  return <AdminDashboardPage />;
+  return <AdminDashboardPage mustVerify={!user?.phoneNumber} />;
 }

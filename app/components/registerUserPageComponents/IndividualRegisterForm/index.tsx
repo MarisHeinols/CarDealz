@@ -13,21 +13,34 @@ import { useNavigate } from "react-router";
 import { useAppDispatch } from "~/redux/hooks";
 import { showNotification } from "~/redux/slices/uiSlice";
 import { COUNTRIES } from "~/constants/countries";
+import { auth } from "~/firebase/auth";
 
-const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
+const IndividualRegisterForm = ({ socialMode, onRegisterSuccess }: { socialMode?: boolean; onRegisterSuccess: () => void }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState<IndividualRegisterData>({
-    name: "",
-    surname: "",
-    email: "",
+    name: auth.currentUser?.displayName?.split(" ")[0] || "",
+    surname: auth.currentUser?.displayName?.split(" ").slice(1).join(" ") || "",
+    email: auth.currentUser?.email || "",
     phone: "",
     country: "",
     password: "",
     confirmPassword: "",
     acceptedTerms: false,
   });
+
+  // Sync social data in case it arrived after initial mount
+  React.useEffect(() => {
+    if (socialMode && auth.currentUser) {
+       setFormData(prev => ({
+         ...prev,
+         name: prev.name || auth.currentUser?.displayName?.split(" ")[0] || "",
+         surname: prev.surname || auth.currentUser?.displayName?.split(" ").slice(1).join(" ") || "",
+         email: prev.email || auth.currentUser?.email || "",
+       }));
+    }
+  }, [socialMode]);
 
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useAppDispatch();
@@ -68,6 +81,17 @@ const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
       return;
     }
 
+    const phone = formData.phone.trim();
+    if (!phone.startsWith("+") || phone.length < 8) {
+      dispatch(
+        showNotification({
+          message: t("auth.invalidPhone", "Phone number must start with '+' and have at least 8 characters."),
+          severity: "error",
+        }),
+      );
+      return;
+    }
+
     if (!formData.acceptedTerms) {
       dispatch(
         showNotification({
@@ -92,44 +116,29 @@ const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
           },
           "individual",
         );
-
-        dispatch(
-          showNotification({
-            message: t("auth.profileCreated"),
-            severity: "success",
-          }),
+      } else {
+        const cred = await registerUser(
+          formData.email,
+          formData.password,
+          {
+            name: formData.name,
+            surname: formData.surname,
+            phone: formData.phone,
+            country: formData.country,
+            acceptedTerms: true,
+            acceptedTermsAt: new Date().toISOString(),
+          },
+          "individual",
         );
-        navigate("/verify-phone");
-        return;
+
+        try {
+          await sendVerificationEmail(cred.user);
+        } catch {
+          // ignore
+        }
       }
 
-      const cred = await registerUser(
-        formData.email,
-        formData.password,
-        {
-          name: formData.name,
-          surname: formData.surname,
-          phone: formData.phone,
-          country: formData.country,
-          acceptedTerms: true,
-          acceptedTermsAt: new Date().toISOString(),
-        },
-        "individual",
-      );
-
-      try {
-        await sendVerificationEmail(cred.user);
-      } catch {
-        // ignore
-      }
-
-      dispatch(
-        showNotification({
-          message: t("auth.accountCreated"),
-          severity: "success",
-        }),
-      );
-      navigate("/verify-phone");
+      onRegisterSuccess();
     } catch (err: any) {
       dispatch(
         showNotification({ message: formatAuthError(err), severity: "error" }),
@@ -139,8 +148,13 @@ const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
     }
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleRegister();
+  };
+
   return (
-    <Box component="form" sx={{ height: "auto" }}>
+    <Box component="form" onSubmit={handleSubmit} sx={{ height: "auto" }}>
       <TextField
         name="name"
         label={t("auth.firstName")}
@@ -240,7 +254,7 @@ const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
         fullWidth
         variant="contained"
         sx={{ mt: 2 }}
-        onClick={handleRegister}
+        type="submit"
         disabled={isLoading}
       >
         {isLoading
@@ -249,6 +263,7 @@ const IndividualRegisterForm = ({ socialMode }: { socialMode?: boolean }) => {
             ? t("auth.completeReg")
             : t("auth.registerIndividual")}
       </Button>
+
     </Box>
   );
 };

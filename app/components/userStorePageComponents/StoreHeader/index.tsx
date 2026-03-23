@@ -21,7 +21,7 @@ const StoreHeader = () => {
               src={storeSettings.logo ? storeSettings.logo : "/store-avatar.jpg"}
             />
             <Stack spacing={0}>
-              <Typography variant="h5" fontWeight={700} color={storeSettings.theme.isTextLight ? "white" : "text.primary"}>
+              <Typography variant="h5" fontWeight={900} sx={{ color: storeSettings.theme.heading || (storeSettings.theme.isTextLight ? "white" : "text.primary") }}>
                 {storeSettings.name}
               </Typography>
               <Typography variant="body1" color={storeSettings.theme.isTextLight ? "rgba(255,255,255,0.7)" : "text.secondary"}>
@@ -54,7 +54,7 @@ const StoreHeader = () => {
             sx={{ width: 90, height: 90, border: "3px solid white", mb: 2, boxShadow: "0 4px 12px rgba(0,0,0,0.2)" }}
             src={storeSettings.logo ? storeSettings.logo : "/store-avatar.jpg"}
           />
-          <Typography variant="h4" fontWeight={800} sx={{ textShadow: "0 2px 4px rgba(0,0,0,0.4)" }}>
+          <Typography variant="h4" fontWeight={900} sx={{ textShadow: "0 2px 4px rgba(0,0,0,0.4)" }}>
             {storeSettings.name}
           </Typography>
           <Typography variant="body1" sx={{ mt: 1, opacity: 0.9, maxWidth: 600 }}>

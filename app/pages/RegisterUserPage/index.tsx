@@ -4,8 +4,8 @@ import IndividualRegisterForm from "~/components/registerUserPageComponents/Indi
 import BusinessRegisterForm from "~/components/registerUserPageComponents/BusinessRegisterForm";
 import { useNavigate, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
-import { auth } from "~/firebase/auth";
 import { useAuth } from "~/hooks/userStore/useAuth";
+import { useUserProfile } from "~/hooks/userStore/useUserProfile";
 
 const RegisterUserPage = () => {
   const navigate = useNavigate();
@@ -14,6 +14,7 @@ const RegisterUserPage = () => {
   const socialMode = searchParams.get("social") === "1";
 
   const { user: currentUser } = useAuth();
+  const { profile } = useUserProfile();
   const [tab, setTab] = useState(0);
 
   React.useEffect(() => {
@@ -23,11 +24,16 @@ const RegisterUserPage = () => {
       return;
     }
 
-    // If logged in and just visiting registration, go home
-    if (!socialMode && currentUser) {
+    // If fully logged in (with role) and just visiting registration, go home
+    if (!socialMode && currentUser && profile?.role) {
       navigate("/");
     }
-  }, [navigate, socialMode, currentUser]);
+  }, [navigate, socialMode, currentUser, profile?.role]);
+
+  const handleRegisterSuccess = () => {
+    // Redirect to home page with a flag to show the phone verification popup
+    navigate("/?verify_phone=1");
+  };
 
   return (
     <Box
@@ -40,19 +46,18 @@ const RegisterUserPage = () => {
       }}
     >
       <Paper sx={{ p: 4, width: "100%", maxWidth: 700 }}>
-        <Typography variant="h5" align="center" mb={2}>
+        <Typography variant="h5" fontWeight={900} align="center" mb={2}>
           {t("auth.registerTitle")}
         </Typography>
 
-        {socialMode ? (
+        {socialMode && currentUser?.providerData?.some(p => p.providerId !== 'password') ? (
           <Typography
             variant="body2"
             color="text.secondary"
             align="center"
             mb={2}
           >
-            You signed in successfully. Please complete your profile to
-            continue.
+            {t("auth.socialSignInSuccess", "You signed in successfully. Please complete your profile to continue.")}
           </Typography>
         ) : null}
 
@@ -61,8 +66,9 @@ const RegisterUserPage = () => {
           <Tab label={t("auth.business")} />
         </Tabs>
 
-        {tab === 0 && <IndividualRegisterForm socialMode={socialMode} />}
-        {tab === 1 && <BusinessRegisterForm socialMode={socialMode} />}
+        {tab === 0 && <IndividualRegisterForm socialMode={socialMode} onRegisterSuccess={handleRegisterSuccess} />}
+        {tab === 1 && <BusinessRegisterForm socialMode={socialMode} onRegisterSuccess={handleRegisterSuccess} />}
+
         <Button
           sx={{ width: "100%", my: "1rem" }}
           onClick={() => {

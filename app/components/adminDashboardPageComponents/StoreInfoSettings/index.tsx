@@ -44,8 +44,9 @@ const StoreInfoSettings = () => {
         const data = userDoc.data();
         const newPhone = data.businessPhone || data.ownerPhone || data.phone || contact.phone;
         const newEmail = data.businessEmail || data.ownerEmail || data.email || contact.email;
-        if (newPhone !== contact.phone || newEmail !== contact.email) {
-          dispatch(setContactInfo({ phone: newPhone, email: newEmail }));
+        const newWebsite = data.website || contact.website;
+        if (newPhone !== contact.phone || newEmail !== contact.email || newWebsite !== contact.website) {
+          dispatch(setContactInfo({ phone: newPhone, email: newEmail, website: newWebsite }));
         }
         if (data.storeName && data.storeName !== name) {
           dispatch(setStoreName(data.storeName));
@@ -176,6 +177,19 @@ const StoreInfoSettings = () => {
                 )
               }
             />
+            <TextField
+              label={t("dashboard.settings.storeInfo.website", "Website")}
+              fullWidth
+              value={contact.website || ""}
+              onChange={(e) =>
+                dispatch(
+                  setContactInfo({
+                    ...contact,
+                    website: e.target.value,
+                  })
+                )
+              }
+            />
           </Stack>
         </Box>
 
@@ -198,6 +212,9 @@ const StoreInfoSettings = () => {
                       disabled={wt.isClosed}
                       value={wt.open}
                       onChange={(e) => handleWorkTimeChange(day, "open", e.target.value)}
+                      inputProps={{ 
+                        onClick: (e: any) => e.target.showPicker?.() 
+                      }}
                     />
                   </Grid>
                   <Grid size={{ xs: 3 }}>
@@ -207,6 +224,9 @@ const StoreInfoSettings = () => {
                       disabled={wt.isClosed}
                       value={wt.close}
                       onChange={(e) => handleWorkTimeChange(day, "close", e.target.value)}
+                      inputProps={{ 
+                        onClick: (e: any) => e.target.showPicker?.() 
+                      }}
                     />
                   </Grid>
                   <Grid size={{ xs: 3 }}>

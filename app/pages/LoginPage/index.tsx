@@ -189,7 +189,7 @@ const LoginPage = () => {
       }}
     >
       <Paper elevation={3} sx={{ p: 4, width: 350 }}>
-        <Typography variant="h5" align="center" mb={2}>
+        <Typography variant="h5" fontWeight={900} align="center" mb={2}>
           {t("auth.loginTitle")}
         </Typography>
 
@@ -220,43 +220,45 @@ const LoginPage = () => {
 
         <Divider sx={{ my: 2 }}>{t("common.or")}</Divider>
 
-        <TextField
-          fullWidth
-          label={t("auth.email")}
-          margin="normal"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          disabled={isLoading}
-        />
+        <Box component="form" onSubmit={(e: React.FormEvent) => { e.preventDefault(); handleLogin(); }}>
+          <TextField
+            fullWidth
+            label={t("auth.email")}
+            margin="normal"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={isLoading}
+          />
 
-        <TextField
-          fullWidth
-          label={t("auth.password")}
-          margin="normal"
-          type={showPassword ? "text" : "password"}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          disabled={isLoading}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton onClick={() => setShowPassword((p) => !p)}>
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
+          <TextField
+            fullWidth
+            label={t("auth.password")}
+            margin="normal"
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={isLoading}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={() => setShowPassword((p) => !p)}>
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
 
-        <Button
-          fullWidth
-          variant="contained"
-          sx={{ mt: 2 }}
-          onClick={handleLogin}
-          disabled={isLoading}
-        >
-          {isLoading ? t("auth.signingIn") : t("auth.signIn")}
-        </Button>
+          <Button
+            fullWidth
+            variant="contained"
+            sx={{ mt: 2 }}
+            type="submit"
+            disabled={isLoading}
+          >
+            {isLoading ? t("auth.signingIn") : t("auth.signIn")}
+          </Button>
+        </Box>
 
         <Divider sx={{ my: 3 }}>{t("common.or")}</Divider>
 

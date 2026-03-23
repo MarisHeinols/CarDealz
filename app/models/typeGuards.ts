@@ -75,7 +75,7 @@ export function isCarListingDetailsJson(value: any): value is CarListingDetailsJ
     typeof value === "object" &&
     value !== null &&
     typeof value.id === "string" &&
-    typeof value.vin === "number" &&
+    typeof value.vin === "string" &&
     typeof value.make === "string" &&
     typeof value.model === "string" &&
     typeof value.year === "number" &&

@@ -31,6 +31,9 @@ import {
   updateListingPrice,
   deleteListingFromDb,
   markListingAsSold,
+  markAsSale,
+  stopSale,
+  updateListingStatus,
 } from "~/services/listingsService";
 import { invalidateCache, cacheKeyOwnerListings, cacheKeyAllListings } from "~/services/listingsCache";
 import { useAppDispatch } from "~/redux/hooks";
@@ -55,6 +58,7 @@ interface Props {
    */
   useStoreTheme?: boolean;
   storeThemeOverride?: StoreTheme;
+  onRefresh?: () => void;
 }
 
 const ListingCard = ({
@@ -62,6 +66,7 @@ const ListingCard = ({
   isOwner,
   useStoreTheme = false,
   storeThemeOverride,
+  onRefresh,
 }: Props) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -77,8 +82,10 @@ const ListingCard = ({
   const [busy, setBusy] = useState(false);
   const [priceOpen, setPriceOpen] = useState(false);
   const [soldOpen, setSoldOpen] = useState(false);
+  const [saleOpen, setSaleOpen] = useState(false);
   const [price, setPrice] = useState<string>("");
   const [soldPrice, setSoldPrice] = useState<string>("");
+  const [salePrice, setSalePrice] = useState<string>("");
 
   const handleActionMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
@@ -108,6 +115,11 @@ const ListingCard = ({
     setSoldPrice(listing.price.toString());
     setSoldOpen(true);
   };
+  const openSale = (e: React.MouseEvent) => {
+    handleClose(e);
+    setSalePrice(listing.isOnSale && listing.salePrice ? listing.salePrice.toString() : (listing.price * 0.9).toString());
+    setSaleOpen(true);
+  };
 
   const confirmDelete = (e: React.MouseEvent) => {
     handleClose(e);
@@ -122,8 +134,11 @@ const ListingCard = ({
     setBusy(true);
     try {
       await updateListingPrice(listing.id, n);
+      if (listing.sellerId) invalidateCache(cacheKeyOwnerListings(listing.sellerId));
+      invalidateCache(cacheKeyAllListings());
       dispatch(showNotification({ message: t("pricing.priceUpdated"), severity: "success" }));
       setPriceOpen(false);
+      onRefresh?.();
     } catch (e) {
       dispatch(showNotification({ message: t("pricing.priceUpdateFailed"), severity: "error" }));
     } finally {
@@ -140,6 +155,7 @@ const ListingCard = ({
       }
       invalidateCache(cacheKeyAllListings());
       dispatch(showNotification({ message: t("pricing.listingDeleted"), severity: "success" }));
+      onRefresh?.();
     } catch (e) {
       dispatch(showNotification({ message: t("pricing.listingDeleteFailed"), severity: "error" }));
     } finally {
@@ -159,8 +175,62 @@ const ListingCard = ({
       invalidateCache(cacheKeyAllListings());
       dispatch(showNotification({ message: t("listingControl.soldSuccess"), severity: "success" }));
       setSoldOpen(false);
+      onRefresh?.();
     } catch (e) {
       dispatch(showNotification({ message: t("auth.loginFailed"), severity: "error" }));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitSale = async () => {
+    const n = Number(salePrice);
+    if (!Number.isFinite(n) || n <= 0) return;
+    setBusy(true);
+    try {
+      await markAsSale(listing.id, n);
+      if (listing.sellerId) invalidateCache(cacheKeyOwnerListings(listing.sellerId));
+      invalidateCache(cacheKeyAllListings());
+      dispatch(showNotification({ message: t("listing.saleApplied", { defaultValue: "Sale applied successfully." }), severity: "success" }));
+      setSaleOpen(false);
+      onRefresh?.();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleStopSale = async (e: React.MouseEvent) => {
+    handleClose(e);
+    setBusy(true);
+    try {
+      await stopSale(listing.id);
+      if (listing.sellerId) invalidateCache(cacheKeyOwnerListings(listing.sellerId));
+      invalidateCache(cacheKeyAllListings());
+      onRefresh?.();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleToggleStatus = async (e: React.MouseEvent) => {
+    handleClose(e);
+    const newStatus = listing.status === "draft" ? "published" : "draft";
+    setBusy(true);
+    try {
+      await updateListingStatus(listing.id, newStatus);
+      if (listing.sellerId) invalidateCache(cacheKeyOwnerListings(listing.sellerId));
+      invalidateCache(cacheKeyAllListings());
+      dispatch(showNotification({ 
+        message: newStatus === "published" ? t("listingControl.publishedSuccess", { defaultValue: "Listing published!" }) : t("listingControl.draftSuccess", { defaultValue: "Listing moved to draft." }), 
+        severity: "success" 
+      }));
+      onRefresh?.();
+    } catch (e) {
+      console.error(e);
     } finally {
       setBusy(false);
     }
@@ -182,7 +252,7 @@ const ListingCard = ({
           boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
         },
         bgcolor: useStoreTheme
-          ? activeTheme?.background || "background.paper"
+          ? activeTheme?.primary || "background.paper"
           : "background.paper",
       }}
     >
@@ -215,6 +285,22 @@ const ListingCard = ({
               boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
             }}
           />
+
+          {isOwner && listing.status === "draft" && (
+             <Chip
+             label={t("form.status_draft")}
+             size="small"
+             color="warning"
+             variant="filled"
+             sx={{
+               position: "absolute",
+               bottom: 12,
+               left: 12,
+               fontWeight: 700,
+               boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
+             }}
+           />
+          )}
         </Box>
 
         {/* Content */}
@@ -235,7 +321,7 @@ const ListingCard = ({
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
-                color: color,
+                color: activeTheme?.heading || color,
               }}
             >
               {listing.year} {listing.make} {listing.model}
@@ -266,8 +352,7 @@ const ListingCard = ({
                 fontWeight={600}
                 sx={{
                   color: useStoreTheme
-                    ? ((activeTheme?.accent || activeTheme?.primary) ??
-                      muiTheme.palette.primary.main)
+                    ? (activeTheme?.accent || muiTheme.palette.primary.main)
                     : muiTheme.palette.primary.main,
                 }}
               >
@@ -353,6 +438,24 @@ const ListingCard = ({
               <EditIcon fontSize="small" sx={{ mr: 1 }} />
               {t("listingControl.changePrice")}
             </MenuItem>
+            
+            {listing.isOnSale ? (
+              <MenuItem onClick={handleStopSale} disabled={busy}>
+                <EditIcon fontSize="small" sx={{ mr: 1, color: "error.main" }} />
+                {t("listingControl.stopSale", { defaultValue: "End Sale" })}
+              </MenuItem>
+            ) : (
+              <MenuItem onClick={openSale} disabled={busy}>
+                <EditIcon fontSize="small" sx={{ mr: 1, color: "error.main" }} />
+                {t("listingControl.putOnSale", { defaultValue: "Put on Sale" })}
+              </MenuItem>
+            )}
+
+            <MenuItem onClick={handleToggleStatus} disabled={busy}>
+               <CheckCircleOutlineIcon fontSize="small" sx={{ mr: 1, color: listing.status === "draft" ? "primary.main" : "text.secondary" }} />
+               {listing.status === "draft" ? t("listingControl.publish", { defaultValue: "Publish" }) : t("listingControl.moveToDraft", { defaultValue: "Move to Draft" })}
+            </MenuItem>
+            
             {!listing.isSold && (
               <MenuItem
                 onClick={openMarkSold}
@@ -440,6 +543,47 @@ const ListingCard = ({
                   <CircularProgress size={18} color="inherit" />
                 ) : (
                   t("listingControl.markAsSold")
+                )}
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Sale Dialog */}
+          <Dialog
+            open={saleOpen}
+            onClose={() => setSaleOpen(false)}
+            maxWidth="xs"
+            fullWidth
+          >
+            <DialogTitle>{t("listingControl.putOnSale", { defaultValue: "Put on Sale" })}</DialogTitle>
+            <DialogContent dividers>
+              <Typography variant="body2" sx={{ mb: 2 }}>
+                {t("listingControl.setSalePriceDesc", { defaultValue: "Set a special sale price for this vehicle." })}
+              </Typography>
+              <TextField
+                autoFocus
+                label={t("form.salePrice", { defaultValue: "Sale Price" })}
+                value={salePrice}
+                onChange={(e) => setSalePrice(e.target.value)}
+                fullWidth
+                type="number"
+                inputProps={{ min: 1 }}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setSaleOpen(false)} disabled={busy}>
+                {t("common.cancel")}
+              </Button>
+              <Button
+                variant="contained"
+                onClick={submitSale}
+                disabled={busy}
+                color="error"
+              >
+                {busy ? (
+                  <CircularProgress size={18} color="inherit" />
+                ) : (
+                  t("listingControl.applySale", { defaultValue: "Apply Sale" })
                 )}
               </Button>
             </DialogActions>

@@ -66,7 +66,7 @@ export default function FeaturesPanel({ listing, setListing }: Props) {
                     onChange={() => toggleFeature(feature)}
                   />
                 }
-                label={t(`features.${feature}`, { defaultValue: featureDefinitions[feature].label })}
+                label={t(`features.${feature}`, { defaultValue: featureDefinitions[feature]?.label || feature })}
               />
             ))}
           </AccordionDetails>

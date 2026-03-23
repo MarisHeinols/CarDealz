@@ -20,7 +20,7 @@ import type {
 export function createEmptyListing(): CarListingDetailsJson {
   return {
     id: "",
-    vin: 0,
+    vin: "",
     ta: "",
     plateNumber: "",
     make: "",
@@ -39,8 +39,9 @@ export function createEmptyListing(): CarListingDetailsJson {
     status: "draft",
     color: "",
     location: "",
+    address: "",
     marketRange: { min: 0, max: 0 },
-    marketRangeUpdatedAt: undefined,
+    marketRangeUpdatedAt: "",
     images: [],
     features: [],
     description: "",

@@ -15,6 +15,22 @@ export async function resolveStoreUidByHandle(handleOrUid: string): Promise<stri
   const cached = getAnyCachedValue<string>(cacheKeyStoreUidByHandle(h));
   if (cached) return cached;
 
+  try {
+    const slugRef = doc(db, "businessNames", h.toLowerCase());
+    const slugSnap = await getDoc(slugRef);
+    if (slugSnap.exists()) {
+      const uid = slugSnap.data()?.uid;
+      if (uid) {
+        setCachedValue(cacheKeyStoreUidByHandle(h), uid);
+        return uid;
+      }
+    }
+  } catch (e) {
+    console.warn("Handle resolution via businessNames failed, falling back to query", e);
+  }
+
+  // Fallback (for older accounts that might not have businessNames entry)
+  // This might fail if rules are tightened, but it's a safety net.
   const usersRef = collection(db, "users");
   const q = query(usersRef, where("storeHandle", "==", h));
   const snap = await getDocs(q);

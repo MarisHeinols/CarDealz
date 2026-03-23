@@ -131,7 +131,7 @@ export default function StoreReviewsSection({
 
       dispatch(
         showNotification({
-          message: myReview ? t("reviews.submitted") : t("reviews.submitted"),
+          message: t("reviews.submitted"),
           severity: "success",
         }),
       );

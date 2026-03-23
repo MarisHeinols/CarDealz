@@ -36,11 +36,13 @@ import EditIcon from "@mui/icons-material/Edit";
 import PeopleIcon from "@mui/icons-material/People";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import DeleteIcon from "@mui/icons-material/Delete";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import { Menu, MenuItem, IconButton, Dialog, DialogTitle, DialogContent, TextField, DialogActions, Button } from "@mui/material";
-import { deleteListingFromDb, markListingAsSold, updateListingPrice } from "~/services/listingsService";
+import { deleteListingFromDb, markListingAsSold, updateListingPrice, markAsSale, stopSale } from "~/services/listingsService";
 import { useNavigate } from "react-router";
 import { useAppDispatch } from "~/redux/hooks";
 import { showNotification } from "~/redux/slices/uiSlice";
+import { invalidateCache, cacheKeyAllListings, cacheKeyOwnerListings } from "~/services/listingsCache";
 
 type Props = {
   id: string;
@@ -78,8 +80,10 @@ const ListingPage = ({ id }: Props) => {
   const [busy, setBusy] = useState(false);
   const [priceOpen, setPriceOpen] = useState(false);
   const [soldOpen, setSoldOpen] = useState(false);
+  const [saleOpen, setSaleOpen] = useState(false);
   const [price, setPrice] = useState<string>("");
   const [soldPrice, setSoldPrice] = useState<string>("");
+  const [salePrice, setSalePrice] = useState<string>("");
 
   const closeManage = () => setManageAnchor(null);
 
@@ -102,7 +106,10 @@ const ListingPage = ({ id }: Props) => {
     setBusy(true);
     try {
       await updateListingPrice(id, n);
+      invalidateCache(cacheKeyAllListings());
+      if (car?.sellerId) invalidateCache(cacheKeyOwnerListings(car.sellerId));
       setPriceOpen(false);
+      dispatch(showNotification({ message: t("pricing.priceUpdated"), severity: "success" }));
     } finally {
       setBusy(false);
     }
@@ -115,7 +122,31 @@ const ListingPage = ({ id }: Props) => {
     setBusy(true);
     try {
       await markListingAsSold(id, n);
+      invalidateCache(cacheKeyAllListings());
+      if (car?.sellerId) invalidateCache(cacheKeyOwnerListings(car.sellerId));
       setSoldOpen(false);
+      dispatch(showNotification({ message: t("listingControl.soldSuccess"), severity: "success" }));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleToggleStatus = async () => {
+    if (!car) return;
+    closeManage();
+    const newStatus = car.status === "draft" ? "published" : "draft";
+    setBusy(true);
+    try {
+      const { updateListingStatus } = await import("~/services/listingsService");
+      await updateListingStatus(id, newStatus);
+      invalidateCache(cacheKeyAllListings());
+      if (car.sellerId) invalidateCache(cacheKeyOwnerListings(car.sellerId));
+      dispatch(showNotification({ 
+        message: newStatus === "published" ? t("listingControl.publishedSuccess") : t("listingControl.draftSuccess"), 
+        severity: "success" 
+      }));
+    } catch (e) {
+      console.error(e);
     } finally {
       setBusy(false);
     }
@@ -132,7 +163,38 @@ const ListingPage = ({ id }: Props) => {
     setBusy(true);
     try {
       await deleteListingFromDb(id);
+      invalidateCache(cacheKeyAllListings());
+      if (car?.sellerId) invalidateCache(cacheKeyOwnerListings(car.sellerId));
       navigate("/admin");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleStopSale = async () => {
+    closeManage();
+    setBusy(true);
+    try {
+      await stopSale(id);
+      invalidateCache(cacheKeyAllListings());
+      if (car?.sellerId) invalidateCache(cacheKeyOwnerListings(car.sellerId));
+      dispatch(showNotification({ message: t("listingControl.saleStopped", { defaultValue: "Sale ended" }), severity: "info" }));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitSale = async () => {
+    if (!car) return;
+    const n = Number(salePrice);
+    if (!Number.isFinite(n) || n <= 0) return;
+    setBusy(true);
+    try {
+      await markAsSale(id, n);
+      invalidateCache(cacheKeyAllListings());
+      if (car?.sellerId) invalidateCache(cacheKeyOwnerListings(car.sellerId));
+      setSaleOpen(false);
+      dispatch(showNotification({ message: t("listingControl.saleApplied"), severity: "success" }));
     } finally {
       setBusy(false);
     }
@@ -226,7 +288,7 @@ const ListingPage = ({ id }: Props) => {
             </Box>
 
             <Box>
-              <Typography variant="h5" mb={1.5} fontWeight={700}>
+              <Typography variant="h6" mb={1.5} fontWeight={800}>
                 {t("listing.description")}
               </Typography>
               <Paper sx={{ p: 3, width: "100%" }}>
@@ -242,7 +304,7 @@ const ListingPage = ({ id }: Props) => {
 
             <Box>
               <Stack direction="row" spacing={1} alignItems="center" mb={1.5}>
-                <Typography variant="h5" fontWeight={700}>
+                <Typography variant="h6" fontWeight={800}>
                   {t("listing.specsAndFeatures")}
                 </Typography>
                 <SpecLevelChip level={specLevel} />
@@ -274,7 +336,7 @@ const ListingPage = ({ id }: Props) => {
             >
               <Typography
                 variant="h4"
-                fontWeight={700}
+                fontWeight={900}
                 sx={{ lineHeight: 1.2, flex: 1 }}
               >
                 {car.year} {car.make} {car.model}
@@ -302,21 +364,40 @@ const ListingPage = ({ id }: Props) => {
                     >
                       <MenuItem onClick={() => { closeManage(); navigate("/admin", { state: { tabIndex: 1 } }); }} disabled={busy}>
                         <PeopleIcon fontSize="small" sx={{ mr: 1 }} />
-                        {t("listing.owner.leads", { defaultValue: "Go to leads" })}
+                        {t("listingControl.goToLeads")}
                       </MenuItem>
                       <MenuItem onClick={openEditPrice} disabled={busy}>
                         <EditIcon fontSize="small" sx={{ mr: 1 }} />
-                        {t("listing.owner.editPrice", { defaultValue: "Edit price" })}
+                        {t("listingControl.changePrice")}
+                      </MenuItem>
+                      <MenuItem 
+                        onClick={() => {
+                          if (car?.isOnSale) {
+                            handleStopSale();
+                          } else {
+                            closeManage();
+                            setSalePrice((car.price * 0.9).toString());
+                            setSaleOpen(true);
+                          }
+                        }} 
+                        disabled={busy}
+                      >
+                        <AttachMoneyIcon fontSize="small" sx={{ mr: 1, color: "error.main" }} />
+                        {car?.isOnSale ? t("listingControl.stopSale") : t("listingControl.putOnSale")}
+                      </MenuItem>
+                      <MenuItem onClick={handleToggleStatus} disabled={busy}>
+                         <CheckCircleOutlineIcon fontSize="small" sx={{ mr: 1, color: car.status === "draft" ? "primary.main" : "text.secondary" }} />
+                         {car.status === "draft" ? t("listingControl.publish") : t("listingControl.moveToDraft")}
                       </MenuItem>
                       {!car.isSold && (
                         <MenuItem onClick={openMarkSold} disabled={busy} sx={{ color: "success.main" }}>
                           <CheckCircleOutlineIcon fontSize="small" sx={{ mr: 1 }} />
-                          {t("listing.owner.markSold", { defaultValue: "Mark as Sold" })}
+                          {t("listingControl.markAsSold")}
                         </MenuItem>
                       )}
                       <MenuItem onClick={deleteListing} disabled={busy} sx={{ color: "error.main" }}>
                         <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
-                        {t("listing.owner.delete", { defaultValue: "Delete Listing" })}
+                        {t("listingControl.deleteListing")}
                       </MenuItem>
                     </Menu>
                   </>
@@ -324,7 +405,7 @@ const ListingPage = ({ id }: Props) => {
               </Stack>
             </Stack>
 
-            <Typography variant="h4" color="primary" fontWeight={700}>
+            <Typography variant="h4" color="primary" fontWeight={900}>
               €{car.price.toLocaleString("en-US")}
             </Typography>
 
@@ -333,7 +414,7 @@ const ListingPage = ({ id }: Props) => {
               spacing={1}
               flexWrap="wrap"
               useFlexGap
-              sx={{ rowGap: 1 }}
+              sx={{ rowGap: 1, alignItems: "center" }}
             >
               <Chip
                 label={
@@ -352,10 +433,10 @@ const ListingPage = ({ id }: Props) => {
                       ? "levelMedium"
                       : "levelLow"
                 }
-                sx={{ textTransform: "capitalize" }}
+                sx={{ textTransform: "capitalize", px: 0.5 }}
               />
 
-              <Chip label={car.location} size="small" variant="levelNeutral" />
+              <Chip label={car.location} size="small" variant="levelNeutral" sx={{ px: 0.5 }} />
 
               <Chip
                 label={
@@ -365,8 +446,10 @@ const ListingPage = ({ id }: Props) => {
                 }
                 size="small"
                 variant={car.seller.isDealer ? "levelHigh" : "levelLow"}
+                sx={{ px: 0.5 }}
               />
             </Stack>
+
 
             <Divider />
 
@@ -461,6 +544,46 @@ const ListingPage = ({ id }: Props) => {
               <CircularProgress size={18} color="inherit" />
             ) : (
               t("common.confirm", { defaultValue: "Confirm" })
+            )}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={saleOpen}
+        onClose={() => setSaleOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>{t("listingControl.putOnSale")}</DialogTitle>
+        <DialogContent dividers>
+          <Typography variant="body2" sx={{ mb: 2 }} color="text.secondary">
+            {t("listingControl.setSalePriceDesc")}
+          </Typography>
+          <TextField
+            autoFocus
+            label={t("listing.owner.newPrice", { defaultValue: "Sale price" })}
+            value={salePrice}
+            onChange={(e) => setSalePrice(e.target.value)}
+            fullWidth
+            type="number"
+            inputProps={{ min: 1 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSaleOpen(false)} disabled={busy}>
+            {t("common.cancel", { defaultValue: "Cancel" })}
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={submitSale}
+            disabled={busy}
+          >
+            {busy ? (
+              <CircularProgress size={18} color="inherit" />
+            ) : (
+              t("listingControl.applySale")
             )}
           </Button>
         </DialogActions>

@@ -18,16 +18,28 @@ import {
 } from "../ListingsTable/useListingTable";
 
 import styles from "./Listings.module.css";
-import type { ListingsFiltersState } from "~/types/types";
+import type { ListingsFiltersState, CarListingSummary, SortKey, SortDir } from "~/types/types";
 import ListingsFilters from "../ListingFilter";
 import TopListings from "../TopListings";
-import { useAllListingsCached } from "~/hooks/useCachedListings";
+import { usePaginatedListings } from "~/hooks/usePaginatedListings";
 import { useUserPreferences } from "~/context/UserPreferencesContext";
 
 const Listings = () => {
-  const { listings, loading, refreshing, error } = useAllListingsCached();
   const [filters, setFilters] = useState<ListingsFiltersState>(defaultFilters);
   const [filtersTouched, setFiltersTouched] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>("createdAt");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  
+  const { 
+    listings, 
+    loading, 
+    refreshing,
+    error, 
+    totalCount, 
+    currentPage, 
+    pageCount, 
+    setCurrentPage 
+  } = usePaginatedListings(10, { make: filters.brand }, sortKey, sortDir);
   const [searchParams, setSearchParams] = useSearchParams();
   const sellerFilter = searchParams.get("seller");
   const prefs = useUserPreferences();
@@ -58,7 +70,20 @@ const Listings = () => {
     ? listings.filter((l) => l.sellerId === sellerFilter)
     : listings;
 
-  const table = useListingsTable(displayedListings, filters);
+  // We still use useListingsTable for its sorting logic, 
+  // though it now only sorts the CURRENT page's results.
+  // In a full implementation, sorting would also be server-side.
+  // We still use useListingsTable for its filtering logic (for search tokens)
+  // and to know how to display the rows.
+  const table = useListingsTable(displayedListings, filters, {
+    sortKey,
+    sortDir,
+    onSort: (key, dir) => {
+      setSortKey(key);
+      setSortDir(dir);
+      setCurrentPage(1);
+    }
+  });
 
   return (
     <div className={styles.listingsContainer}>
@@ -131,13 +156,13 @@ const Listings = () => {
 
       <div className={styles.footer}>
         <Typography variant="body2">
-          {table.total} {t("common.results")}
+          {totalCount} {t("common.results")}
         </Typography>
 
         <Pagination
-          page={table.page}
-          count={table.pageCount}
-          onChange={(_, p) => table.setPage(p)}
+          page={currentPage}
+          count={pageCount}
+          onChange={(_, p) => setCurrentPage(p)}
         />
       </div>
     </div>

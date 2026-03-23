@@ -11,7 +11,7 @@ import {
   reload,
   type User,
 } from "firebase/auth";
-import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { doc, serverTimestamp, setDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { saveStoreSettings } from "./storeSettingsService";
 import { slugify } from "~/utils/slugify";
 import { reserveBusinessName } from "~/services/businessNameService";
@@ -23,6 +23,10 @@ export const registerUser = async (
   role: "individual" | "business"
 ) => {
   const normalizedEmail = String(email || "").trim().toLowerCase();
+  
+  // 1. Pre-check availability (Phone / Business Name)
+  await checkAvailability(normalizedEmail, userData, role);
+
   const cred = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
 
   // Prevent copycat business profiles (reserve business name)
@@ -72,7 +76,7 @@ export const registerUser = async (
       String(userData?.country || "").trim(),
     ].filter(Boolean);
     const defaultSettings = {
-      name: userData.businessName || "My Dealership",
+      name: userData.businessName || userData.storeName || "My Dealership",
       description: "Welcome to my online store!",
       contact: {
         phone: userData.businessPhone || userData.ownerPhone || userData.phone || "",
@@ -123,6 +127,11 @@ export const completeSocialRegistration = async (
   const user = auth.currentUser;
   if (!user) throw new Error("You must be logged in to complete registration.");
 
+  const normalizedEmail = String(user.email || "").trim().toLowerCase();
+  
+  // 1. Pre-check availability (skipping UID check for caller)
+  await checkAvailability(normalizedEmail, userData, role, user.uid);
+
   // Prevent copycat business profiles (reserve business name)
   if (role === "business") {
     const name = String(userData?.businessName || userData?.storeName || "").trim();
@@ -133,8 +142,6 @@ export const completeSocialRegistration = async (
     role === "business"
       ? buildStoreHandle(user.uid, userData, user.email || "")
       : undefined;
-
-  const normalizedEmail = String(user.email || "").trim().toLowerCase();
 
   await setDoc(doc(db, "users", user.uid), {
     uid: user.uid,
@@ -212,8 +219,32 @@ function buildStoreHandle(uid: string, userData: any, email: string): string {
     (email ? email.split("@")[0] : "store");
 
   const slug = slugify(String(base)) || "store";
-  // Ensure uniqueness without extra queries.
-  return `${slug}-${uid.slice(0, 6)}`;
+  // As business names are unique, we use the slug directly.
+  return slug;
+}
+
+/**
+ * Checks if email, phone, or business name is already taken in Firestore
+ */
+async function checkAvailability(email: string, userData: any, role: string, currentUid?: string) {
+  const phone = (userData.ownerPhone || userData.phone || "").trim();
+
+  // 1. Check Phone
+  if (phone) {
+    const usersRef = collection(db, "users");
+    
+    // Check both potential phone fields
+    const q1 = query(usersRef, where("phone", "==", phone));
+    const q2 = query(usersRef, where("ownerPhone", "==", phone));
+    
+    const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+    
+    const conflictingUser = [...snap1.docs, ...snap2.docs].find(d => !currentUid || d.id !== currentUid);
+    
+    if (conflictingUser) {
+      throw new Error(`The phone number ${phone} is already linked to another account.`);
+    }
+  }
 }
 
 export const logout = async () => {

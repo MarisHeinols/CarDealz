@@ -17,7 +17,10 @@ import {
   type ConfirmationResult,
 } from "firebase/auth";
 
+import { useTranslation } from "react-i18next";
+
 export default function VerifyPhonePage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
@@ -41,7 +44,18 @@ export default function VerifyPhonePage() {
 
     if (user.phoneNumber) {
       navigate("/");
+      return;
     }
+
+    // Pre-fill phone from user doc if available
+    const fetchProfile = async () => {
+      const { getUserProfile } = await import("~/services/usersService");
+      const profile = await getUserProfile(user.uid);
+      if (profile && (profile.phone || profile.ownerPhone)) {
+        setPhone(profile.phone || profile.ownerPhone || "");
+      }
+    };
+    fetchProfile();
   }, [navigate, user]);
 
   const canSend = useMemo(() => phone.trim().length >= 8, [phone]);
@@ -69,7 +83,7 @@ export default function VerifyPhonePage() {
     if (!canSend) {
       dispatch(
         showNotification({
-          message: "Enter a valid phone number (include country code, e.g. +371...).",
+          message: t("verifyPhone.enterValidPhone"),
           severity: "error",
         })
       );
@@ -78,31 +92,57 @@ export default function VerifyPhonePage() {
 
     setLoading(true);
     try {
+      // 1. Check if number is blocked in Firestore (duplicate check across individual/business)
+      const { collection, getDocs, query, where } = await import("firebase/firestore");
+      const { db } = await import("~/firebase/fireStore");
+
+      const num = phone.replace(/[^\d+]/g, "").trim();
+      console.log("[DEBUG] Sending SMS to clean number:", num);
+
+      if (!num.startsWith("+")) {
+         throw { code: "custom/missing-plus-sign" };
+      }
+      
+      // Global minimum check (longest country code + shortest valid subscriber number)
+      if (num.length < 8) {
+        throw { code: "auth/invalid-phone-number" };
+      }
+
+      const checkPhone = await getDocs(query(collection(db, "users"), where("phone", "==", num), where("uid", "!=", currentUser.uid)));
+      const checkOwner = await getDocs(query(collection(db, "users"), where("ownerPhone", "==", num), where("uid", "!=", currentUser.uid)));
+
+      if (!checkPhone.empty || !checkOwner.empty) {
+        throw { code: "custom/phone-in-use-firestore" };
+      }
+
       const verifier = ensureVerifier();
       const confirmation = await linkWithPhoneNumber(
         currentUser,
-        phone.trim(),
+        num,
         verifier
       );
       confirmationRef.current = confirmation;
       setStep("enter_code");
       dispatch(
         showNotification({
-          message: "Verification code sent.",
+          message: t("verifyPhone.codeSent"),
           severity: "success",
         })
       );
     } catch (e: any) {
+      console.error("Phone verification error:", e);
       dispatch(
         showNotification({
           message:
-            e?.code === "auth/credential-already-in-use"
-              ? "This phone number is already used by another account."
+            e?.code === "custom/phone-in-use-firestore" || e?.code === "auth/credential-already-in-use"
+              ? t("verifyPhone.phoneInUse")
               : e?.code === "auth/invalid-phone-number"
-                ? "Invalid phone number. Make sure it includes the country code (e.g. +371...)."
-                : e?.code === "auth/too-many-requests"
-                  ? "Too many attempts. Please wait a bit and try again."
-                  : e?.message || "Failed to send verification code.",
+                ? t("verifyPhone.invalidPhone")
+                : e?.code === "custom/missing-plus-sign"
+                  ? t("verifyPhone.missingPlus")
+                  : e?.code === "auth/too-many-requests"
+                    ? t("verifyPhone.tooManyRequests", { code: e?.code || "unknown" })
+                    : t("verifyPhone.verificationFailed", { error: e?.code || e?.message || "unknown" }),
           severity: "error",
         })
       );
@@ -116,7 +156,7 @@ export default function VerifyPhonePage() {
     if (!confirmation) {
       dispatch(
         showNotification({
-          message: "Please request a verification code first.",
+          message: t("verifyPhone.requestFirst"),
           severity: "error",
         })
       );
@@ -126,7 +166,7 @@ export default function VerifyPhonePage() {
     if (!canConfirm) {
       dispatch(
         showNotification({
-          message: "Enter the SMS code.",
+          message: t("verifyPhone.enterSmsCode"),
           severity: "error",
         })
       );
@@ -138,7 +178,7 @@ export default function VerifyPhonePage() {
       await confirmation.confirm(code.trim());
       dispatch(
         showNotification({
-          message: "Phone verified successfully.",
+          message: t("verifyPhone.verifySuccess"),
           severity: "success",
         })
       );
@@ -148,10 +188,10 @@ export default function VerifyPhonePage() {
         showNotification({
           message:
             e?.code === "auth/invalid-verification-code"
-              ? "Incorrect code. Please try again."
+              ? t("verifyPhone.incorrectCode")
               : e?.code === "auth/code-expired"
-                ? "Code expired. Please request a new one."
-                : e?.message || "Failed to verify phone.",
+                ? t("verifyPhone.codeExpired")
+                : e?.message || t("verifyPhone.failedToVerify"),
           severity: "error",
         })
       );
@@ -173,18 +213,25 @@ export default function VerifyPhonePage() {
     >
       <Paper elevation={3} sx={{ p: 4, width: "100%", maxWidth: 420 }}>
         <Stack spacing={2}>
-          <Typography variant="h5" fontWeight={800} textAlign="center">
-            Verify phone
+          <Typography variant="h5" fontWeight={900} textAlign="center" mb={2}>
+            {t("verifyPhone.title")}
           </Typography>
           <Typography variant="body2" color="text.secondary" textAlign="center">
-            Phone verification is required to prevent multiple accounts.
+            {t("verifyPhone.description")}
           </Typography>
 
           {step === "enter_phone" ? (
-            <>
+            <Box
+              component="form"
+              onSubmit={(e: React.FormEvent) => {
+                e.preventDefault();
+                sendCode();
+              }}
+              sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+            >
               <TextField
                 fullWidth
-                label="Phone number"
+                label={t("verifyPhone.phoneNumber")}
                 placeholder="+371..."
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -193,17 +240,24 @@ export default function VerifyPhonePage() {
 
               <Button
                 variant="contained"
-                onClick={sendCode}
+                type="submit"
                 disabled={loading}
               >
-                Send code
+                {t("verifyPhone.sendCode")}
               </Button>
-            </>
+            </Box>
           ) : (
-            <>
+            <Box
+              component="form"
+              onSubmit={(e: React.FormEvent) => {
+                e.preventDefault();
+                confirmCode();
+              }}
+              sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+            >
               <TextField
                 fullWidth
-                label="SMS code"
+                label={t("verifyPhone.smsCode")}
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 disabled={loading}
@@ -218,18 +272,18 @@ export default function VerifyPhonePage() {
                   }}
                   disabled={loading}
                 >
-                  Back
+                  {t("verifyPhone.back")}
                 </Button>
                 <Button
                   variant="contained"
                   fullWidth
-                  onClick={confirmCode}
+                  type="submit"
                   disabled={loading}
                 >
-                  Verify
+                  {t("verifyPhone.verify")}
                 </Button>
               </Stack>
-            </>
+            </Box>
           )}
 
           <Box id="phone-recaptcha" />

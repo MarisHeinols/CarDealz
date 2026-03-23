@@ -20,10 +20,13 @@ import { useAppDispatch } from "~/redux/hooks";
 import { showNotification } from "~/redux/slices/uiSlice";
 import { getListingsByOwner } from "~/services/listingsService";
 import { useTranslation } from "react-i18next";
+import { useUserProfile } from "~/hooks/userStore/useUserProfile";
+import { buildLocation } from "~/utils/location";
 
 export default function NewListingForm() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { profile } = useUserProfile();
   const [listing, setListing] =
     useState<CarListingDetailsJson>(createEmptyListing());
   const [images, setImages] = useState<File[]>([]);
@@ -31,30 +34,30 @@ export default function NewListingForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const dispatch = useAppDispatch();
 
+  const isApprovedDealer = 
+    profile?.dealerVerified || profile?.dealerVerificationStatus === "approved";
+  const isUnverifiedDealer = 
+    profile?.role === "business" && !isApprovedDealer;
+
   useEffect(() => {
-    const user = auth.currentUser;
-    if (!user) return;
-    getDoc(doc(db, "users", user.uid))
-      .then((snap) => {
-        const data = snap.data() || {};
-        const role = data.role as "individual" | "business" | undefined;
-        const dealerVerified = Boolean(data.dealerVerified);
-        if (role === "business" && !dealerVerified) {
-          dispatch(
-            showNotification({
-              message: t("newListing.unverifiedDraftNotice", {
-                defaultValue:
-                  "Your dealer account is pending verification. You can create listings as drafts, but publishing requires approval.",
-              }),
-              severity: "info",
-            }),
-          );
-        }
-      })
-      .catch(() => {
-        // ignore
+    if (profile && profile.role === "business") {
+      setListing((prev) => {
+        // Only pre-fill if fields are currently empty to avoid overwriting user edits
+        const hasLocation = prev.location && prev.location.trim() !== "";
+        const hasAddress = prev.address && prev.address.trim() !== "";
+        
+        if (hasLocation || hasAddress) return prev;
+
+        const profileLocation = buildLocation(profile.city || "", profile.country || "");
+        
+        return {
+          ...prev,
+          location: profileLocation,
+          address: profile.address || "",
+        };
       });
-  }, [dispatch, t]);
+    }
+  }, [profile]);
 
   const handleSubmit = async () => {
     const user = auth.currentUser;
@@ -67,14 +70,14 @@ export default function NewListingForm() {
     setError(null);
 
     try {
-      // 1. Fetch user info for seller object
-      const userDoc = await getDoc(doc(db, "users", user.uid));
-      const userData = userDoc.data() || {};
-      const role = userData.role as "individual" | "business" | undefined;
-      const dealerVerified = Boolean(userData.dealerVerified);
+      // 1. Use profile info from real-time hook
+      if (!profile) {
+        throw new Error("User profile not found");
+      }
+      const role = profile.role as "individual" | "business" | undefined;
       const seller = {
-        name: userData.ownerName || userData.name || "Private Seller",
-        phone: userData.ownerPhone || userData.phone || "",
+        name: profile.ownerName || profile.name || "Private Seller",
+        phone: profile.ownerPhone || profile.phone || "",
         email: user.email || "",
         isDealer: role === "business",
       };
@@ -98,7 +101,7 @@ export default function NewListingForm() {
       const listingToValidate = {
         ...listing,
         status:
-          role === "business" && !dealerVerified ? "draft" : listing.status,
+          role === "business" && !isApprovedDealer ? "draft" : listing.status,
         images: images as any, // pass local array to bypass empty images block
         seller,
       } as CarListingDetailsJson;
@@ -107,9 +110,10 @@ export default function NewListingForm() {
       if (!validation.isValid) {
         setIsSubmitting(false);
         const errorMessages = validation.errors
-          .map((e) => `${e.field}: ${e.message}`)
+          .map((e) => `${t(`fields.${e.field}`)}: ${t(e.message)}`)
           .join("\n");
         setError(`${t("newListing.fixErrors")}\n${errorMessages}`);
+        window.scrollTo({ top: 0, behavior: "smooth" });
         return;
       }
 
@@ -119,6 +123,12 @@ export default function NewListingForm() {
         ...listingToValidate,
         images: listingImages,
       });
+
+      // Invalidate cache so it appears immediately on the profile/store page
+      const { invalidateCache, cacheKeyOwnerListings, cacheKeyAllListings } = await import("~/services/listingsCache");
+      invalidateCache(cacheKeyOwnerListings(user.uid));
+      invalidateCache(cacheKeyAllListings());
+
       dispatch(
         showNotification({
           message: t("newListing.createdSuccess"),
@@ -139,6 +149,14 @@ export default function NewListingForm() {
       {error && (
         <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
           {error}
+        </Alert>
+      )}
+
+      {isUnverifiedDealer && (
+        <Alert severity="warning" variant="filled" sx={{ mb: 3, fontWeight: 700 }}>
+          {t("newListing.unverifiedDealerAlert", { 
+            defaultValue: "Your account is pending verification. You cannot publish new listings until the site administrator approves your business registration. You will receive an email once approved." 
+          })}
         </Alert>
       )}
 
@@ -170,7 +188,7 @@ export default function NewListingForm() {
         <Button
           variant="contained"
           onClick={handleSubmit}
-          disabled={isSubmitting}
+          disabled={isSubmitting || isUnverifiedDealer}
         >
           {isSubmitting ? t("newListing.creating") : t("newListing.create")}
         </Button>

@@ -4,6 +4,17 @@ import type { UserProfileDoc } from "~/services/usersService";
 
 export async function getBusinessUsers(): Promise<UserProfileDoc[]> {
   const usersRef = collection(db, "users");
+  const q = query(
+    usersRef, 
+    where("role", "==", "business"),
+    where("dealerVerified", "==", true)
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ uid: d.id, ...(d.data() as any) })) as UserProfileDoc[];
+}
+
+export async function getAllBusinessUsers(): Promise<UserProfileDoc[]> {
+  const usersRef = collection(db, "users");
   const q = query(usersRef, where("role", "==", "business"));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ uid: d.id, ...(d.data() as any) })) as UserProfileDoc[];

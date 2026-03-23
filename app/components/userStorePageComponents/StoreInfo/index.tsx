@@ -4,6 +4,7 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 import PhoneIcon from "@mui/icons-material/Phone";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import EmailIcon from "@mui/icons-material/Email";
+import LanguageIcon from "@mui/icons-material/Language";
 import { useStorefrontSettings } from "~/hooks/useStorefrontSettings";
 import { readableTextOn } from "~/utils/color";
 
@@ -19,7 +20,7 @@ const StoreInfo = ({ reviewStats, listingsCount, viewsCount }: Props) => {
   const { t } = useTranslation();
   const storeSettings = useStorefrontSettings();
   const theme = storeSettings.theme;
-  const onCard = readableTextOn(theme.secondary || theme.background, "dark");
+  const onCard = readableTextOn(theme.primary || theme.background, "dark");
   const contact = storeSettings.contact;
   const location = storeSettings.location;
   const workTime = storeSettings.workTime;
@@ -66,11 +67,11 @@ const StoreInfo = ({ reviewStats, listingsCount, viewsCount }: Props) => {
   const workGroups = groupedWorkTimes();
 
   return (
-    <Paper sx={{ p: 3, bgcolor: theme.secondary, color: onCard.text }}>
+    <Paper sx={{ p: 3, bgcolor: theme.primary, color: onCard.text }}>
       <Stack spacing={2}>
         <Stack spacing={1}>
           <Typography variant="body2" sx={{ color: onCard.text, display: "flex", alignItems: "center", gap: 1 }}>
-            <LocationOnIcon fontSize="small" /> {location.adress || t("listing.noAddress")}
+            <LocationOnIcon fontSize="small" sx={{ opacity: 0.8 }} /> {location.adress || t("listing.noAddress")}
           </Typography>
 
           <Box
@@ -83,7 +84,7 @@ const StoreInfo = ({ reviewStats, listingsCount, viewsCount }: Props) => {
           >
             <AccessTimeIcon fontSize="small" />
             <Box>
-              <Typography variant="body2" fontWeight={600}>
+              <Typography variant="body2" fontWeight={600} sx={{ color: "inherit" }}>
                 {t("listing.hours")}
               </Typography>
               {workGroups ? (
@@ -109,12 +110,26 @@ const StoreInfo = ({ reviewStats, listingsCount, viewsCount }: Props) => {
           </Box>
 
           <Typography variant="body2" sx={{ color: onCard.text, display: "flex", alignItems: "center", gap: 1 }}>
-            <PhoneIcon fontSize="small" /> {contact.phone || t("listing.noPhone")}
+            <PhoneIcon fontSize="small" sx={{ opacity: 0.8 }} /> {contact.phone || t("listing.noPhone")}
           </Typography>
 
           <Typography variant="body2" sx={{ color: onCard.text, display: "flex", alignItems: "center", gap: 1 }}>
-            <EmailIcon fontSize="small" /> {contact.email || t("listing.noEmail")}
+            <EmailIcon fontSize="small" sx={{ opacity: 0.8 }} /> {contact.email || t("listing.noEmail")}
           </Typography>
+
+          {contact.website && (
+            <Typography variant="body2" sx={{ color: onCard.text, display: "flex", alignItems: "center", gap: 1 }}>
+              <LanguageIcon fontSize="small" sx={{ opacity: 0.8 }} />
+              <a 
+                href={contact.website.startsWith("http") ? contact.website : `https://${contact.website}`} 
+                target="_blank" 
+                rel="noreferrer" 
+                style={{ color: "inherit", textDecoration: "underline" }}
+              >
+                {contact.website.replace(/^https?:\/\//, "")}
+              </a>
+            </Typography>
+          )}
         </Stack>
 
         <Button

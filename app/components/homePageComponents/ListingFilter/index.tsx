@@ -37,6 +37,7 @@ interface Props {
   onChange: (filters: ListingsFiltersState) => void;
   onReset: () => void;
   noBorder?: boolean;
+  sx?: any;
 }
 
 const YEARS = Array.from({ length: 30 }, (_, i) =>
@@ -59,10 +60,18 @@ const DISPLAY_COLORS = [
   "Purple",
 ];
 
-const ListingsFilters = ({ filters, onChange, onReset, noBorder }: Props) => {
+const ListingsFilters = ({ filters, onChange, onReset, noBorder, sx }: Props) => {
   const { t } = useTranslation();
-  const set = (key: keyof ListingsFiltersState, value: string) =>
-    onChange({ ...filters, [key]: value });
+  const set = (key: keyof ListingsFiltersState, value: string) => {
+    let finalValue = value;
+    if (
+      ["priceFrom", "priceTo", "mileageFrom", "mileageTo"].includes(key) &&
+      value !== ""
+    ) {
+      finalValue = String(Math.max(0, Number(value)));
+    }
+    onChange({ ...filters, [key]: finalValue });
+  };
 
   const makes = CAR_MAKES as unknown as string[];
 
@@ -81,12 +90,15 @@ const ListingsFilters = ({ filters, onChange, onReset, noBorder }: Props) => {
         borderColor: "divider",
         borderRadius: noBorder ? 0 : 2,
         mb: noBorder ? 0 : 3,
+        ...sx,
       }}
     >
-      <Typography fontWeight={600} mb={1}>
-        {t("filters.searchTitle")}
-      </Typography>
-
+      {!noBorder && (
+        <Typography fontWeight={600} mb={1}>
+          {t("filters.searchTitle")}
+        </Typography>
+      )}
+ 
       <TextField
         fullWidth
         placeholder={t("filters.searchPlaceholder")}
@@ -94,7 +106,7 @@ const ListingsFilters = ({ filters, onChange, onReset, noBorder }: Props) => {
         onChange={(e) => set("search", e.target.value)}
         sx={{ mb: 3 }}
       />
-
+ 
       <Grid container spacing={2}>
         {/* Brand */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -109,7 +121,7 @@ const ListingsFilters = ({ filters, onChange, onReset, noBorder }: Props) => {
             )}
           />
         </Grid>
-
+ 
         {/* Model */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Autocomplete
@@ -143,7 +155,7 @@ const ListingsFilters = ({ filters, onChange, onReset, noBorder }: Props) => {
             )}
           />
         </Grid>
-
+ 
         {/* Country */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <TextField
@@ -161,7 +173,7 @@ const ListingsFilters = ({ filters, onChange, onReset, noBorder }: Props) => {
             ))}
           </TextField>
         </Grid>
-
+ 
         {/* City */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Autocomplete
@@ -195,7 +207,7 @@ const ListingsFilters = ({ filters, onChange, onReset, noBorder }: Props) => {
             )}
           />
         </Grid>
-
+ 
         {/* Year */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <TextField
@@ -213,7 +225,7 @@ const ListingsFilters = ({ filters, onChange, onReset, noBorder }: Props) => {
             ))}
           </TextField>
         </Grid>
-
+ 
         {/* Condition */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <TextField
@@ -231,7 +243,7 @@ const ListingsFilters = ({ filters, onChange, onReset, noBorder }: Props) => {
             ))}
           </TextField>
         </Grid>
-
+ 
         {/* Color */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Autocomplete
@@ -244,7 +256,7 @@ const ListingsFilters = ({ filters, onChange, onReset, noBorder }: Props) => {
             )}
           />
         </Grid>
-
+ 
         {/* Price Range */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Stack direction="row" spacing={1}>
@@ -254,6 +266,7 @@ const ListingsFilters = ({ filters, onChange, onReset, noBorder }: Props) => {
               type="number"
               value={filters.priceFrom}
               onChange={(e) => set("priceFrom", e.target.value)}
+              inputProps={{ min: 0 }}
             />
             <TextField
               fullWidth
@@ -261,10 +274,11 @@ const ListingsFilters = ({ filters, onChange, onReset, noBorder }: Props) => {
               type="number"
               value={filters.priceTo}
               onChange={(e) => set("priceTo", e.target.value)}
+              inputProps={{ min: 0 }}
             />
           </Stack>
         </Grid>
-
+ 
         {/* Mileage Range */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Stack direction="row" spacing={1}>
@@ -274,6 +288,7 @@ const ListingsFilters = ({ filters, onChange, onReset, noBorder }: Props) => {
               type="number"
               value={filters.mileageFrom}
               onChange={(e) => set("mileageFrom", e.target.value)}
+              inputProps={{ min: 0 }}
             />
             <TextField
               fullWidth
@@ -281,6 +296,7 @@ const ListingsFilters = ({ filters, onChange, onReset, noBorder }: Props) => {
               type="number"
               value={filters.mileageTo}
               onChange={(e) => set("mileageTo", e.target.value)}
+              inputProps={{ min: 0 }}
             />
           </Stack>
         </Grid>

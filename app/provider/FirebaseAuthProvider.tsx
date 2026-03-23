@@ -2,7 +2,6 @@
 import { useState, useEffect, createContext, type ReactNode } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { auth } from "~/firebase/auth";
-import { useNavigate, useLocation } from "react-router";
 import { Box, CircularProgress, Typography } from "@mui/material";
 
 type ContextState = { user: User | null };
@@ -17,8 +16,6 @@ const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-  const location = useLocation();
 
   const value = { user };
 

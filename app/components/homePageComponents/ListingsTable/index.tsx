@@ -12,6 +12,8 @@ import {
   TableRow,
   TableSortLabel,
   Paper,
+  Stack,
+  Typography,
 } from "@mui/material";
 
 import type { CarListingSummary, SortDir, SortKey } from "~/types/types";
@@ -23,9 +25,10 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { markListingAsSold } from "~/services/listingsService";
+import { markListingAsSold, markAsSale, stopSale } from "~/services/listingsService";
 import { useAppDispatch } from "~/redux/hooks";
 import { showNotification } from "~/redux/slices/uiSlice";
+import { invalidateCache, cacheKeyOwnerListings, cacheKeyAllListings } from "~/services/listingsCache";
 
 const ListingsTable = ({
   rows,
@@ -35,6 +38,7 @@ const ListingsTable = ({
   showOwnerActions,
   onChangePrice,
   onDelete,
+  onRefresh,
 }: {
   rows: CarListingSummary[];
   sortKey: SortKey;
@@ -43,6 +47,7 @@ const ListingsTable = ({
   showOwnerActions?: boolean;
   onChangePrice?: (listingId: string, newPrice: number) => void;
   onDelete?: (listingId: string) => void;
+  onRefresh?: () => void;
 }) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -148,27 +153,31 @@ const ListingsTable = ({
               </TableCell>
 
               <TableCell>
-                {l.make}
-                {l.isDealer && (
-                  <Chip
-                    label={t("listing.dealer")}
-                    size="small"
-                    variant="levelHigh"
-                    sx={{ ml: 1, fontSize: "0.65rem" }}
-                  />
-                )}
-                {l.isSold && (
-                  <Chip
-                    label={t("sellerCard.status_sold")}
-                    size="small"
-                    color="success"
-                    sx={{
-                      ml: l.isDealer ? 0.5 : 1,
-                      fontSize: "0.65rem",
-                      fontWeight: "bold",
-                    }}
-                  />
-                )}
+                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                  <Typography variant="body2" fontWeight={600}>
+                    {l.make}
+                  </Typography>
+                  {l.isDealer && (
+                    <Chip
+                      label={t("listing.dealer")}
+                      size="small"
+                      variant="levelHigh"
+                      sx={{ fontSize: "0.65rem", height: 20 }}
+                    />
+                  )}
+                  {l.isSold && (
+                    <Chip
+                      label={t("sellerCard.status_sold")}
+                      size="small"
+                      color="success"
+                      sx={{
+                        fontSize: "0.65rem",
+                        height: 20,
+                        fontWeight: "bold",
+                      }}
+                    />
+                  )}
+                </Stack>
               </TableCell>
               <TableCell>{l.model}</TableCell>
               <TableCell>{l.year}</TableCell>
@@ -247,6 +256,43 @@ const ListingsTable = ({
           {t("table.changePrice")}
         </MenuItem>
 
+        <MenuItem
+          onClick={(e) => {
+            const id = activeId;
+            closeMenu(e);
+            if (!id) return;
+            const listing = rows.find((l) => l.id === id);
+            if (!listing) return;
+
+            if (listing.isOnSale) {
+              stopSale(id).then(() => {
+                const sellerId = listing.sellerId;
+                if (sellerId) invalidateCache(cacheKeyOwnerListings(sellerId));
+                invalidateCache(cacheKeyAllListings());
+                onRefresh?.();
+              });
+            } else {
+              const salePriceStr = window.prompt(
+                t("listingControl.setSalePriceDesc"),
+                (listing.price * 0.9).toString(),
+              );
+              if (salePriceStr && !isNaN(Number(salePriceStr))) {
+                markAsSale(id, Number(salePriceStr)).then(() => {
+                  const sellerId = listing.sellerId;
+                  if (sellerId) invalidateCache(cacheKeyOwnerListings(sellerId));
+                  invalidateCache(cacheKeyAllListings());
+                  onRefresh?.();
+                });
+              }
+            }
+          }}
+        >
+          <AttachMoneyIcon fontSize="small" sx={{ mr: 1, color: "error.main" }} />
+          {activeId && rows.find((r) => r.id === activeId)?.isOnSale
+            ? t("listingControl.stopSale")
+            : t("listingControl.putOnSale")}
+        </MenuItem>
+
         {/* Mark as Sold Option */}
         {anchorEl &&
           activeId &&
@@ -269,13 +315,16 @@ const ListingsTable = ({
                 const soldPrice = Number(soldPriceStr);
                 if (!isNaN(soldPrice) && soldPrice > 0) {
                   markListingAsSold(id, soldPrice).then(() => {
+                    const sellerId = listing.sellerId;
+                    if (sellerId) invalidateCache(cacheKeyOwnerListings(sellerId));
+                    invalidateCache(cacheKeyAllListings());
                     dispatch(
                       showNotification({
                         message: t("listingControl.soldSuccess"),
                         severity: "success",
                       }),
                     );
-                    setTimeout(() => window.location.reload(), 500);
+                    onRefresh?.();
                   });
                 }
               }}

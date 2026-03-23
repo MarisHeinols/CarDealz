@@ -7,4 +7,9 @@ firebase-functions/node_modules/
 
 # React Router
 /.react-router/
+/.wrangler/
 /build/
+
+# Firebase Service Account (SECURITY)
+service-account.json
+**/service-account.json

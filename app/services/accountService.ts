@@ -29,31 +29,53 @@ export async function disableAccount(uid: string): Promise<void> {
 }
 
 /**
- * Permanently deletes a user's account and hides their data.
- * Note: Re-authentication may be required by Firebase if the user session is old.
+ * Re-activates a user's account.
+ */
+export async function reActivateAccount(uid: string): Promise<void> {
+  const userRef = doc(db, USERS_COLLECTION, uid);
+  await updateDoc(userRef, {
+    status: "active",
+    reactivatedAt: new Date().toISOString(),
+  });
+}
+
+/**
+ * Permanently deletes a user's account and all associated data from the database.
  */
 export async function permanentDeleteAccount(user: User): Promise<void> {
   const uid = user.uid;
-
-  // 1. Mark all listings as deleted
-  const listingsRef = collection(db, LISTINGS_COLLECTION);
-  const q = query(listingsRef, where("sellerId", "==", uid));
-  const snap = await getDocs(q);
-  
   const batch = writeBatch(db);
-  snap.forEach((d) => {
-    batch.update(d.ref, { deleted: true, deletedAt: new Date().toISOString() });
-  });
-  
-  // 2. Mark user doc as deleted
-  batch.update(doc(db, USERS_COLLECTION, uid), { 
-    deleted: true, 
-    deletedAt: new Date().toISOString(),
-    email: `deleted_${Date.now()}@deleted.com` // Scramble email for privacy/reuse
-  });
-  
+
+  // 1. HARD DELETE all listings
+  const listingsSnap = await getDocs(query(collection(db, LISTINGS_COLLECTION), where("sellerId", "==", uid)));
+  listingsSnap.forEach((d) => batch.delete(d.ref));
+
+  // 2. HARD DELETE all leads directed to/from this user
+  const leadsInSnap = await getDocs(query(collection(db, "leads"), where("dealerId", "==", uid)));
+  leadsInSnap.forEach((d) => batch.delete(d.ref));
+  const leadsOutSnap = await getDocs(query(collection(db, "leads"), where("buyerUid", "==", uid)));
+  leadsOutSnap.forEach((d) => batch.delete(d.ref));
+
+  // 3. HARD DELETE all reviews for/by this user
+  const reviewsForSnap = await getDocs(query(collection(db, "storeReviews"), where("storeUid", "==", uid)));
+  reviewsForSnap.forEach((d) => batch.delete(d.ref));
+  const reviewsBySnap = await getDocs(query(collection(db, "storeReviews"), where("reviewerUid", "==", uid)));
+  reviewsBySnap.forEach((d) => batch.delete(d.ref));
+
+  // 4. HARD DELETE business name reservation
+  const namesSnap = await getDocs(query(collection(db, "businessNames"), where("uid", "==", uid)));
+  namesSnap.forEach((d) => batch.delete(d.ref));
+
+  // 5. HARD DELETE store settings
+  batch.delete(doc(db, "storeSettings", uid));
+
+  // 6. HARD DELETE the user document and private metadata
+  batch.delete(doc(db, "privateUserMetadata", uid));
+  batch.delete(doc(db, USERS_COLLECTION, uid));
+
+  // Execute all deletions
   await batch.commit();
 
-  // 3. Delete from Firebase Auth (This must be the last step)
+  // 7. Finally, delete the account from Firebase Auth
   await deleteUser(user);
 }

@@ -12,7 +12,7 @@ const TopListings = ({ carListings }: { carListings: CarListingSummary[] }) => {
 
   return (
     <>
-      <Typography gutterBottom variant="h6">
+      <Typography gutterBottom variant="h5" fontWeight={900}>
         {t("nav.top_listings")}
       </Typography>
 

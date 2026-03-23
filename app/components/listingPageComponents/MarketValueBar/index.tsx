@@ -23,8 +23,12 @@ const getColor = (value: number): "success" | "warning" | "error" => {
 };
 
 const MarketValueBar = ({ price, marketRange }: Props) => {
-  const percentage =
-    ((price - marketRange.min) / (marketRange.max - marketRange.min)) * 100;
+  if (!marketRange || (marketRange.min === 0 && marketRange.max === 0)) {
+    return null;
+  }
+
+  const range = marketRange.max - marketRange.min;
+  const percentage = range > 0 ? ((price - marketRange.min) / range) * 100 : 50;
 
   const value = Math.max(0, Math.min(100, percentage));
   const color = getColor(value);

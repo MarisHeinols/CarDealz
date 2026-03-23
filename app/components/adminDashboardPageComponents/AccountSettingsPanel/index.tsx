@@ -11,18 +11,106 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AccountPrivacySettings from "../AccountPrivacySettings";
 import { useAppDispatch } from "~/redux/hooks";
 import { showNotification } from "~/redux/slices/uiSlice";
+import { useNavigate } from "react-router";
+import { auth } from "~/firebase/auth";
 
 import { useTranslation } from "react-i18next";
 
-const AccountSettingsPanel = () => {
+const AccountSettingsPanel = ({ mustVerify }: { mustVerify?: boolean }) => {
   const { t } = useTranslation();
   const appDispatch = useAppDispatch();
+  const navigate = useNavigate();
 
   return (
     <Box sx={{ maxWidth: 800, mx: "auto", mt: 2 }}>
-      <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
+      <Typography variant="h6" fontWeight={800} sx={{ mb: 2 }}>
         {t("dashboard.account.title", { defaultValue: "Account Settings" })}
       </Typography>
+
+      {mustVerify && (
+        <Box 
+          p={3} 
+          mb={4} 
+          sx={{ 
+            bgcolor: "error.light", 
+            borderRadius: 2, 
+            border: "1px solid",
+            borderColor: "error.main",
+            display: "flex", 
+            flexDirection: "column",
+            gap: 2 
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+            <Typography variant="subtitle1" fontWeight={800} color="error.dark">
+              {t("nav.verifyPhone", { defaultValue: "Verify Phone" })}
+            </Typography>
+          </Box>
+          <Typography variant="body2" color="error.dark">
+            {t("listingControl.phone_verification_required", { defaultValue: "Phone verification is required to access all features." })}
+          </Typography>
+          <Button 
+            variant="contained" 
+            color="error" 
+            fullWidth 
+            onClick={() => navigate("/verify-phone")}
+          >
+            {t("nav.verifyPhone", { defaultValue: "Verify Phone" })}
+          </Button>
+        </Box>
+      )}
+      <Accordion defaultExpanded>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography fontWeight={600}>
+            {t("dashboard.account.verification.title", { defaultValue: "Verification Status" })}
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Stack spacing={2}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Box 
+                sx={{ 
+                  width: 20, 
+                  height: 20, 
+                  borderRadius: "50%", 
+                  bgcolor: auth.currentUser?.emailVerified ? "success.main" : "warning.main",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "white",
+                  fontSize: 14
+                }}
+              >
+                {auth.currentUser?.emailVerified ? "✓" : "!"}
+              </Box>
+              <Typography variant="body2" fontWeight={600}>
+                {t("dashboard.account.verification.email", { defaultValue: "Email Verified" })}
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Box 
+                sx={{ 
+                  width: 20, 
+                  height: 20, 
+                  borderRadius: "50%", 
+                  bgcolor: auth.currentUser?.phoneNumber ? "success.main" : "error.main",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "white",
+                  fontSize: 14
+                }}
+              >
+                {auth.currentUser?.phoneNumber ? "✓" : "!"}
+              </Box>
+              <Typography variant="body2" fontWeight={600}>
+                {t("dashboard.account.verification.phone", { defaultValue: "Phone Verified" })}
+              </Typography>
+            </Box>
+          </Stack>
+        </AccordionDetails>
+      </Accordion>
 
       <Accordion defaultExpanded>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>

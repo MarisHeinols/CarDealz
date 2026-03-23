@@ -2,6 +2,7 @@ import { serverTimestamp, arrayUnion, doc, setDoc, updateDoc } from "firebase/fi
 import { db } from "~/firebase/fireStore";
 import type { CarListingDetailsJson } from "~/types/types";
 import { generateListingId, validateListing } from "~/models";
+import { getUserProfile } from "./usersService";
 
 /**
  * Creates a new listing in the database
@@ -14,6 +15,17 @@ export async function createListing(
   userId: string, 
   listing: CarListingDetailsJson
 ): Promise<string> {
+  // 0. Verify business status (Force fresh check)
+  const profile = await getUserProfile(userId, true);
+  if (!profile) throw new Error("User profile not found.");
+  
+  if (profile.role === "business") {
+    const isApproved = profile.dealerVerified || profile.dealerVerificationStatus === "approved";
+    if (!isApproved) {
+      throw new Error("Your business account is not yet approved by the administrator. Please wait for the verification email.");
+    }
+  }
+
   // Validate listing before submission
   const validation = validateListing(listing);
   if (!validation.isValid) {

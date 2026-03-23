@@ -5,6 +5,8 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useSearchParams,
+  useNavigate,
 } from "react-router";
 import { Box, CircularProgress, Typography, Button } from "@mui/material";
 
@@ -21,6 +23,9 @@ import { store } from "./redux/store";
 import { Provider } from "react-redux";
 import { FirebaseAuthProvider } from "./provider/FirebaseAuthProvider";
 import { UserPreferencesProvider } from "./context/UserPreferencesContext";
+import GlobalSnackbar from "./components/shared/GlobalSnackbar";
+import RegistrationGuard from "./components/shared/RegistrationGuard";
+import VerificationDialog from "./components/shared/VerificationDialog";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -35,8 +40,6 @@ export const links: Route.LinksFunction = () => [
   },
   { rel: "icon", type: "image/svg+xml", href: "/favicon.svg?v=2" },
 ];
-
-import GlobalSnackbar from "./components/shared/GlobalSnackbar";
 
 function GlobalProviders({ children }: { children: React.ReactNode }) {
   return (
@@ -93,23 +96,42 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const showVerifyPhone = searchParams.get("verify_phone") === "1";
+
+  const handleCloseVerify = () => {
+    // Clear the param
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete("verify_phone");
+    setSearchParams(newParams, { replace: true });
+    // Then go to verify page
+    navigate("/verify-phone");
+  };
+
   return (
     <FirebaseAuthProvider>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          minHeight: "100vh",
-        }}
-      >
-        <Header />
-        <Box component="main" sx={{ flexGrow: 1 }}>
-          <Outlet />
+      <RegistrationGuard>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            minHeight: "100vh",
+          }}
+        >
+          <Header />
+          <Box component="main" sx={{ flexGrow: 1 }}>
+            <Outlet />
+          </Box>
+          <Footer />
+          <CookieBanner />
+          <GlobalSnackbar />
+          <VerificationDialog 
+            open={showVerifyPhone} 
+            onClose={handleCloseVerify} 
+          />
         </Box>
-        <Footer />
-        <CookieBanner />
-        <GlobalSnackbar />
-      </Box>
+      </RegistrationGuard>
     </FirebaseAuthProvider>
   );
 }

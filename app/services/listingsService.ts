@@ -1,4 +1,4 @@
-import { collection, getDocs, getDoc, query, where, doc, updateDoc, increment, serverTimestamp } from "firebase/firestore";
+import { collection, getDocs, getDoc, query, where, doc, updateDoc, increment, serverTimestamp, limit, startAfter, orderBy, getCountFromServer, type DocumentSnapshot, type QueryConstraint } from "firebase/firestore";
 import { db } from "~/firebase/fireStore";
 import type { CarListingDetailsJson, CarListingSummary } from "~/types/types";
 
@@ -42,19 +42,78 @@ export function mapListingToSummary(id: string, data: any): CarListingSummary {
 
 export async function getAllListings(): Promise<CarListingSummary[]> {
   const listingsRef = collection(db, "listings");
-  // Fetch all listings and filter deleted ones client-side.
-  // Avoids relying on a Firestore composite index for != queries,
-  // and also handles listings created before the `deleted` field was added.
-  const snapshot = await getDocs(listingsRef);
+  const q = query(
+    listingsRef,
+    where("deleted", "==", false),
+    where("isSold", "==", false),
+    where("status", "==", "published"),
+    orderBy("createdAt", "desc")
+  );
+  const snapshot = await getDocs(q);
 
   const results: CarListingSummary[] = [];
   snapshot.forEach(doc => {
-    const data = doc.data();
-    if (data.deleted !== true && data.isSold !== true) {
-      results.push(mapListingToSummary(doc.id, data));
-    }
+    results.push(mapListingToSummary(doc.id, doc.data()));
   });
   return results;
+}
+
+export type PaginatedListingsResult = {
+  listings: CarListingSummary[];
+  lastVisible: DocumentSnapshot | null;
+  totalCount: number;
+};
+
+export async function getPaginatedListings(
+  pageSize: number,
+  lastVisible?: DocumentSnapshot | null,
+  filters?: Partial<CarListingSummary>,
+  sortBy: string = "createdAt",
+  sortDir: "asc" | "desc" = "desc"
+): Promise<PaginatedListingsResult> {
+  const listingsRef = collection(db, "listings");
+  
+  const constraints: QueryConstraint[] = [
+    where("deleted", "==", false),
+    where("isSold", "==", false),
+    where("status", "==", "published"),
+    orderBy(sortBy, sortDir)
+  ];
+
+  if (filters?.make && filters.make !== "all") {
+    constraints.push(where("make", "==", filters.make));
+  }
+  
+  // Note: if sortBy is not 'createdAt', we usually still want 'createdAt' as a tie-breaker
+  if (sortBy !== "createdAt") {
+    constraints.push(orderBy("createdAt", "desc"));
+  }
+  
+  // Note: Firestore requires specific indexes for complex queries.
+  // We'll stick to basic ones for now to avoid setup errors.
+
+  const countQuery = query(listingsRef, ...constraints);
+  const countSnapshot = await getCountFromServer(countQuery);
+  const totalCount = countSnapshot.data().count;
+
+  if (lastVisible) {
+    constraints.push(startAfter(lastVisible));
+  }
+  constraints.push(limit(pageSize));
+
+  const q = query(listingsRef, ...constraints);
+  const snapshot = await getDocs(q);
+
+  const listings: CarListingSummary[] = [];
+  snapshot.forEach((doc) => {
+    listings.push(mapListingToSummary(doc.id, doc.data()));
+  });
+
+  return {
+    listings,
+    lastVisible: snapshot.docs[snapshot.docs.length - 1] || null,
+    totalCount
+  };
 }
 
 /**
@@ -114,7 +173,15 @@ export async function markAsSale(listingId: string, salePrice: number) {
   const listingRef = doc(db, "listings", listingId);
   await updateDoc(listingRef, {
     isOnSale: true,
-    salePrice
+    salePrice,
+  });
+}
+
+export async function stopSale(listingId: string) {
+  const listingRef = doc(db, "listings", listingId);
+  await updateDoc(listingRef, {
+    isOnSale: false,
+    salePrice: null,
   });
 }
 
@@ -126,6 +193,13 @@ export async function markListingAsSold(listingId: string, soldPrice: number) {
     soldPrice: soldPrice,
     isOnSale: false,
     salePrice: null
+  });
+}
+
+export async function updateListingStatus(listingId: string, status: "draft" | "published" | "closed") {
+  const listingRef = doc(db, "listings", listingId);
+  await updateDoc(listingRef, {
+    status: status
   });
 }
 

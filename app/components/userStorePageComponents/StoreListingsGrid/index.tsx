@@ -6,9 +6,10 @@ import { useStorefrontSettings } from "~/hooks/useStorefrontSettings";
 interface Props {
   listings: CarListingSummary[];
   isOwner?: boolean;
+  onRefresh?: () => void;
 }
 
-const StoreListingsGrid = ({ listings, isOwner }: Props) => {
+const StoreListingsGrid = ({ listings, isOwner, onRefresh }: Props) => {
   const theme = useStorefrontSettings().theme;
 
   const getGridSize = () => {
@@ -32,6 +33,7 @@ const StoreListingsGrid = ({ listings, isOwner }: Props) => {
             isOwner={isOwner}
             useStoreTheme
             storeThemeOverride={theme}
+            onRefresh={onRefresh}
           />
         </Grid>
       ))}

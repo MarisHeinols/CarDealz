@@ -25,6 +25,11 @@ export default function NewUserStoreRoute() {
       return;
     }
 
+    if (!user.phoneNumber) {
+      navigate("/verify-phone");
+      return;
+    }
+
     setBusy(true);
     getStoreHandleForUid(user.uid)
       .then((handle) => {

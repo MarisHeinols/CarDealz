@@ -2,25 +2,31 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // 1. USERS COLLECTION
+    // 1. USERS COLLECTION (Public can get individual profile, only Admin can list)
     match /users/{userId} {
-      allow read: if true;
-      allow create: if request.auth != null && request.auth.uid == userId;
-      allow update: if request.auth != null && request.auth.uid == userId;
+      allow get: if true;
+      allow list: if request.auth != null && request.auth.token.admin == true;
+      allow create, update: if request.auth != null && request.auth.uid == userId;
       allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // 1b. PRIVATE USER METADATA (Internal notes, stripe IDs)
+    match /privateUserMetadata/{userId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || request.auth.token.admin == true);
+      allow delete: if request.auth != null && request.auth.uid == userId;
+      allow create, update: if false; // Only admin SDK (Cloud Functions)
     }
     
     match /businessNames/{slug} {
       allow read: if true;
       allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
-      allow update, delete: if false;
+      allow update, delete: if request.auth != null && (resource.data.uid == request.auth.uid || request.auth.token.admin == true);
     }
 
     // 2. STORE SETTINGS
     match /storeSettings/{userId} {
       allow read: if true;
-      allow create, update: if request.auth != null && request.auth.uid == userId;
-      allow delete: if false; 
+      allow create, update, delete: if request.auth != null && request.auth.uid == userId;
     }
 
     // 3. LISTINGS
@@ -35,7 +41,7 @@ service cloud.firestore {
     // 4. LEADS (Allows Guest Access for Creation)
     match /leads/{leadId} {
       // Dealers can read their own received leads
-      allow read: if request.auth != null && request.auth.uid == resource.data.dealerId;
+      allow read: if request.auth != null && (request.auth.uid == resource.data.dealerId || request.auth.token.admin == true);
      
       allow create: if 
         // If logged in, enforce UID match. If guest, allow.
@@ -44,8 +50,11 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/listings/$(request.resource.data.listingId)).data.sellerId
             == request.resource.data.dealerId;
      
-      allow update: if request.auth != null && request.auth.uid == resource.data.dealerId;
-      allow delete: if false;
+      allow update, delete: if request.auth != null && (
+        request.auth.uid == resource.data.dealerId || 
+        request.auth.uid == resource.data.buyerUid || 
+        request.auth.token.admin == true
+      );
     }
 
     // 5. STORE REVIEWS
@@ -60,7 +69,11 @@ service cloud.firestore {
         && request.resource.data.text is string
         && request.resource.data.text.size() <= 1000;
      
-      allow delete: if false;
+      allow delete: if request.auth != null && (
+        resource.data.reviewerUid == request.auth.uid || 
+        resource.data.storeUid == request.auth.uid ||
+        request.auth.token.admin == true
+      );
     }
   }
 }
