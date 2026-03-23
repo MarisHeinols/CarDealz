@@ -15,7 +15,7 @@ import {
 import React from "react";
 import MenuIcon from "@mui/icons-material/Menu";
 import AddIcon from "@mui/icons-material/Add";
-import { useNavigate } from "react-router";
+import { Link as RouterLink, useNavigate } from "react-router";
 import { useAuth } from "~/hooks/userStore/useAuth";
 import { logout } from "~/services/auth";
 import { useAppDispatch } from "~/redux/hooks";
@@ -192,14 +192,9 @@ const Header = () => {
               {pages.map((page) => (
                 <Button
                   key={page.key}
-                  onClick={() => {
-                    if (page.key === "profile") {
-                      goProfile();
-                    } else {
-                      navigate(page.url);
-                    }
-                    handleCloseNavMenu();
-                  }}
+                  component={RouterLink}
+                  to={page.url}
+                  onClick={handleCloseNavMenu}
                   sx={{ my: 2, display: "block" }}
                 >
                   {page.pageName}
@@ -236,14 +231,9 @@ const Header = () => {
             {pages.map((page) => (
               <Button
                 key={page.key}
-                onClick={() => {
-                  if (page.key === "profile") {
-                    goProfile();
-                  } else {
-                    navigate(page.url);
-                  }
-                  handleCloseNavMenu();
-                }}
+                component={RouterLink}
+                to={page.url}
+                onClick={handleCloseNavMenu}
                 sx={{ my: 2, display: "block" }}
               >
                 {page.pageName}
@@ -305,104 +295,107 @@ const Header = () => {
               open={Boolean(anchorElUser)}
               onClose={handleCloseUserMenu}
             >
-            {user && (
-              <Box>
-                {!user.phoneNumber ? (
-                  <MenuItem
-                    onClick={() => {
-                      navigate("/verify-phone");
-                      handleCloseUserMenu();
-                    }}
-                    sx={{ color: "error.main" }}
-                  >
-                    <ListItemIcon>
-                      <CheckIcon fontSize="small" color="error" />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={t("nav.verifyPhone", {
-                        defaultValue: "Verify Phone",
-                      })}
-                      primaryTypographyProps={{ fontWeight: 800 }}
-                    />
-                  </MenuItem>
-                ) : (
-                  role === "business" && (
-                    <>
-                      <MenuItem
-                        onClick={() => {
-                          goProfile();
-                          handleCloseUserMenu();
+              {user && (
+                <Box>
+                  {!user.phoneNumber ? (
+                    <MenuItem
+                      onClick={() => {
+                        navigate("/verify-phone");
+                        handleCloseUserMenu();
+                      }}
+                      sx={{ color: "error.main" }}
+                    >
+                      <ListItemIcon>
+                        <CheckIcon fontSize="small" color="error" />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={t("nav.verifyPhone", {
+                          defaultValue: "Verify Phone",
+                        })}
+                        primaryTypographyProps={{ fontWeight: 800 }}
+                      />
+                    </MenuItem>
+                  ) : (
+                    role === "business" && (
+                      <>
+                        <MenuItem
+                          onClick={() => {
+                            goProfile();
+                            handleCloseUserMenu();
+                          }}
+                        >
+                          <ListItemIcon>
+                            <PersonIcon fontSize="small" />
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={t("nav.profile")}
+                            primaryTypographyProps={{ fontWeight: 600 }}
+                          />
+                        </MenuItem>
+                        <MenuItem
+                          onClick={() => {
+                            navigate("/admin");
+                            handleCloseUserMenu();
+                          }}
+                        >
+                          <ListItemIcon>
+                            <DashboardIcon fontSize="small" />
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={t("nav.admin")}
+                            primaryTypographyProps={{ fontWeight: 600 }}
+                          />
+                        </MenuItem>
+                        <MenuItem
+                          onClick={() => {
+                            navigate("/new-listing");
+                            handleCloseUserMenu();
+                          }}
+                        >
+                          <ListItemIcon>
+                            <AddIcon fontSize="small" />
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={t("nav.newListing")}
+                            primaryTypographyProps={{ fontWeight: 600 }}
+                          />
+                        </MenuItem>
+                      </>
+                    )
+                  )}
+                  {isAdmin && (
+                    <MenuItem
+                      onClick={() => {
+                        navigate("/super-admin");
+                        handleCloseUserMenu();
+                      }}
+                      sx={{ bgcolor: "rgba(106, 27, 154, 0.05)" }}
+                    >
+                      <ListItemIcon>
+                        <DashboardIcon fontSize="small" color="primary" />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary="Super Admin"
+                        primaryTypographyProps={{
+                          fontWeight: 800,
+                          color: "primary",
                         }}
-                      >
-                        <ListItemIcon>
-                          <PersonIcon fontSize="small" />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={t("nav.profile")}
-                          primaryTypographyProps={{ fontWeight: 600 }}
-                        />
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => {
-                          navigate("/admin");
-                          handleCloseUserMenu();
-                        }}
-                      >
-                        <ListItemIcon>
-                          <DashboardIcon fontSize="small" />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={t("nav.admin")}
-                          primaryTypographyProps={{ fontWeight: 600 }}
-                        />
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => {
-                          navigate("/new-listing");
-                          handleCloseUserMenu();
-                        }}
-                      >
-                        <ListItemIcon>
-                          <AddIcon fontSize="small" />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={t("nav.newListing")}
-                          primaryTypographyProps={{ fontWeight: 600 }}
-                        />
-                      </MenuItem>
-                    </>
-                  )
-                )}
-                {isAdmin && (
-                  <MenuItem
-                    onClick={() => {
-                      navigate("/super-admin");
-                      handleCloseUserMenu();
-                    }}
-                    sx={{ bgcolor: "rgba(106, 27, 154, 0.05)" }}
-                  >
-                    <ListItemIcon>
-                      <DashboardIcon fontSize="small" color="primary" />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Super Admin"
-                      primaryTypographyProps={{ fontWeight: 800, color: "primary" }}
-                    />
-                  </MenuItem>
-                )}
-                <Divider />
-              </Box>
-            )}
+                      />
+                    </MenuItem>
+                  )}
+                  <Divider />
+                </Box>
+              )}
 
-            <MenuItem disabled sx={{ opacity: 0.9 }}>
-              <ListItemIcon>
-                <LanguageIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText
-                primary={t("nav.language")}
-                primaryTypographyProps={{ fontWeight: 700 }}
-              />
-            </MenuItem>
+              <MenuItem disabled sx={{ opacity: 0.9 }}>
+                <ListItemIcon>
+                  <LanguageIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText
+                  primary={t("nav.language")}
+                  primaryTypographyProps={{ fontWeight: 700 }}
+                />
+              </MenuItem>
               <Divider />
               {[
                 { code: "en", label: "English", flag: "🇬🇧" },
