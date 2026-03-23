@@ -710,3 +710,59 @@ export const stripeWebhook = onRequest(
     res.json({ received: true });
   }
 );
+
+/**
+ * Function: Dynamic XML Sitemap for SEO
+ * Returns all published car listings in XML format.
+ */
+export const sitemap = onRequest(
+  { region: "europe-west1", cors: true, invoker: "public" },
+  async (req, res) => {
+    const db = admin.firestore();
+    const baseUrl = "https://baltic-auto.net";
+
+    try {
+      // 1. Fetch live listings
+      const snapshot = await db.collection("listings")
+        .where("deleted", "==", false)
+        .where("status", "==", "published")
+        .where("isSold", "==", false)
+        .orderBy("createdAt", "desc")
+        .get();
+
+      const staticUrls = [
+        "",
+        "/businesses",
+        "/about",
+        "/pricing",
+        "/privacy-policy",
+        "/terms-of-service",
+      ];
+
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+
+      // Static Pages
+      staticUrls.forEach(url => {
+        xml += `  <url>\n    <loc>${baseUrl}${url}</loc>\n    <changefreq>daily</changefreq>\n    <priority>${url === "" ? "1.0" : "0.8"}</priority>\n  </url>\n`;
+      });
+
+      // Dynamic Listings
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const id = doc.id;
+        const lastMod = data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate().toISOString().split("T")[0] : new Date().toISOString().split("T")[0]) : new Date().toISOString().split("T")[0];
+        
+        xml += `  <url>\n    <loc>${baseUrl}/listing/${id}</loc>\n    <lastmod>${lastMod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
+      });
+
+      xml += `</urlset>`;
+
+      res.set("Content-Type", "application/xml");
+      res.status(200).send(xml);
+    } catch (err) {
+      logger.error("Sitemap generation failed:", err);
+      res.status(500).send("Internal Server Error");
+    }
+  }
+);
+

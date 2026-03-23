@@ -57,6 +57,7 @@ export default function AboutPage() {
               </Typography>
               <Typography
                 variant="h2"
+                component="h1"
                 fontWeight={900}
                 sx={{
                   lineHeight: 1.1,

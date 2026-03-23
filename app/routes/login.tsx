@@ -2,8 +2,8 @@ import LoginPage from "~/pages/LoginPage";
 
 export function meta() {
   return [
-    { title: "User Authnetication" },
-    { name: "Login", content: "User Authnetication" },
+    { title: "Log In | BalticAuto - Car Marketplace" },
+    { name: "description", content: "Sign in to your BalticAuto account to manage your listings, communicate with buyers, and save your favorite cars." },
   ];
 }
 

@@ -2,8 +2,8 @@ import PricingPage from "~/pages/PricingPage";
 
 export function meta() {
   return [
-    { title: "Pricing" },
-    { name: "Pricing", content: "Pricing and subscription tiers" },
+    { title: "Pricing & Listing Plans | BalticAuto" },
+    { name: "description", content: "Affordable listing options for private sellers and comprehensive business plans for car dealerships on BalticAuto." },
   ];
 }
 

@@ -2,6 +2,13 @@ import React from "react";
 import { Container, Typography, Box } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
+export function meta() {
+  return [
+    { title: "Privacy Policy | BalticAuto" },
+    { name: "description", content: "Understand how we collect, use, and protect your personal information at BalticAuto." },
+  ];
+}
+
 export default function PrivacyPolicy() {
   const { t } = useTranslation();
 

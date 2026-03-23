@@ -87,6 +87,9 @@ const Listings = () => {
 
   return (
     <div className={styles.listingsContainer}>
+      <Typography variant="h4" component="h1" fontWeight={900} mb={3}>
+        {t("seo.homeTitle")}
+      </Typography>
       {refreshing ? <LinearProgress sx={{ mb: 2 }} /> : null}
       {/* Seller filter banner */}
       {sellerFilter && (

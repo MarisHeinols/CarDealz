@@ -72,7 +72,7 @@ export async function getPaginatedListings(
   sortDir: "asc" | "desc" = "desc"
 ): Promise<PaginatedListingsResult> {
   const listingsRef = collection(db, "listings");
-  
+
   const constraints: QueryConstraint[] = [
     where("deleted", "==", false),
     where("isSold", "==", false),
@@ -83,12 +83,12 @@ export async function getPaginatedListings(
   if (filters?.make && filters.make !== "all") {
     constraints.push(where("make", "==", filters.make));
   }
-  
+
   // Note: if sortBy is not 'createdAt', we usually still want 'createdAt' as a tie-breaker
   if (sortBy !== "createdAt") {
     constraints.push(orderBy("createdAt", "desc"));
   }
-  
+
   // Note: Firestore requires specific indexes for complex queries.
   // We'll stick to basic ones for now to avoid setup errors.
 
@@ -142,7 +142,7 @@ export async function getListingsByOwner(
   // Best to query by sellerId and filter out deleted locally.
   const q = query(listingsRef, where("sellerId", "==", userId));
   const snapshot = await getDocs(q);
-  
+
   const results: CarListingSummary[] = [];
   snapshot.forEach(doc => {
     const data = doc.data();

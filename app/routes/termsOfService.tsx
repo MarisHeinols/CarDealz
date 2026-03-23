@@ -2,6 +2,13 @@ import React from "react";
 import { Container, Typography, Box } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
+export function meta() {
+  return [
+    { title: "Terms of Service | BalticAuto" },
+    { name: "description", content: "The legal terms and conditions for using the BalticAuto platform." },
+  ];
+}
+
 export default function TermsOfService() {
   const { t } = useTranslation();
 

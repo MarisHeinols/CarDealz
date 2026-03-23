@@ -8,8 +8,8 @@ import { Box, CircularProgress, Typography } from "@mui/material";
 
 export function meta() {
   return [
-    { title: "Create New Listing" },
-    { name: "description", content: "Create a new car listing" },
+    { title: "Sell Your Car - Create New Listing | BalticAuto" },
+    { name: "description", content: "List your car for sale on the most popular vehicle marketplace in the Baltics. Simple, fast, and secure process." },
   ];
 }
 

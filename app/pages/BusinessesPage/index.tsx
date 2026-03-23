@@ -279,7 +279,7 @@ export default function BusinessesPage() {
       {busy ? <LinearProgress sx={{ mb: 2 }} /> : null}
 
       <Stack spacing={1} sx={{ mb: 2 }}>
-        <Typography variant="h5" fontWeight={900}>
+        <Typography variant="h5" component="h1" fontWeight={900}>
           {t("businesses.title")}
         </Typography>
         <Typography color="text.secondary">

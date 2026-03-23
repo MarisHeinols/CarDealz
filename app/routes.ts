@@ -16,5 +16,6 @@ export default [
   route("verify-phone","routes/verifyPhone.tsx"),
   route("super-admin", "routes/superAdmin.tsx"),
   route("privacy-policy", "routes/privacyPolicy.tsx"),
-  route("terms-of-service", "routes/termsOfService.tsx")
+  route("terms-of-service", "routes/termsOfService.tsx"),
+  route("sitemap.xml", "routes/sitemap[.]xml.tsx")
 ] satisfies RouteConfig;

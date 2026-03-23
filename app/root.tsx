@@ -54,14 +54,17 @@ function GlobalProviders({ children }: { children: React.ReactNode }) {
   );
 }
 
+import i18n from "./i18n";
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang={i18n.language || "en"}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        <link rel="canonical" href="https://baltic-auto.net/" />
         <script dangerouslySetInnerHTML={{ __html: `
           // Silence known browser extension background errors (common in Brave/Chrome extensions)
           window.addEventListener('unhandledrejection', function(event) {

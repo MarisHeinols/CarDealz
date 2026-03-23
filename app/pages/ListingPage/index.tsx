@@ -336,6 +336,7 @@ const ListingPage = ({ id }: Props) => {
             >
               <Typography
                 variant="h4"
+                component="h1"
                 fontWeight={900}
                 sx={{ lineHeight: 1.2, flex: 1 }}
               >
