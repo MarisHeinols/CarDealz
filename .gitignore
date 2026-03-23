@@ -2,7 +2,6 @@
 .env*
 node_modules/
 **/node_modules/
-functions/
 firebase-functions/node_modules/
 
 # React Router
