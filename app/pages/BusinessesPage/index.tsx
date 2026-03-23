@@ -487,7 +487,7 @@ export default function BusinessesPage() {
             sx={{
               mt: 1,
               borderRadius: 1,
-              overflow: "hidden",
+              overflowX: "auto",
               border: "1px solid",
               borderColor: "divider",
             }}
@@ -619,17 +619,19 @@ export default function BusinessesPage() {
         </Grid>
 
         <Grid size={{ xs: 12, md: 4 }}>
-          <Typography variant="h6" fontWeight={800} sx={{ mb: 1 }}>
-            {t("businesses.mapTitle")}
-          </Typography>
-          <BusinessesMap markers={mapMarkers} />
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ display: "block", mt: 1 }}
-          >
-            {t("businesses.mapSubtitle", { count: mapMarkers.length })}
-          </Typography>
+          <Box sx={{ position: { md: "sticky" }, top: { md: 24 } }}>
+            <Typography variant="h6" fontWeight={800} sx={{ mb: 1 }}>
+              {t("businesses.mapTitle")}
+            </Typography>
+            <BusinessesMap markers={mapMarkers} />
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ display: "block", mt: 1 }}
+            >
+              {t("businesses.mapSubtitle", { count: mapMarkers.length })}
+            </Typography>
+          </Box>
         </Grid>
       </Grid>
     </AppContainer>
