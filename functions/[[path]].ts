@@ -1,7 +1,7 @@
 import { createPagesFunctionHandler } from "@react-router/cloudflare";
 
 // @ts-ignore - The build output won't exist until you run `npm run build`
-import * as build from "../build/server/index.js";
+import * as build from "../output-dist/server/index.js";
 
 const handler = createPagesFunctionHandler({ build });
 

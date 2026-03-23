@@ -8,6 +8,7 @@ firebase-functions/node_modules/
 /.react-router/
 /.wrangler/
 /build/
+/output-dist/
 
 # Firebase Service Account (SECURITY)
 service-account.json
