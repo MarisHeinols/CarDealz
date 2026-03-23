@@ -15,7 +15,7 @@ import {
 import React from "react";
 import MenuIcon from "@mui/icons-material/Menu";
 import AddIcon from "@mui/icons-material/Add";
-import { Link as RouterLink, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { useAuth } from "~/hooks/userStore/useAuth";
 import { logout } from "~/services/auth";
 import { useAppDispatch } from "~/redux/hooks";
@@ -192,9 +192,14 @@ const Header = () => {
               {pages.map((page) => (
                 <Button
                   key={page.key}
-                  component={RouterLink}
-                  to={page.url}
-                  onClick={handleCloseNavMenu}
+                  onClick={() => {
+                    if (page.key === "profile") {
+                      goProfile();
+                    } else {
+                      navigate(page.url);
+                    }
+                    handleCloseNavMenu();
+                  }}
                   sx={{ my: 2, display: "block" }}
                 >
                   {page.pageName}
@@ -231,9 +236,14 @@ const Header = () => {
             {pages.map((page) => (
               <Button
                 key={page.key}
-                component={RouterLink}
-                to={page.url}
-                onClick={handleCloseNavMenu}
+                onClick={() => {
+                  if (page.key === "profile") {
+                    goProfile();
+                  } else {
+                    navigate(page.url);
+                  }
+                  handleCloseNavMenu();
+                }}
                 sx={{ my: 2, display: "block" }}
               >
                 {page.pageName}

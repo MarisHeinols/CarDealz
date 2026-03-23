@@ -18,7 +18,12 @@ import {
 } from "../ListingsTable/useListingTable";
 
 import styles from "./Listings.module.css";
-import type { ListingsFiltersState, CarListingSummary, SortKey, SortDir } from "~/types/types";
+import type {
+  ListingsFiltersState,
+  CarListingSummary,
+  SortKey,
+  SortDir,
+} from "~/types/types";
 import ListingsFilters from "../ListingFilter";
 import TopListings from "../TopListings";
 import { usePaginatedListings } from "~/hooks/usePaginatedListings";
@@ -29,16 +34,16 @@ const Listings = () => {
   const [filtersTouched, setFiltersTouched] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("createdAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
-  
-  const { 
-    listings, 
-    loading, 
+
+  const {
+    listings,
+    loading,
     refreshing,
-    error, 
-    totalCount, 
-    currentPage, 
-    pageCount, 
-    setCurrentPage 
+    error,
+    totalCount,
+    currentPage,
+    pageCount,
+    setCurrentPage,
   } = usePaginatedListings(10, { make: filters.brand }, sortKey, sortDir);
   const [searchParams, setSearchParams] = useSearchParams();
   const sellerFilter = searchParams.get("seller");
@@ -70,7 +75,7 @@ const Listings = () => {
     ? listings.filter((l) => l.sellerId === sellerFilter)
     : listings;
 
-  // We still use useListingsTable for its sorting logic, 
+  // We still use useListingsTable for its sorting logic,
   // though it now only sorts the CURRENT page's results.
   // In a full implementation, sorting would also be server-side.
   // We still use useListingsTable for its filtering logic (for search tokens)
@@ -82,7 +87,7 @@ const Listings = () => {
       setSortKey(key);
       setSortDir(dir);
       setCurrentPage(1);
-    }
+    },
   });
 
   return (
@@ -112,7 +117,16 @@ const Listings = () => {
       )}
 
       {error && (
-        <Box sx={{ mb: 4, p: 3, bgcolor: "error.light", borderRadius: 2, border: "1px solid", borderColor: "error.main" }}>
+        <Box
+          sx={{
+            mb: 4,
+            p: 3,
+            bgcolor: "error.light",
+            borderRadius: 2,
+            border: "1px solid",
+            borderColor: "error.main",
+          }}
+        >
           <Stack spacing={1}>
             <Typography color="error.dark" fontWeight="bold">
               {t("common.error_fetching")}
@@ -120,11 +134,11 @@ const Listings = () => {
             <Typography variant="body2" color="error.dark">
               {error}
             </Typography>
-            <Button 
-              variant="contained" 
-              color="error" 
-              size="small" 
-              onClick={() => window.location.reload()} 
+            <Button
+              variant="contained"
+              color="error"
+              size="small"
+              onClick={() => window.location.reload()}
               sx={{ alignSelf: "flex-start", mt: 1 }}
             >
               {t("common.retry")}
