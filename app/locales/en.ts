@@ -872,7 +872,7 @@ export const en = {
     },
     seo: {
       homeTitle: "BalticAuto - Buy & Sell Cars in the Baltics",
-      homeDesc: "The leading car marketplace in Estonia, Latvia, and Lithuania. Find used and new cars for sale, or list your own vehicle today.",
+      homeDesc: "Browse used and new cars from verified dealerships in Estonia, Latvia, and Lithuania.",
       businessesTitle: "Car Dealerships & Businesses | BalticAuto",
       businessesDesc: "Discover verified car dealers and automotive businesses across the Baltics.",
       aboutTitle: "About Us | BalticAuto",

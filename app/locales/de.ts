@@ -667,7 +667,7 @@ export const de = {
     },
     seo: {
       homeTitle: "BalticAuto - Autos kaufen & verkaufen im Baltikum",
-      homeDesc: "Der führende Marktplatz für Autos in Estland, Lettland und Litauen. Finden Sie gebrauchte und neue Autos oder inserieren Sie noch heute Ihr eigenes Fahrzeug.",
+      homeDesc: "Gebrauchte und neue Autos von verifizierten Autohäusern in Estland, Lettland und Litauen entdecken.",
       businessesTitle: "Autohäuser & Unternehmen | BalticAuto",
       businessesDesc: "Entdecken Sie verifizierte Autohändler und Unternehmen im gesamten Baltikum.",
       aboutTitle: "Über uns | BalticAuto",

@@ -732,7 +732,7 @@ export const es = {
     },
     seo: {
       homeTitle: "BalticAuto - Compra y vende coches en el Báltico",
-      homeDesc: "El mercado de coches líder en Estonia, Letonia y Lituania. Encuentra coches nuevos y usados, o publica tu propio vehículo hoy mismo.",
+      homeDesc: "Explora coches nuevos y usados de concesionarios verificados en Estonia, Letonia y Lituania.",
       businessesTitle: "Concesionarios y Empresas | BalticAuto",
       businessesDesc: "Descubra concesionarios verificados y empresas del sector automotriz en todo el Báltico.",
       aboutTitle: "Sobre nosotros | BalticAuto",

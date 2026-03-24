@@ -690,7 +690,7 @@ export const et = {
     },
     seo: {
       homeTitle: "BalticAuto - Osta ja müü autosid Baltikumis",
-      homeDesc: "Juhtiv autode müügiportaal Eestis, Lätis ja Leedus. Leia kasutatud ja uued autod või lisa oma kuulutus juba täna.",
+      homeDesc: "Sirvi kasutatud ja uusi autosid verifitseeritud esindustelt Eestis, Lätis ja Leedus.",
       businessesTitle: "Automüüjad ja Ettevõtted | BalticAuto",
       businessesDesc: "Leia kontrollitud automüüjad ja autoettevõtted üle kogu Baltikumi.",
       aboutTitle: "Meist | BalticAuto",

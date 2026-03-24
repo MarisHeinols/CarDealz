@@ -7,6 +7,7 @@ import {
   Chip,
   Stack,
   LinearProgress,
+  alpha,
 } from "@mui/material";
 import { useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -92,9 +93,54 @@ const Listings = () => {
 
   return (
     <div className={styles.listingsContainer}>
-      <Typography variant="h4" component="h1" fontWeight={900} mb={3}>
-        {t("seo.homeTitle")}
-      </Typography>
+      <Box
+        sx={{
+          py: { xs: 4, md: 6 },
+          px: 3,
+          borderRadius: 4,
+          background: (theme) => `linear-gradient(180deg, ${alpha(theme.palette.primary.main, 0.05)} 0%, ${alpha(theme.palette.background.paper, 0.01)} 100%)`,
+          border: "1px solid rgba(0,0,0,0.06)",
+          mb: 4,
+          position: "relative",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          textAlign: "center"
+        }}
+      >
+        <Typography
+          variant="h1"
+          sx={{
+            fontWeight: 900,
+            fontSize: { xs: "1.75rem", sm: "2.25rem", md: "2.75rem" },
+            background: (theme) => `linear-gradient(135deg, ${theme.palette.text.primary} 30%, ${theme.palette.primary.main} 100%)`,
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            mb: 1.5,
+            lineHeight: 1.2,
+            letterSpacing: "-0.03em",
+            maxWidth: "800px",
+            mx: "auto"
+          }}
+        >
+          {t("seo.homeTitle")}
+        </Typography>
+        <Typography
+          variant="body1"
+          color="text.secondary"
+          sx={{
+            maxWidth: "600px",
+            mx: "auto",
+            fontWeight: 400,
+            lineHeight: 1.5,
+            opacity: 0.85,
+          }}
+        >
+          {t("seo.homeDesc")}
+        </Typography>
+      </Box>
+
       {refreshing ? <LinearProgress sx={{ mb: 2 }} /> : null}
       {/* Seller filter banner */}
       {sellerFilter && (

@@ -876,7 +876,7 @@ export const lv = {
     },
     seo: {
       homeTitle: "BalticAuto - Pērc un pārdod auto Baltijā",
-      homeDesc: "Vadošais auto sludinājumu portāls Igaunijā, Latvijā un Lietuvā. Atrodi lietotus un jaunus auto vai pievieno savu sludinājumu jau šodien.",
+      homeDesc: "Atrodi lietotus un jaunus auto no verificētiem officiāliem dīleriem Igaunijā, Latvijā un Lietuvā.",
       businessesTitle: "Auto dīleri un uzņēmumi | BalticAuto",
       businessesDesc: "Atklājiet pārbaudītus auto tirgotājus un automobiļu uzņēmumus visā Baltijā.",
       aboutTitle: "Par mums | BalticAuto",

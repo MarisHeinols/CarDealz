@@ -675,7 +675,7 @@ export const lt = {
     },
     seo: {
       homeTitle: "BalticAuto - Pirkite ir parduokite automobilius Baltijos šalyse",
-      homeDesc: "Pirmaujanti automobilių rinka Estijoje, Latvijoje ir Lietuvoje. Raskite naudotų ir naujų automobilių pardavimui arba įkelkite savo skelbimą jau šiandien.",
+      homeDesc: "Naršykite naudotus ir naujus automobilius iš patikrintų atstovybių Estijoje, Latvijoje ir Lietuvoje.",
       businessesTitle: "Automobilių salonai ir įmonės | BalticAuto",
       businessesDesc: "Atraskite patikrintus automobilių pardavėjus ir įmones visose Baltijos šalyse.",
       aboutTitle: "Apie mus | BalticAuto",
