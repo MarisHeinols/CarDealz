@@ -7,6 +7,7 @@ import {
   ScrollRestoration,
   useSearchParams,
   useNavigate,
+  useLocation,
 } from "react-router";
 import { Box, CircularProgress, Typography, Button } from "@mui/material";
 
@@ -57,6 +58,9 @@ function GlobalProviders({ children }: { children: React.ReactNode }) {
 import i18n from "./i18n";
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  const canonicalHref = `https://baltic-auto.net${location.pathname}`;
+
   return (
     <html lang={i18n.language || "en"}>
       <head>
@@ -64,8 +68,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
-        <link rel="canonical" href="https://baltic-auto.net/" />
-        <script dangerouslySetInnerHTML={{ __html: `
+        <link rel="canonical" href={canonicalHref} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
           // Silence known browser extension background errors (common in Brave/Chrome extensions)
           window.addEventListener('unhandledrejection', function(event) {
             const reason = event.reason;
@@ -85,12 +91,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                return false;
              }
           });
-        ` }} />
+        `,
+          }}
+        />
       </head>
       <body>
-        <GlobalProviders>
-          {children}
-        </GlobalProviders>
+        <GlobalProviders>{children}</GlobalProviders>
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -129,9 +135,9 @@ export default function App() {
           <Footer />
           <CookieBanner />
           <GlobalSnackbar />
-          <VerificationDialog 
-            open={showVerifyPhone} 
-            onClose={handleCloseVerify} 
+          <VerificationDialog
+            open={showVerifyPhone}
+            onClose={handleCloseVerify}
           />
         </Box>
       </RegistrationGuard>
@@ -144,18 +150,20 @@ export default function App() {
  */
 export function HydrateFallback() {
   return (
-    <Box 
-      sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        flexDirection: 'column',
-        gap: 2
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+        flexDirection: "column",
+        gap: 2,
       }}
     >
       <CircularProgress />
-      <Typography variant="body2" color="text.secondary">Loading app…</Typography>
+      <Typography variant="body2" color="text.secondary">
+        Loading app…
+      </Typography>
     </Box>
   );
 }
@@ -178,17 +186,22 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 
   return (
     <main className="pt-16 p-4 container mx-auto">
-      <Box sx={{ p: 4, bgcolor: 'error.light', borderRadius: 2 }}>
-        <Typography variant="h4" gutterBottom>{message}</Typography>
+      <Box sx={{ p: 4, bgcolor: "error.light", borderRadius: 2 }}>
+        <Typography variant="h4" gutterBottom>
+          {message}
+        </Typography>
         <Typography variant="body1">{details}</Typography>
         {stack && (
-          <Box component="pre" sx={{ mt: 2, p: 2, bgcolor: 'rgba(0,0,0,0.05)', overflow: 'auto' }}>
+          <Box
+            component="pre"
+            sx={{ mt: 2, p: 2, bgcolor: "rgba(0,0,0,0.05)", overflow: "auto" }}
+          >
             <code>{stack}</code>
           </Box>
         )}
-        <Button 
-          variant="contained" 
-          onClick={() => window.location.href = '/'}
+        <Button
+          variant="contained"
+          onClick={() => (window.location.href = "/")}
           sx={{ mt: 3 }}
         >
           Go Home
