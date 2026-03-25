@@ -31,7 +31,6 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 import AppContainer from "~/components/shared/AppContainer";
 import { getBusinessUsers } from "~/services/businessesService";
 import { loadStoreSettingsFromDb } from "~/services/storeSettingsService";
-import { getStoreReviews } from "~/services/reviewsService";
 import { useAllListingsForStatsCached } from "~/hooks/useCachedListingsForStats";
 import BusinessesMap from "~/components/businessesPageComponents/BusinessesMap";
 import { useNavigate } from "react-router";
@@ -105,66 +104,61 @@ export default function BusinessesPage() {
     setLoading(true);
     setError(null);
 
-    import("~/services/listingsCache").then(({ getOrFetch, cacheKeyBusinessUsers, cacheKeyStoreSettings, cacheKeyStoreReviews }) => {
-      getOrFetch(cacheKeyBusinessUsers(), () => getBusinessUsers(), BIZ_TTL)
-        .then(async (biz) => {
-          if (cancelled) return;
-          const out: BusinessRow[] = [];
-          
-          // Process businesses in parallel batches to be fast but smart
-          // Using getOrFetch for settings and reviews ensures we use cache if available
-          await Promise.all(
-            biz.map(async (b) => {
-              const uid = b.uid;
-              const settings = await getOrFetch(
-                cacheKeyStoreSettings(uid), 
-                () => loadStoreSettingsFromDb(uid), 
-                BIZ_TTL
-              ).catch(() => null);
+    import("~/services/listingsCache").then(
+      ({ getOrFetch, cacheKeyBusinessUsers, cacheKeyStoreSettings }) => {
+        getOrFetch(cacheKeyBusinessUsers(), () => getBusinessUsers(), BIZ_TTL)
+          .then(async (biz) => {
+            if (cancelled) return;
+            const out: BusinessRow[] = [];
 
-              const reviews = await getOrFetch(
-                cacheKeyStoreReviews(uid), 
-                () => getStoreReviews(uid), 
-                BIZ_TTL
-              ).catch(() => []);
+            await Promise.all(
+              biz.map(async (b) => {
+                const uid = b.uid;
+                const settings = await getOrFetch(
+                  cacheKeyStoreSettings(uid),
+                  () => loadStoreSettingsFromDb(uid),
+                  BIZ_TTL,
+                ).catch(() => null);
 
-              const name = b.storeName || b.businessName || settings?.name || t("auth.business");
-              const handleOrUid = b.storeHandle || uid;
-              const locationText = settings?.location?.adress || b.address || b.city || "";
-              const lat = settings?.location?.cords?.lat ?? null;
-              const lng = settings?.location?.cords?.lng ?? null;
-              const logoUrl = settings?.logo ?? null;
-              const reviewCount = reviews.length;
+                const name = settings?.name || t("auth.business");
+                const handleOrUid = b.storeHandle || uid;
+                const locationText = settings?.location?.adress || "";
+                const lat = settings?.location?.cords?.lat ?? null;
+                const lng = settings?.location?.cords?.lng ?? null;
+                const logoUrl = settings?.logo ?? null;
 
-              out.push({
-                uid,
-                name,
-                handleOrUid,
-                locationText,
-                logoUrl,
-                lat,
-                lng,
-                viewsTotal: 0,
-                soldLast30d: 0,
-                reviewCount,
-              });
-            }),
-          );
-          
-          if (!cancelled) {
-            setRows(out);
-            setError(null);
-          }
-        })
-        .catch((err) => {
-          if (cancelled) return;
-          console.error("Error loading businesses:", err);
-          setError(err instanceof Error ? err.message : "Failed to load businesses");
-        })
-        .finally(() => {
-          if (!cancelled) setLoading(false);
-        });
-    });
+                out.push({
+                  uid,
+                  name,
+                  handleOrUid,
+                  locationText,
+                  logoUrl,
+                  lat,
+                  lng,
+                  viewsTotal: 0,
+                  soldLast30d: 0,
+                  reviewCount: 0,
+                });
+              }),
+            );
+
+            if (!cancelled) {
+              setRows(out);
+              setError(null);
+            }
+          })
+          .catch((err) => {
+            if (cancelled) return;
+            console.error("Error loading businesses:", err);
+            setError(
+              err instanceof Error ? err.message : "Failed to load businesses",
+            );
+          })
+          .finally(() => {
+            if (!cancelled) setLoading(false);
+          });
+      },
+    );
 
     return () => {
       cancelled = true;
@@ -238,8 +232,8 @@ export default function BusinessesPage() {
   const top5 = useMemo(() => sorted.slice(0, 5), [sorted]);
 
   const mapMarkers = useMemo(() => {
-    const top5Ids = new Set(top5.map(t => t.uid));
-    
+    const top5Ids = new Set(top5.map((t) => t.uid));
+
     return filtered
       .filter((r) => typeof r.lat === "number" && typeof r.lng === "number")
       .map((r) => ({
@@ -248,7 +242,7 @@ export default function BusinessesPage() {
         lat: r.lat as number,
         lng: r.lng as number,
         subtitle: r.locationText,
-        isTop5: top5Ids.has(r.uid)
+        isTop5: top5Ids.has(r.uid),
       }));
   }, [filtered, top5]);
 
@@ -288,7 +282,16 @@ export default function BusinessesPage() {
       </Stack>
 
       {error && (
-        <Box sx={{ mb: 4, p: 3, bgcolor: "error.light", borderRadius: 2, border: "1px solid", borderColor: "error.main" }}>
+        <Box
+          sx={{
+            mb: 4,
+            p: 3,
+            bgcolor: "error.light",
+            borderRadius: 2,
+            border: "1px solid",
+            borderColor: "error.main",
+          }}
+        >
           <Stack spacing={1}>
             <Typography color="error.dark" fontWeight="bold">
               {t("common.error_fetching")}
@@ -296,11 +299,11 @@ export default function BusinessesPage() {
             <Typography variant="body2" color="error.dark">
               {error}
             </Typography>
-            <Button 
-              variant="contained" 
-              color="error" 
-              size="small" 
-              onClick={() => window.location.reload()} 
+            <Button
+              variant="contained"
+              color="error"
+              size="small"
+              onClick={() => window.location.reload()}
               sx={{ alignSelf: "flex-start", mt: 1 }}
             >
               {t("common.retry")}
@@ -312,94 +315,100 @@ export default function BusinessesPage() {
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 8 }}>
           <Paper variant="outlined" sx={{ p: 2 }}>
-            <Stack
-              direction={{ xs: "column", md: "row" }}
-              spacing={2}
-              alignItems={{ md: "center" }}
-            >
-              <TextField
-                fullWidth
-                label={t("businesses.searchLabel")}
-                placeholder={t("businesses.searchPlaceholder")}
-                value={search}
-                onChange={(e) => {
-                  setFiltersTouched(true);
-                  setSearch(e.target.value);
-                }}
-              />
+            <Grid container spacing={2} alignItems="center">
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  fullWidth
+                  label={t("businesses.searchLabel")}
+                  placeholder={t("businesses.searchPlaceholder")}
+                  value={search}
+                  onChange={(e) => {
+                    setFiltersTouched(true);
+                    setSearch(e.target.value);
+                  }}
+                />
+              </Grid>
 
-              <TextField
-                select
-                label={t("businesses.country")}
-                value={country}
-                onChange={(e) => {
-                  setFiltersTouched(true);
-                  setCountry(e.target.value);
-                  setCity("");
-                }}
-                sx={{ minWidth: 220 }}
-              >
-                <MenuItem value="all">{t("businesses.allCountries")}</MenuItem>
-                {COUNTRIES.map((c) => (
-                  <MenuItem key={c} value={c}>
-                    {c}
-                  </MenuItem>
-                ))}
-              </TextField>
+              <Grid size={{ xs: 12, sm: 6, md: "auto" }}>
+                <TextField
+                  select
+                  fullWidth
+                  label={t("businesses.country")}
+                  value={country}
+                  onChange={(e) => {
+                    setFiltersTouched(true);
+                    setCountry(e.target.value);
+                    setCity("");
+                  }}
+                  sx={{ minWidth: { md: 190 } }}
+                >
+                  <MenuItem value="all">{t("businesses.allCountries")}</MenuItem>
+                  {COUNTRIES.map((c) => (
+                    <MenuItem key={c} value={c}>
+                      {t(`common.countries.${c}`, c)}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
 
-              <Autocomplete
-                freeSolo
-                options={cities}
-                loading={citiesLoading}
-                disabled={country === "all"}
-                value={city}
-                onInputChange={(_, newValue) => {
-                  setFiltersTouched(true);
-                  setCity(newValue);
-                }}
-                sx={{ minWidth: 220 }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label={
-                      citiesLoading
-                        ? t("businesses.loadingCities")
-                        : t("businesses.cityRegion")
-                    }
-                    placeholder={
-                      country === "all"
-                        ? t("businesses.selectCountryFirst")
-                        : t("businesses.searchCity")
-                    }
-                    InputProps={{
-                      ...params.InputProps,
-                      endAdornment: (
-                        <>
-                          {citiesLoading ? (
-                            <CircularProgress color="inherit" size={18} />
-                          ) : null}
-                          {params.InputProps.endAdornment}
-                        </>
-                      ),
-                    }}
-                  />
-                )}
-              />
+              <Grid size={{ xs: 12, sm: 6, md: "auto" }}>
+                <Autocomplete
+                  freeSolo
+                  options={cities}
+                  loading={citiesLoading}
+                  disabled={country === "all"}
+                  value={city}
+                  onInputChange={(_, newValue) => {
+                    setFiltersTouched(true);
+                    setCity(newValue);
+                  }}
+                  sx={{ minWidth: { md: 190 } }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      fullWidth
+                      label={
+                        citiesLoading
+                          ? t("businesses.loadingCities")
+                          : t("businesses.cityRegion")
+                      }
+                      placeholder={
+                        country === "all"
+                          ? t("businesses.selectCountryFirst")
+                          : t("businesses.searchCity")
+                      }
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <>
+                            {citiesLoading ? (
+                              <CircularProgress color="inherit" size={18} />
+                            ) : null}
+                            {params.InputProps.endAdornment}
+                          </>
+                        ),
+                      }}
+                    />
+                  )}
+                />
+              </Grid>
 
-              <Select
-                value={sortKey}
-                onChange={(e) => setSortKey(e.target.value as SortKey)}
-                sx={{ minWidth: 220 }}
-              >
-                <MenuItem value="reviews">{t("businesses.sort.reviews")}</MenuItem>
-                <MenuItem value="views">{t("businesses.sort.views")}</MenuItem>
-                <MenuItem value="soldLast30d">
-                  {t("businesses.sort.sold")}
-                </MenuItem>
-                <MenuItem value="name">{t("businesses.sort.name")}</MenuItem>
-              </Select>
-            </Stack>
+              <Grid size={{ xs: 12, sm: 6, md: "auto" }}>
+                <Select
+                  fullWidth
+                  value={sortKey}
+                  onChange={(e) => setSortKey(e.target.value as SortKey)}
+                  sx={{ minWidth: { md: 170 } }}
+                >
+                  <MenuItem value="reviews">{t("businesses.sort.reviews")}</MenuItem>
+                  <MenuItem value="views">{t("businesses.sort.views")}</MenuItem>
+                  <MenuItem value="soldLast30d">{t("businesses.sort.sold")}</MenuItem>
+                  <MenuItem value="name">{t("businesses.sort.name")}</MenuItem>
+                </Select>
+              </Grid>
+            </Grid>
           </Paper>
+
 
           <Box sx={{ mt: 2 }}>
             <Typography variant="h6" fontWeight={800} sx={{ mb: 1 }}>
@@ -474,7 +483,6 @@ export default function BusinessesPage() {
               ))}
             </Grid>
           </Box>
-
 
           <Divider sx={{ my: 3 }} />
 

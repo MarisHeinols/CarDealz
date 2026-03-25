@@ -14,7 +14,7 @@ export async function startStripeCheckout(planId: Exclude<TierId, "individual_fr
 
 export async function selectFreeIndividualPlan(uid: string) {
   await setDoc(
-    doc(db, "users", uid),
+    doc(db, "privateUsers", uid),
     {
       billing: {
         planId: "individual_free",

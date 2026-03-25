@@ -29,7 +29,6 @@ import ListingsFilters, {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useAppSelector } from "~/redux/hooks";
 import { useOwnerListingsCached } from "~/hooks/useCachedListings";
-import StoreReviewsSection from "~/components/shared/StoreReviewsSection";
 import { useNavigate } from "react-router";
 
 const ITEMS_PER_PAGE = 8;
@@ -188,10 +187,18 @@ const UserStorePage = () => {
             displayEmpty
             sx={{ color: theme.isTextLight ? "white" : "text.primary" }}
           >
-            <MenuItem value="newest">{t("businesses.sortOptions.newest")}</MenuItem>
-            <MenuItem value="price_asc">{t("businesses.sortOptions.price_asc")}</MenuItem>
-            <MenuItem value="price_desc">{t("businesses.sortOptions.price_desc")}</MenuItem>
-            <MenuItem value="year_desc">{t("businesses.sortOptions.year")}</MenuItem>
+            <MenuItem value="newest">
+              {t("businesses.sortOptions.newest")}
+            </MenuItem>
+            <MenuItem value="price_asc">
+              {t("businesses.sortOptions.price_asc")}
+            </MenuItem>
+            <MenuItem value="price_desc">
+              {t("businesses.sortOptions.price_desc")}
+            </MenuItem>
+            <MenuItem value="year_desc">
+              {t("businesses.sortOptions.year")}
+            </MenuItem>
           </Select>
         </FormControl>
       </Box>
@@ -213,16 +220,7 @@ const UserStorePage = () => {
         </Box>
       )}
 
-      <Box>
-        {ownerId ? (
-          <StoreReviewsSection
-            storeUid={ownerId}
-            ownerUid={ownerId}
-            viewerUid={ownerId}
-            useStoreTheme
-          />
-        ) : null}
-      </Box>
+      <Box />
     </Container>
   );
 };

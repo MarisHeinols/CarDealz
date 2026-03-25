@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogActions, Button, Typography, Box } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
+import EmailIcon from "@mui/icons-material/Email";
 
 interface VerificationDialogProps {
   open: boolean;
@@ -25,15 +25,15 @@ const VerificationDialog = ({ open, onClose }: VerificationDialogProps) => {
           margin: "0 auto",
           mb: 3
         }}>
-          <PhoneIphoneIcon sx={{ fontSize: 40 }} />
+          <EmailIcon sx={{ fontSize: 40 }} />
         </Box>
         
         <Typography variant="h5" fontWeight={900} gutterBottom>
-          {t("auth.completePhoneVerification", "Verify Your Phone")}
+          {t("auth.registrationSuccessTitle")}
         </Typography>
         
         <Typography variant="body2" color="text.secondary">
-          {t("auth.phoneVerifyDesc", "Your profile is ready! Please verify your phone number to start using the platform.")}
+          {t("auth.registrationSuccessDesc")}
         </Typography>
       </DialogContent>
       <DialogActions sx={{ justifyContent: "center", pb: 3, px: 3 }}>

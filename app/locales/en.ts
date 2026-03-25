@@ -22,6 +22,17 @@ export const en = {
       save_error: "Failed to save settings.",
       saving: "Saving...",
       useMyLocation: "Use my location",
+      countries: {
+        Latvia: "Latvia",
+        Estonia: "Estonia",
+        Lithuania: "Lithuania",
+      },
+    },
+    errors: {
+      profileNotFound: "User profile not found.",
+      businessNotApproved: "Your business account is not yet approved by the administrator. Please wait for the verification email.",
+      validationFailed: "Listing validation failed: {{errors}}",
+      createFailed: "Failed to create listing",
     },
     fields: {
       make: "Make",
@@ -93,6 +104,9 @@ export const en = {
       about: "About Us",
       terms: "Terms of Service",
       privacy: "Privacy Policy",
+      cookie_settings: "Cookie Settings",
+      cookie_policy: "Cookie Policy",
+      data_deletion: "Data Deletion",
       copyright: "Copyright",
     },
     auth: {
@@ -110,7 +124,8 @@ export const en = {
       loginFailed: "Login failed",
       acceptTermsPart1: "I agree to the",
       acceptTermsPart2: "and",
-      mustAcceptTerms: "You must accept the Terms of Service and Privacy Policy.",
+      mustAcceptTerms:
+        "You must accept the Terms of Service and Privacy Policy.",
       firstName: "First Name",
       surname: "Surname",
       phone: "Phone",
@@ -132,21 +147,26 @@ export const en = {
       fieldsRequired: "First name and surname are required.",
       businessNameRequired: "Business name is required.",
       ownerFieldsRequired: "Owner first name and surname are required.",
-      profileCreated: "Profile created. Please verify your phone number.",
-      accountCreated: "Account created. Check your email to verify it, then verify your phone.",
+      profileCreated: "Profile created.",
+      accountCreated: "Account created. Please check your email to verify it.",
       checkEmailTitle: "Check Your Email",
-      verifyEmailSent: "We have sent a verification link to your email address.",
-      verifyEmailDesc: "Please click the link in the email to verify your account. After that, you will be redirected to phone verification.",
-      completePhoneVerification: "Verify Your Phone",
-      phoneVerifyDesc: "Your profile is ready! Please verify your phone number to start using the platform.",
+      verifyEmailSent:
+        "We have sent a verification link to your email address.",
+      verifyEmailDesc: "Please click the link in the email to verify your account and get started.",
+      registrationSuccessTitle: "Registration Successful!",
+      registrationSuccessDesc: "Please check your inbox to verify your email. Our administrators will review your account and grant full access within the next 24 hours. In the meantime, feel free to explore the platform.",
+      onlyVerifiedDealersNote: "Please note: Only verified dealers can register and publish listings on this platform.",
+      confirmRegisteredDealer: "I confirm that I am a registered dealer.",
     },
     pricing: {
       title: "Pricing",
-      subtitle: "Choose a plan that fits your needs. You can upgrade or change at any time.",
+      subtitle:
+        "Choose a plan that fits your needs. You can upgrade or change at any time.",
       chooseTierCta: "Choose tier",
       viewPricingCta: "View pricing",
       chooseTierTitle: "Choose your tier",
-      chooseTierSubtitle: "Select a plan to unlock listings, analytics, and customization.",
+      chooseTierSubtitle:
+        "Select a plan to unlock listings, analytics, and customization.",
       individualSection: "Individual",
       businessSection: "Business",
       popular: "Popular",
@@ -226,7 +246,7 @@ export const en = {
         delete: "Delete Listing",
         newPrice: "New price",
         soldPrice: "Sold price",
-      }
+      },
     },
     sellerCard: {
       contactHidden: "Contact information hidden",
@@ -317,8 +337,10 @@ export const en = {
       creating: "Creating…",
       create: "Create Listing",
       fixErrors: "Please fix the following errors:",
-      individualListingLimit: "Individual accounts can create only 3 listings per year.",
-      unverifiedDraftNotice: "Your dealer account is pending verification. You can create listings as drafts, but publishing requires approval.",
+      individualListingLimit:
+        "Individual accounts can create only 3 listings per year.",
+      unverifiedDraftNotice:
+        "Your dealer account is pending verification. You can create listings as drafts, but publishing requires approval.",
     },
     form: {
       make: "Make",
@@ -338,7 +360,8 @@ export const en = {
       myLocation: "My Location",
       detecting: "Detecting…",
       geolocationUnsupported: "Geolocation is not supported by your browser.",
-      locationDetectFailed: "Could not determine your location. Enter it manually.",
+      locationDetectFailed:
+        "Could not determine your location. Enter it manually.",
       locationDenied: "Location access denied or failed. Enter it manually.",
       locationTimeout: "Location request timed out. Enter it manually.",
       exteriorColor: "Exterior Color",
@@ -409,7 +432,8 @@ export const en = {
       buyer: {
         overline: "FOR BUYERS",
         title: "Find your next car from verified dealers.",
-        subtitle: "Compare prices, see trending cars, and know which deals are really worth it.",
+        subtitle:
+          "Compare prices, see trending cars, and know which deals are really worth it.",
         howWorks: "HOW IT WORKS",
         step1: {
           title: "Dealer Uploads",
@@ -436,7 +460,8 @@ export const en = {
       dealer: {
         overline: "FOR DEALERS",
         title: "Scale your dealership faster.",
-        subtitle: "The only platform in the Baltics combining localized CRM with a high-visibility marketplace.",
+        subtitle:
+          "The only platform in the Baltics combining localized CRM with a high-visibility marketplace.",
         pricingTitle: "PRICING PLANS",
         plans: {
           free: {
@@ -483,19 +508,23 @@ export const en = {
           },
         },
         exclusiveTitle: "EXCLUSIVE EXPERIENCE",
-        exclusiveDesc: "Unlike traditional marketplaces, listings won't get lost in thousands of private ones. Users come here specifically to find inventory from trusted, professional dealers.",
+        exclusiveDesc:
+          "Unlike traditional marketplaces, listings won't get lost in thousands of private ones. Users come here specifically to find inventory from trusted, professional dealers.",
         uniqueTitle: "UNIQUE IN THE BALTICS",
-        uniqueDesc: "Currently, there is no single CRM + Marketplace platform focused strictly on verified dealers in Latvia, Estonia, and Lithuania. Join us to fill this gap and dominate your niche.",
+        uniqueDesc:
+          "Currently, there is no single CRM + Marketplace platform focused strictly on verified dealers in Latvia, Estonia, and Lithuania. Join us to fill this gap and dominate your niche.",
       },
       store: {
         opening: "Opening your store…",
         notFound: "Store not found",
-        notFoundDesc: "This store link may be incorrect, the store hasn’t been published yet.",
+        notFoundDesc:
+          "This store link may be incorrect, the store hasn’t been published yet.",
         details: "Details: {{error}}",
         loadingStore: "Loading store…",
         fetchingProfile: "Fetching store profile and settings.",
         notPublished: "Store not published yet",
-        notPublishedDesc: "This business store doesn’t have storefront settings saved yet.",
+        notPublishedDesc:
+          "This business store doesn’t have storefront settings saved yet.",
       },
     },
     featureCategories: {
@@ -633,7 +662,8 @@ export const en = {
       },
       resultsCount: "{{count}} results",
       mapTitle: "Map",
-      mapSubtitle: "Showing {{count}} locations (only businesses with coordinates).",
+      mapSubtitle:
+        "Showing {{count}} locations (only businesses with coordinates).",
     },
     dashboard: {
       title: "Business Dashboard",
@@ -665,6 +695,14 @@ export const en = {
       },
       account: {
         title: "Account Settings",
+        verification: {
+          title: "Verification Status",
+          email: "Email Verified",
+          dealer: "Dealer Status",
+          dealerVerified: "Verified Dealer",
+          pending: "Pending Admin Review",
+          rejected: "Verification Rejected",
+        },
         billing: {
           title: "Plan & Billing",
           desc: "Managing your subscription status, payment methods, and invoices via Stripe Secure Portal.",
@@ -673,7 +711,8 @@ export const en = {
         privacy: {
           title: "Account & Privacy",
           disableTitle: "Disable Store",
-          disableDesc: "Hides your store and all car listings from public search results. You can reactivate them later by marking listings as published again.",
+          disableDesc:
+            "Hides your store and all car listings from public search results. You can reactivate them later by marking listings as published again.",
           disableCta: "Disable My Store",
           disabling: "Disabling...",
           activateTitle: "Activate Store",
@@ -681,11 +720,13 @@ export const en = {
           activateCta: "Activate My Store",
           activating: "Activating...",
           dangerTitle: "Danger Zone",
-          dangerDesc: "Permanently delete your account and all associated data. This action cannot be undone.",
+          dangerDesc:
+            "Permanently delete your account and all associated data. This action cannot be undone.",
           deleteCta: "Delete Account Permanently",
           deleting: "Deleting...",
           confirmTitle: "Delete Account Permanently?",
-          confirmDesc: "Are you absolutely sure? All your listings, store settings, and personal data will be hidden or removed. This action is irreversible.",
+          confirmDesc:
+            "Are you absolutely sure? All your listings, store settings, and personal data will be hidden or removed. This action is irreversible.",
           confirmCta: "Confirm Delete",
         },
         notifications: {
@@ -693,8 +734,9 @@ export const en = {
           disableFailed: "Failed to disable account: {{error}}",
           deleted: "Account deleted permanently.",
           deleteFailed: "Failed to delete account: {{error}}",
-          reauthRequired: "Please log out and log back in to verify your identity before deleting your account.",
-        }
+          reauthRequired:
+            "Please log out and log back in to verify your identity before deleting your account.",
+        },
       },
       settings: {
         appearance: {
@@ -744,8 +786,8 @@ export const en = {
             friday: "Friday",
             saturday: "Saturday",
             sunday: "Sunday",
-          }
-        }
+          },
+        },
       },
     },
     leads: {
@@ -779,62 +821,102 @@ export const en = {
       preferredEmail: "Email",
       preferredPhone: "Phone",
       message: "Message",
-      messagePlaceholder: "Write a message to the dealer. Include when you'd like them to contact you.",
-      notice: "Your contact details and message will be sent to the dealer by email notification and shown in their dashboard.",
+      messagePlaceholder:
+        "Write a message to the dealer. Include when you'd like them to contact you.",
+      notice:
+        "Your contact details and message will be sent to the dealer by email notification and shown in their dashboard.",
+      gdprConsentPart1: "I agree that my contact details and message will be processed to handle my enquiry. See our",
+      gdprPolicy: "Privacy Policy",
+      gdprConsentPart2: ".",
+      profanityError: "Your message contains prohibited language. Please remove it and try again.",
     },
     legal: {
       privacy_title: "Privacy Policy",
-      privacy_intro: "Your privacy is important to us. This Privacy Policy explains how BalticAuto collects, uses, and protects your personal information in accordance with GDPR and applicable laws.",
+      privacy_intro:
+        "Your privacy is important to us. This Privacy Policy explains how BalticAuto collects, uses, and protects your personal information in accordance with GDPR and applicable laws.",
+      data_controller_title: "Data Controller (GDPR)",
+      data_controller_name: "Maris Heinols (self-employed)",
+      data_controller_email_label: "Email",
+      data_controller_reg_label: "Registration number",
+      data_controller_reg_value: "",
+      data_controller_dpo_label: "Data Protection",
+      data_controller_dpo_value: "For any data-related requests, contact support@baltic-auto.net",
       privacy_section1_title: "1. Information We Collect",
-      privacy_section1_text: "We collect information you provide directly (name, email, phone) when registering or creating listings. We also collect technical data (IP address, browser type) through Google Firebase services to ensure platform security.",
+      privacy_section1_text:
+        "We collect information you provide directly when using the service (e.g., account details such as email, profile information, and any information you submit in listings or messages/leads). We also process technical and security data (e.g., IP address, device/browser data, timestamps, logs) to operate and protect the platform. Payment processing is handled by Stripe; we do not store full card details.",
       privacy_section2_title: "2. How We Use Your Data",
-      privacy_section2_text: "Your data is used to maintain your account, process vehicle listings, facilitate communication between buyers and sellers, and improve our services through anonymized analytics.",
+      privacy_section2_text:
+        "We use your data to provide the marketplace (create and manage accounts, listings, and leads/messages) and to maintain the security of the service. Lawful bases (GDPR Art. 6) may include: (a) performance of a contract (account and marketplace features), (b) legitimate interests (fraud prevention, security, service improvement), (c) consent (e.g., optional analytics), and (d) legal obligation (e.g., accounting/tax where applicable).",
       privacy_section3_title: "3. Data Sharing & Third Parties",
-      privacy_section3_text: "We do not sell your personal data. Data is shared with essential service providers like Google Firebase (hosting/auth) and Stripe (payments) only as necessary to provide our services.",
+      privacy_section3_text:
+        "We do not sell personal data. We share data with service providers acting as processors, only as needed to provide the service, such as Google Firebase (authentication, database, hosting/functions), Stripe (payments/billing), and Cloudflare (security, performance; and analytics only if you consent). Data may be processed outside the EEA; where required, transfers rely on appropriate safeguards such as Standard Contractual Clauses (SCCs) and other measures provided by the vendors.",
       privacy_section4_title: "4. Data Retention & Security",
-      privacy_section4_text: "We retain your data for as long as your account is active. We implement industry-standard encryption and security protocols to prevent unauthorized access or disclosure.",
+      privacy_section4_text:
+        "We retain personal data for no longer than necessary for the purposes described above. Typically, account and listing data is kept while your account is active and until you delete it (or request deletion), subject to legal obligations (e.g., billing/accounting). Leads/messages may be retained to provide the service and for dispute/security purposes. We apply appropriate technical and organizational security measures to protect data against unauthorized access, alteration, and loss.",
       privacy_section5_title: "5. Your GDPR Rights",
-      privacy_section5_text: "Users in the EU have the right to access, rectify, or delete their personal data. You may also object to processing or request data portability. Contact support@baltic-auto.net to exercise these rights.",
+      privacy_section5_text:
+        "Users in the EU have the right to access, rectify, or delete their personal data, and may also object to processing, request restriction, or request data portability. To exercise your rights, contact maris.heinolsh@gmail.com. We may need to verify your identity before fulfilling a request and we generally respond within 1 month. You also have the right to lodge a complaint with the Latvian supervisory authority (Datu valsts inspekcija): https://www.dvi.gov.lv/.",
       privacy_section6_title: "6. Cookies & Tracking",
-      privacy_section6_text: "We use essential cookies to maintain your session and preferences. By using our platform, you consent to the use of these necessary technical cookies.",
+      privacy_section6_text:
+        "We use essential technologies for core functionality and security. With your consent, we also use Cloudflare Web Analytics to understand aggregated usage and improve the service. You can change or withdraw your cookie choices at any time via Cookie settings.",
       tos_title: "Terms of Service",
-      tos_intro: "By using BalticAuto, you agree to these legal terms. Please read them carefully before using our marketplace.",
+      tos_intro:
+        "By using BalticAuto, you agree to these legal terms. Please read them carefully before using our marketplace.",
       tos_section1_title: "1. Acceptance of Terms",
-      tos_section1_text: "By accessing BalticAuto, you confirm you are at least 18 years old and agree to be bound by these Terms of Service and all applicable EU laws and regulations.",
+      tos_section1_text:
+        "By accessing BalticAuto, you confirm you are at least 18 years old and agree to be bound by these Terms of Service and all applicable EU laws and regulations.",
       tos_section2_title: "2. Account Registration",
-      tos_section2_text: "You are responsible for maintaining the confidentiality of your account credentials. You agree to notify us immediately of any unauthorized use of your account.",
+      tos_section2_text:
+        "You are responsible for maintaining the confidentiality of your account credentials. You agree to notify us immediately of any unauthorized use of your account.",
       tos_section3_title: "3. Listing Rules & Content",
-      tos_section3_text: "Sellers warrant that all vehicle information is accurate. Fraudulent, misleading, or stolen vehicle listings are strictly prohibited and will result in immediate account termination.",
+      tos_section3_text:
+        "Sellers warrant that all vehicle information is accurate. Fraudulent, misleading, or stolen vehicle listings are strictly prohibited and will result in immediate account termination.",
       tos_section4_title: "4. Transactions & Liability",
-      tos_section4_text: "BalticAuto is a marketplace platform. Actual sales contracts are between the buyer and seller. We are not liable for vehicle condition or payment disputes between parties.",
+      tos_section4_text:
+        "BalticAuto is a marketplace platform. Actual sales contracts are between the buyer and seller. We are not liable for vehicle condition or payment disputes between parties.",
       tos_section5_title: "5. Intellectual Property",
-      tos_section5_text: "All content on this platform, including logos and software, is the property of BalticAuto or its licensors and is protected by copyright laws.",
+      tos_section5_text:
+        "All content on this platform, including logos and software, is the property of BalticAuto or its licensors and is protected by copyright laws.",
       tos_section6_title: "6. Governing Law",
-      tos_section6_text: "These terms are governed by the laws of the European Union and the specific regulations of the Baltic state where the service is primarily provided.",
+      tos_section6_text:
+        "These terms are governed by the laws of the European Union and the specific regulations of the Baltic state where the service is primarily provided.",
       last_updated: "Last updated: March 2026",
+      cookie_policy_title: "7. Cookie Policy",
+      cookie_policy_intro: "We use the following technologies on this platform. You can manage your preferences at any time via the Cookie settings link in the footer.",
+      cookie_col_name: "Technology",
+      cookie_col_type: "Type",
+      cookie_col_purpose: "Purpose",
+      cookie_col_provider: "Provider",
+      cookie_type_essential: "Essential",
+      cookie_type_analytics: "Analytics",
+      cookie_consent_purpose: "Stores your cookie consent preference",
+      cookie_firebase_purpose: "Authentication session management",
+      cookie_analytics_purpose: "Aggregated usage statistics — only loaded with your consent",
+      cookie_retention: "The consent cookie expires after 365 days. Analytics are processed without persistent cookies using privacy-preserving techniques.",
+      deletion_title: "8. Data Deletion Request",
+      deletion_text: "You have the right to request deletion of all personal data we hold about you (GDPR Art. 17). You can:",
+      deletion_option1: "Delete your account directly from your account dashboard (Settings → Delete Account).",
+      deletion_option2: "Send a deletion request by email — we will process it within 30 days.",
+      deletion_note: "Certain data may be retained for legal obligations (e.g. billing records) even after deletion. We will inform you of any such exceptions.",
+      deletion_cta: "Request Data Deletion by Email",
     },
     cookies: {
       title: "Cookies & Privacy",
-      message: "We use cookies to improve your experience, analyze traffic, and ensure security. By clicking \"Accept All\", you consent to our use of cookies.",
+      message:
+        "We use essential technologies for core functionality and security. With your consent, we also use Cloudflare Web Analytics to understand aggregated usage and improve the service.",
       learn_more: "Learn more in our Privacy Policy",
+      settings_title: "Cookie settings",
+      settings_intro:
+        "You can choose whether to allow analytics. Essential technologies are always enabled for core functionality and security.",
+      essential_title: "Essential",
+      essential_desc: "Required for core functionality and security. Always enabled.",
+      analytics_title: "Analytics",
+      analytics_desc: "Helps us understand aggregated usage (Cloudflare Web Analytics).",
+      analytics_toggle: "Allow analytics",
+      settings_cta: "Settings",
+      save: "Save",
       accept: "Accept All",
       decline: "Essential Only",
-    },
-    reviews: {
-      title: "Reviews",
-      customer_reviews: "Customer Reviews",
-      none: "No reviews yet.",
-      login_required: "Log in to leave a review.",
-      own_page: "You can’t review your own page.",
-      submitted: "Thanks! Your review has been submitted.",
-      only_individuals: "Only individual accounts can leave reviews.",
-      leave: "Leave a review",
-      label: "Review",
-      placeholder: "Share your experience…",
-      submit: "Submit review",
-      update: "Update review",
-      saving: "Saving…",
-      write_short: "Please write a short review.",
     },
     store: {
       inventory: "Our Inventory",
@@ -846,16 +928,21 @@ export const en = {
         condition: "Condition",
         price: "Price Range",
         color: "Color",
-      }
+      },
     },
     verifyPhone: {
       title: "Verify phone",
-      description: "Phone verification is required to prevent multiple accounts.",
-      enterValidPhone: "Enter a valid phone number (include country code, e.g. +371...).",
+      description:
+        "Phone verification is required to prevent multiple accounts.",
+      enterValidPhone:
+        "Enter a valid phone number (include country code, e.g. +371...).",
       codeSent: "Verification code sent.",
-      phoneInUse: "This phone number is already used by another account. If you just deleted your old account, please wait or try again later.",
-      invalidPhone: "Invalid phone number. Make sure it includes the country code (e.g. +371...).",
-      missingPlus: "Phone number must start with a '+' sign followed by your country code.",
+      phoneInUse:
+        "This phone number is already used by another account. If you just deleted your old account, please wait or try again later.",
+      invalidPhone:
+        "Invalid phone number. Make sure it includes the country code (e.g. +371...).",
+      missingPlus:
+        "Phone number must start with a '+' sign followed by your country code.",
       tooManyRequests: "Too many attempts (Firebase Error: {{code}}).",
       verificationFailed: "Verification failed (Error: {{error}}).",
       requestFirst: "Please request a verification code first.",
@@ -872,13 +959,17 @@ export const en = {
     },
     seo: {
       homeTitle: "BalticAuto - Buy & Sell Cars in the Baltics",
-      homeDesc: "Browse used and new cars from verified dealerships in Estonia, Latvia, and Lithuania.",
+      homeDesc:
+        "Browse used and new cars from verified dealerships in Estonia, Latvia, and Lithuania.",
       businessesTitle: "Car Dealerships & Businesses | BalticAuto",
-      businessesDesc: "Discover verified car dealers and automotive businesses across the Baltics.",
+      businessesDesc:
+        "Discover verified car dealers and automotive businesses across the Baltics.",
       aboutTitle: "About Us | BalticAuto",
-      aboutDesc: "Learn more about BalticAuto, the premier destination for car buying and selling in Northern Europe.",
+      aboutDesc:
+        "Learn more about BalticAuto, the premier destination for car buying and selling in Northern Europe.",
       pricingTitle: "Pricing & Plans | BalticAuto",
-      pricingDesc: "Flexible pricing plans for individuals and automotive businesses.",
+      pricingDesc:
+        "Flexible pricing plans for individuals and automotive businesses.",
       loginTitle: "Log In | BalticAuto",
       registerTitle: "Sign Up | BalticAuto",
       privacyTitle: "Privacy Policy | BalticAuto",

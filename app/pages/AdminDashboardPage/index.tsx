@@ -17,23 +17,17 @@ const LoadingFallback = () => (
   </Box>
 );
 
-const AdminDashboardPage = ({ mustVerify }: { mustVerify?: boolean }) => {
+const AdminDashboardPage = () => {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   
   const tabNames = ["analytics", "leads", "store", "account"];
   const currentTab = searchParams.get("tab") || "analytics";
-  const tabIndex = mustVerify ? 3 : Math.max(0, tabNames.indexOf(currentTab));
+  const tabIndex = Math.max(0, tabNames.indexOf(currentTab));
 
   const setTabIndex = (newValue: number) => {
     setSearchParams({ tab: tabNames[newValue] }, { replace: true });
   };
-
-  useEffect(() => {
-    if (mustVerify && currentTab !== "account") {
-      setTabIndex(3);
-    }
-  }, [mustVerify, currentTab]);
 
   return (
     <AppContainer sx={{ py: 4 }}>
@@ -99,7 +93,7 @@ const AdminDashboardPage = ({ mustVerify }: { mustVerify?: boolean }) => {
           </BillingGuard>
         )}
 
-        {tabIndex === 3 && <AccountSettingsPanel mustVerify={mustVerify} />}
+        {tabIndex === 3 && <AccountSettingsPanel />}
       </Suspense>
     </AppContainer>
   );

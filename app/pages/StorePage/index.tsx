@@ -21,7 +21,10 @@ import { Link as RouterLink } from "react-router";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useAppDispatch } from "~/redux/hooks";
 import { loadStoreSettingsFromDb } from "~/services/storeSettingsService";
-import { getStoreHandleForUid, resolveStoreUidByHandle } from "~/services/storeHandleService";
+import {
+  getStoreHandleForUid,
+  resolveStoreUidByHandle,
+} from "~/services/storeHandleService";
 import { useOwnerListingsCached } from "~/hooks/useCachedListings";
 import StoreHeader from "~/components/userStorePageComponents/StoreHeader";
 import StoreInfo from "~/components/userStorePageComponents/StoreInfo";
@@ -29,9 +32,15 @@ import StoreMap from "~/components/userStorePageComponents/StoreMap";
 import StoreListingsGrid from "~/components/userStorePageComponents/StoreListingsGrid";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "~/firebase/auth";
-import { StorefrontContext, type StorefrontSettings } from "~/context/StorefrontContext";
+import {
+  StorefrontContext,
+  type StorefrontSettings,
+} from "~/context/StorefrontContext";
 import { getUserProfile, type UserProfileDoc } from "~/services/usersService";
-import { cacheKeyStoreUidByHandle, getAnyCachedValue } from "~/services/storeCache";
+import {
+  cacheKeyStoreUidByHandle,
+  getAnyCachedValue,
+} from "~/services/storeCache";
 import ListingsTable from "~/components/homePageComponents/ListingsTable";
 import ListingsFilters from "~/components/homePageComponents/ListingFilter";
 import {
@@ -40,9 +49,11 @@ import {
 } from "~/components/homePageComponents/ListingsTable/useListingTable";
 import type { ListingsFiltersState, CarListingSummary } from "~/types/types";
 import { useTranslation } from "react-i18next";
-import { updateListingPrice, deleteListingFromDb } from "~/services/listingsService";
+import {
+  updateListingPrice,
+  deleteListingFromDb,
+} from "~/services/listingsService";
 import { showNotification } from "~/redux/slices/uiSlice";
-import StoreReviewsSection from "~/components/shared/StoreReviewsSection";
 import AppContainer from "~/components/shared/AppContainer";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
@@ -64,7 +75,8 @@ function IndividualProfileListings({
   const { t } = useTranslation();
   const [filters, setFilters] = useState<ListingsFiltersState>(defaultFilters);
   const dispatch = useAppDispatch();
-  const [localListings, setLocalListings] = useState<CarListingSummary[]>(listings);
+  const [localListings, setLocalListings] =
+    useState<CarListingSummary[]>(listings);
 
   useEffect(() => {
     setLocalListings(listings);
@@ -76,12 +88,26 @@ function IndividualProfileListings({
     try {
       await updateListingPrice(listingId, newPrice);
       setLocalListings((prev) =>
-        prev.map((l) => (l.id === listingId ? { ...l, price: newPrice, isOnSale: false, salePrice: undefined } : l))
+        prev.map((l) =>
+          l.id === listingId
+            ? { ...l, price: newPrice, isOnSale: false, salePrice: undefined }
+            : l,
+        ),
       );
-      dispatch(showNotification({ message: t("pricing.priceUpdated"), severity: "success" }));
+      dispatch(
+        showNotification({
+          message: t("pricing.priceUpdated"),
+          severity: "success",
+        }),
+      );
       onRefresh?.();
     } catch (e: any) {
-      dispatch(showNotification({ message: e?.message || t("pricing.priceUpdateFailed"), severity: "error" }));
+      dispatch(
+        showNotification({
+          message: e?.message || t("pricing.priceUpdateFailed"),
+          severity: "error",
+        }),
+      );
     }
   };
 
@@ -89,10 +115,20 @@ function IndividualProfileListings({
     try {
       await deleteListingFromDb(listingId);
       setLocalListings((prev) => prev.filter((l) => l.id !== listingId));
-      dispatch(showNotification({ message: t("pricing.listingDeleted"), severity: "info" }));
+      dispatch(
+        showNotification({
+          message: t("pricing.listingDeleted"),
+          severity: "info",
+        }),
+      );
       onRefresh?.();
     } catch (e: any) {
-      dispatch(showNotification({ message: e?.message || t("pricing.listingDeleteFailed"), severity: "error" }));
+      dispatch(
+        showNotification({
+          message: e?.message || t("pricing.listingDeleteFailed"),
+          severity: "error",
+        }),
+      );
     }
   };
 
@@ -105,20 +141,22 @@ function IndividualProfileListings({
         {title}
       </Typography>
 
-      <Accordion 
-        defaultExpanded={false} 
-        variant="outlined" 
-        sx={{ 
-          mb: 3, 
-          borderRadius: 2, 
-          '&:before': { display: 'none' },
-          overflow: 'hidden',
+      <Accordion
+        defaultExpanded={false}
+        variant="outlined"
+        sx={{
+          mb: 3,
+          borderRadius: 2,
+          "&:before": { display: "none" },
+          overflow: "hidden",
           borderColor: "divider",
-          boxShadow: "none"
+          boxShadow: "none",
         }}
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography fontWeight={600}>{t("store.search_and_filter")}</Typography>
+          <Typography fontWeight={600}>
+            {t("store.search_and_filter")}
+          </Typography>
         </AccordionSummary>
         <AccordionDetails sx={{ p: 3, pt: 1 }}>
           <ListingsFilters
@@ -147,7 +185,14 @@ function IndividualProfileListings({
         onRefresh={onRefresh}
       />
 
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mt: 2,
+        }}
+      >
         <Typography variant="body2" color="text.secondary">
           {t("businesses.resultsCount", { count: table.total })}
         </Typography>
@@ -172,12 +217,11 @@ export default function StorePage({ handle }: { handle: string }) {
   const [lookupError, setLookupError] = useState<string | null>(null);
   const [storefront, setStorefront] = useState<StorefrontSettings | null>(null);
   const [profile, setProfile] = useState<UserProfileDoc | null>(null);
-  const [reviewStats, setReviewStats] = useState<{ avg: number; count: number } | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       setViewerUid(u?.uid || null);
-      setViewerVerified(Boolean(u?.phoneNumber));
+      setViewerVerified(true);
     });
     return () => unsubscribe();
   }, []);
@@ -189,10 +233,11 @@ export default function StorePage({ handle }: { handle: string }) {
     setLookupError(null);
     setProfile(null);
     setStorefront(null);
-    setReviewStats(null);
 
     // Fast path: hydrate from cache synchronously to avoid "loading" UI.
-    const cachedUid = getAnyCachedValue<string>(cacheKeyStoreUidByHandle(handle));
+    const cachedUid = getAnyCachedValue<string>(
+      cacheKeyStoreUidByHandle(handle),
+    );
     if (cachedUid) {
       setOwnerId(cachedUid);
       // Profile/settings caches are handled inside services, but we can stop the initial loader if we already have profile.
@@ -224,7 +269,7 @@ export default function StorePage({ handle }: { handle: string }) {
         ]);
         if (cancelled) return;
         setProfile(userProfile);
-        
+
         // Handle disabled accounts
         const isOwner = Boolean(uid && viewerUid === uid);
         if (userProfile?.status === "disabled" && !isOwner) {
@@ -293,8 +338,8 @@ export default function StorePage({ handle }: { handle: string }) {
   const owner = useOwnerListingsCached(ownerId);
   const isIndividual = profile?.role === "individual";
   const displayName = isIndividual
-    ? `${profile?.name || ""} ${profile?.surname || ""}`.trim() || "Private Seller"
-    : profile?.storeName || profile?.businessName || storefront?.name || "Store";
+    ? "Private Seller"
+    : storefront?.name || "Store";
 
   const theme = storefront?.theme;
 
@@ -312,7 +357,8 @@ export default function StorePage({ handle }: { handle: string }) {
     });
   }, [theme]);
 
-  const isLoading = loadingStore || !profile || (owner.loading && owner.listings.length === 0);
+  const isLoading =
+    loadingStore || !profile || (owner.loading && owner.listings.length === 0);
   const isOwner = Boolean(viewerUid && ownerId && viewerUid === ownerId);
 
   const visibleListings = useMemo(() => {
@@ -322,7 +368,10 @@ export default function StorePage({ handle }: { handle: string }) {
 
   const listingStats = useMemo(() => {
     const listingsCount = visibleListings.length;
-    const viewsCount = visibleListings.reduce((sum, l) => sum + (Number(l.viewCount) || 0), 0);
+    const viewsCount = visibleListings.reduce(
+      (sum, l) => sum + (Number(l.viewCount) || 0),
+      0,
+    );
     return { listingsCount, viewsCount };
   }, [visibleListings]);
 
@@ -340,7 +389,11 @@ export default function StorePage({ handle }: { handle: string }) {
           {t("about.store.notFoundDesc")}
         </Typography>
         {lookupError ? (
-          <Typography color="text.secondary" variant="caption" sx={{ display: "block", mt: 1 }}>
+          <Typography
+            color="text.secondary"
+            variant="caption"
+            sx={{ display: "block", mt: 1 }}
+          >
             {t("about.store.details", { error: lookupError })}
           </Typography>
         ) : null}
@@ -360,27 +413,7 @@ export default function StorePage({ handle }: { handle: string }) {
           canManage={isOwner && viewerVerified}
           onRefresh={owner.refresh}
         />
-        {isOwner && !viewerVerified && (
-          <Container maxWidth="xl" sx={{ mt: 1 }}>
-            <Box p={2} mb={2} sx={{ bgcolor: "warning.light", borderRadius: 2, display: "flex", alignItems: "center", gap: 1 }}>
-              <ErrorOutlineIcon color="warning" />
-              <Typography variant="body2" fontWeight={600}>
-                Please <Link component={RouterLink} to="/verify-phone" sx={{ color: "info.main", textDecoration: "underline" }}>verify your phone</Link> to enable listing management.
-              </Typography>
-            </Box>
-          </Container>
-        )}
-        {ownerId ? (
-          <Container maxWidth="xl" sx={{ pb: 6 }}>
-            <StoreReviewsSection
-              storeUid={handle}
-              ownerUid={ownerId}
-              viewerUid={viewerUid}
-              onStatsChange={setReviewStats}
-              useStoreTheme={false}
-            />
-          </Container>
-        ) : null}
+        {ownerId ? <Container maxWidth="xl" sx={{ pb: 6 }} /> : null}
       </>
     );
   }
@@ -415,16 +448,27 @@ export default function StorePage({ handle }: { handle: string }) {
   }
 
   const content = (
-    <Box sx={{ bgcolor: theme?.background || "transparent", minHeight: "calc(100vh - 64px)" }}>
+    <Box
+      sx={{
+        bgcolor: theme?.background || "transparent",
+        minHeight: "calc(100vh - 64px)",
+      }}
+    >
       <AppContainer sx={{ py: 4 }}>
         {owner.refreshing ? <LinearProgress sx={{ mb: 2 }} /> : null}
         {isLoading ? <LinearProgress sx={{ mb: 2 }} /> : null}
 
         <StoreHeader />
 
-        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "5fr 7fr" }, gap: 3, mt: 1 }}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", md: "5fr 7fr" },
+            gap: 3,
+            mt: 1,
+          }}
+        >
           <StoreInfo
-            reviewStats={reviewStats}
             listingsCount={listingStats.listingsCount}
             viewsCount={listingStats.viewsCount}
           />
@@ -443,11 +487,17 @@ export default function StorePage({ handle }: { handle: string }) {
                 borderColor: "divider",
                 boxShadow: "none",
                 borderRadius: 2,
-                '&:before': { display: 'none' },
-                overflow: 'hidden'
+                "&:before": { display: "none" },
+                overflow: "hidden",
               }}
             >
-              <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: theme?.isTextLight ? 'white' : 'inherit' }} />}>
+              <AccordionSummary
+                expandIcon={
+                  <ExpandMoreIcon
+                    sx={{ color: theme?.isTextLight ? "white" : "inherit" }}
+                  />
+                }
+              >
                 <Typography fontWeight={600} sx={{ color: "inherit" }}>
                   {t("store.search_and_filter")}
                 </Typography>
@@ -469,20 +519,20 @@ export default function StorePage({ handle }: { handle: string }) {
             </Accordion>
 
             <Box sx={{ mt: 4 }}>
-              <Typography variant="h6" fontWeight={800} sx={{ mb: 2, color: theme?.heading || "inherit" }}>
+              <Typography
+                variant="h6"
+                fontWeight={800}
+                sx={{ mb: 2, color: theme?.heading || "inherit" }}
+              >
                 {t("store.inventory")}
               </Typography>
-              
-              {isOwner && !viewerVerified && (
-                <Box p={2} mb={3} sx={{ bgcolor: "warning.light", borderRadius: 2, display: "flex", alignItems: "center", gap: 1 }}>
-                  <ErrorOutlineIcon color="warning" />
-                  <Typography variant="body2" fontWeight={600}>
-                    Please <Link component={RouterLink} to="/verify-phone" sx={{ color: "info.main", textDecoration: "underline" }}>verify your phone</Link> to enable store management.
-                  </Typography>
-                </Box>
-              )}
-              
-              <StoreListingsGrid listings={table.rows} isOwner={isOwner && viewerVerified} onRefresh={owner.refresh} />
+
+
+              <StoreListingsGrid
+                listings={table.rows}
+                isOwner={isOwner && viewerVerified}
+                onRefresh={owner.refresh}
+              />
 
               <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
                 <Pagination
@@ -494,26 +544,16 @@ export default function StorePage({ handle }: { handle: string }) {
                       color: theme?.isTextLight ? "white" : "inherit",
                     },
                     "& .Mui-selected": {
-                      bgcolor: (theme?.accent || "primary.main") + " !important",
+                      bgcolor:
+                        (theme?.accent || "primary.main") + " !important",
                       color: "white !important",
-                    }
+                    },
                   }}
                 />
               </Box>
             </Box>
           </Box>
         </Box>
-
-        <Divider sx={{ my: 5 }} />
-
-        {/* Reviews Section */}
-        <StoreReviewsSection
-          storeUid={handle}
-          viewerUid={auth.currentUser?.uid || null}
-          ownerUid={profile?.uid || handle}
-          useStoreTheme={true}
-          onStatsChange={setReviewStats}
-        />
       </AppContainer>
     </Box>
   );
@@ -521,9 +561,7 @@ export default function StorePage({ handle }: { handle: string }) {
   return (
     <StorefrontContext.Provider value={storefront}>
       {muiTheme ? (
-        <ThemeProvider theme={muiTheme}>
-          {content}
-        </ThemeProvider>
+        <ThemeProvider theme={muiTheme}>{content}</ThemeProvider>
       ) : (
         content
       )}

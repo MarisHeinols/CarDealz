@@ -4,6 +4,7 @@ import { Box, CircularProgress, Typography } from "@mui/material";
 import { useAuth } from "~/hooks/userStore/useAuth";
 import { getStoreHandleForUid } from "~/services/storeHandleService";
 import { useTranslation } from "react-i18next";
+import { getUserProfile } from "~/services/usersService";
 
 export function meta() {
   return [
@@ -25,10 +26,6 @@ export default function NewUserStoreRoute() {
       return;
     }
 
-    if (!user.phoneNumber) {
-      navigate("/verify-phone");
-      return;
-    }
 
     setBusy(true);
     getStoreHandleForUid(user.uid)
@@ -52,7 +49,14 @@ export default function NewUserStoreRoute() {
   if (!busy) return null;
 
   return (
-    <Box display="flex" justifyContent="center" alignItems="center" p={6} flexDirection="column" gap={1.5}>
+    <Box
+      display="flex"
+      justifyContent="center"
+      alignItems="center"
+      p={6}
+      flexDirection="column"
+      gap={1.5}
+    >
       <CircularProgress />
       <Typography color="text.secondary">{t("about.store.opening")}</Typography>
     </Box>

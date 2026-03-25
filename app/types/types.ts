@@ -137,10 +137,7 @@ export interface IndividualRegisterData {
 }
 
 export interface BusinessRegisterData {
-  ownerName: string;
-  ownerSurname: string;
   ownerEmail: string;
-  ownerPhone: string;
   password: string;
   confirmPassword: string;
   storeName: string;
@@ -154,6 +151,7 @@ export interface BusinessRegisterData {
   registrationNumber: string;
   website?: string;
   acceptedTerms: boolean;
+  confirmedDealer: boolean;
   acceptedTermsAt?: string;
 }
 
@@ -225,22 +223,23 @@ export interface CarListingDetails {
   createdAt: string;
   isSold?: boolean;
   soldAt?: string;
+  deleted?: boolean;
 }
 
 export type CarListingDetailsJson = {
   id: string;
   vin: string;
-  ta:string;
+  ta: string;
   plateNumber?: string;
   make: string;
   model: string;
   year: number;
   mileage: number;
-  fuelType:"diesel"|"petrol"|"hybrid"|"electric";
-  displacement:number;
-  transmission: "automatic"|"manual";
+  fuelType: "diesel" | "petrol" | "hybrid" | "electric";
+  displacement: number;
+  transmission: "automatic" | "manual";
   drivetrain: "fwd" | "rwd" | "awd" | "4wd";
-  horsepower:number;
+  horsepower: number;
   price: number;
   selfCost: number;
   interiorColor: string;
@@ -257,7 +256,7 @@ export type CarListingDetailsJson = {
    */
   marketRangeUpdatedAt?: string;
   images: { id: string; url: string; isPrimary?: boolean }[];
-  features: string[];          
+  features: string[];
   description: string;
   seller: {
     name: string;
@@ -267,10 +266,11 @@ export type CarListingDetailsJson = {
   };
   viewCount: number;
   leadCount?: number;
-  lastViewed: string;       
-  createdAt: string;           
+  lastViewed: string;
+  createdAt: string;
   isSold?: boolean;
   soldAt?: string;
+  deleted?: boolean;
 };
 
 export type LeadDoc = {

@@ -168,7 +168,7 @@ const ListingsFilters = ({ filters, onChange, onReset, noBorder, sx }: Props) =>
             <MenuItem value="all">{t("filters.allCountries")}</MenuItem>
             {COUNTRIES.map((c) => (
               <MenuItem key={c} value={c}>
-                {c}
+                {t(`common.countries.${c}`, c)}
               </MenuItem>
             ))}
           </TextField>

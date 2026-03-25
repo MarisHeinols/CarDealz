@@ -34,10 +34,9 @@ export default function NewListingForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const dispatch = useAppDispatch();
 
-  const isApprovedDealer = 
+  const isApprovedDealer =
     profile?.dealerVerified || profile?.dealerVerificationStatus === "approved";
-  const isUnverifiedDealer = 
-    profile?.role === "business" && !isApprovedDealer;
+  const isUnverifiedDealer = profile?.role === "business" && !isApprovedDealer;
 
   useEffect(() => {
     if (profile && profile.role === "business") {
@@ -45,11 +44,14 @@ export default function NewListingForm() {
         // Only pre-fill if fields are currently empty to avoid overwriting user edits
         const hasLocation = prev.location && prev.location.trim() !== "";
         const hasAddress = prev.address && prev.address.trim() !== "";
-        
+
         if (hasLocation || hasAddress) return prev;
 
-        const profileLocation = buildLocation(profile.city || "", profile.country || "");
-        
+        const profileLocation = buildLocation(
+          profile.city || "",
+          profile.country || "",
+        );
+
         return {
           ...prev,
           location: profileLocation,
@@ -76,15 +78,23 @@ export default function NewListingForm() {
       }
       const role = profile.role as "individual" | "business" | undefined;
       const seller = {
-        name: profile.ownerName || profile.name || "Private Seller",
-        phone: profile.ownerPhone || profile.phone || "",
+        name:
+          role === "business"
+            ? profile.storeName || profile.businessName || "Dealer"
+            : profile.name || "Private Seller",
+        phone:
+          role === "business"
+            ? profile.businessPhone || ""
+            : profile.phone || "",
         email: user.email || "",
         isDealer: role === "business",
       };
 
       // Individuals: limit 3 listings per calendar year
       if (role === "individual") {
-        const existing = await getListingsByOwner(user.uid, { includeSold: true });
+        const existing = await getListingsByOwner(user.uid, {
+          includeSold: true,
+        });
         const year = new Date().getFullYear();
         const countThisYear = existing.filter((l) => {
           const createdAt =
@@ -125,7 +135,8 @@ export default function NewListingForm() {
       });
 
       // Invalidate cache so it appears immediately on the profile/store page
-      const { invalidateCache, cacheKeyOwnerListings, cacheKeyAllListings } = await import("~/services/listingsCache");
+      const { invalidateCache, cacheKeyOwnerListings, cacheKeyAllListings } =
+        await import("~/services/listingsCache");
       invalidateCache(cacheKeyOwnerListings(user.uid));
       invalidateCache(cacheKeyAllListings());
 
@@ -137,9 +148,25 @@ export default function NewListingForm() {
       );
       navigate("/user");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : t("newListing.createFailed"),
-      );
+      let displayError = t("newListing.createFailed") as string;
+      if (err instanceof Error) {
+        try {
+          const parsed = JSON.parse(err.message);
+          if (parsed.key === "errors.validationFailed" && parsed.validationErrors) {
+            const translatedErrors = parsed.validationErrors
+              .map((e: any) => `${t(`fields.${e.field}`)}: ${t(e.message)}`)
+              .join(", ");
+            displayError = t(parsed.key, { errors: translatedErrors }) as string;
+          } else if (parsed.key) {
+            displayError = t(parsed.key, parsed.params) as string;
+          } else {
+            displayError = t(err.message) as string;
+          }
+        } catch {
+          displayError = t(err.message) as string;
+        }
+      }
+      setError(displayError);
       setIsSubmitting(false);
     }
   };
@@ -153,9 +180,14 @@ export default function NewListingForm() {
       )}
 
       {isUnverifiedDealer && (
-        <Alert severity="warning" variant="filled" sx={{ mb: 3, fontWeight: 700 }}>
-          {t("newListing.unverifiedDealerAlert", { 
-            defaultValue: "Your account is pending verification. You cannot publish new listings until the site administrator approves your business registration. You will receive an email once approved." 
+        <Alert
+          severity="warning"
+          variant="filled"
+          sx={{ mb: 3, fontWeight: 700 }}
+        >
+          {t("newListing.unverifiedDealerAlert", {
+            defaultValue:
+              "Your account is pending verification. You cannot publish new listings until the site administrator approves your business registration. You will receive an email once approved.",
           })}
         </Alert>
       )}

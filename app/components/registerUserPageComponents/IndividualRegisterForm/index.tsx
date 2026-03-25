@@ -201,7 +201,7 @@ const IndividualRegisterForm = ({ socialMode, onRegisterSuccess }: { socialMode?
         >
           {COUNTRIES.map((c) => (
             <MenuItem key={c} value={c}>
-              {c}
+              {t(`common.countries.${c}`, c)}
             </MenuItem>
           ))}
         </Select>

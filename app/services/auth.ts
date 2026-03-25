@@ -16,6 +16,9 @@ import { saveStoreSettings } from "./storeSettingsService";
 import { slugify } from "~/utils/slugify";
 import { reserveBusinessName } from "~/services/businessNameService";
 
+const PUBLIC_USERS_COLLECTION = "publicUsers";
+const PRIVATE_USERS_COLLECTION = "privateUsers";
+
 export const registerUser = async (
   email: string,
   password: string,
@@ -24,8 +27,8 @@ export const registerUser = async (
 ) => {
   const normalizedEmail = String(email || "").trim().toLowerCase();
   
-  // 1. Pre-check availability (Phone / Business Name)
-  await checkAvailability(normalizedEmail, userData, role);
+  // 1. Pre-check availability (Commented out because current Firestore rules restrict public querying of private user data)
+  // await checkAvailability(normalizedEmail, userData, role);
 
   const cred = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
 
@@ -50,17 +53,34 @@ export const registerUser = async (
       ? buildStoreHandle(cred.user.uid, userData, email)
       : undefined;
 
-  await setDoc(doc(db, "users", cred.user.uid), {
+  const publicPayload = {
+    uid: cred.user.uid,
+    role,
+    status: "active",
+    ...(role === "business"
+      ? { dealerVerified: false, dealerVerificationStatus: "pending" as const }
+      : {}),
+    ...(storeHandle ? { storeHandle } : {}),
+    createdAt: serverTimestamp(),
+  };
+
+  const privatePayload = {
     uid: cred.user.uid,
     email: normalizedEmail,
     role,
+    status: "active",
     ...(role === "business"
       ? { dealerVerified: false, dealerVerificationStatus: "pending" as const }
       : {}),
     ...(storeHandle ? { storeHandle } : {}),
     ...userData,
     createdAt: serverTimestamp(),
-  });
+  };
+
+  await Promise.all([
+    setDoc(doc(db, PUBLIC_USERS_COLLECTION, cred.user.uid), publicPayload),
+    setDoc(doc(db, PRIVATE_USERS_COLLECTION, cred.user.uid), privatePayload),
+  ]);
 
   if (role === "business") {
     const defaultDay = { open: "09:00", close: "18:00", isClosed: false };
@@ -79,7 +99,7 @@ export const registerUser = async (
       name: userData.businessName || userData.storeName || "My Dealership",
       description: "Welcome to my online store!",
       contact: {
-        phone: userData.businessPhone || userData.ownerPhone || userData.phone || "",
+        phone: userData.businessPhone || userData.phone || "",
         email: normalizedEmail,
       },
       workTime: {
@@ -129,8 +149,8 @@ export const completeSocialRegistration = async (
 
   const normalizedEmail = String(user.email || "").trim().toLowerCase();
   
-  // 1. Pre-check availability (skipping UID check for caller)
-  await checkAvailability(normalizedEmail, userData, role, user.uid);
+  // 1. Pre-check availability (Commented out due to Firestore permission restrictions on private data)
+  // await checkAvailability(normalizedEmail, userData, role, user.uid);
 
   // Prevent copycat business profiles (reserve business name)
   if (role === "business") {
@@ -143,17 +163,32 @@ export const completeSocialRegistration = async (
       ? buildStoreHandle(user.uid, userData, user.email || "")
       : undefined;
 
-  await setDoc(doc(db, "users", user.uid), {
+  const publicPayload = {
+    uid: user.uid,
+    role,
+    status: "active",
+    ...(role === "business"
+      ? { dealerVerified: false, dealerVerificationStatus: "pending" as const }
+      : {}),
+    ...(storeHandle ? { storeHandle } : {}),
+    createdAt: serverTimestamp(),
+  };
+  const privatePayload = {
     uid: user.uid,
     email: normalizedEmail || undefined,
     role,
+    status: "active",
     ...(role === "business"
       ? { dealerVerified: false, dealerVerificationStatus: "pending" as const }
       : {}),
     ...(storeHandle ? { storeHandle } : {}),
     ...userData,
     createdAt: serverTimestamp(),
-  });
+  };
+  await Promise.all([
+    setDoc(doc(db, PUBLIC_USERS_COLLECTION, user.uid), publicPayload, { merge: true }),
+    setDoc(doc(db, PRIVATE_USERS_COLLECTION, user.uid), privatePayload, { merge: true }),
+  ]);
 
   if (role === "business") {
     const defaultDay = { open: "09:00", close: "18:00", isClosed: false };
@@ -172,7 +207,7 @@ export const completeSocialRegistration = async (
       name: userData.businessName || userData.storeName || "My Dealership",
       description: "Welcome to my online store!",
       contact: {
-        phone: userData.businessPhone || userData.ownerPhone || userData.phone || "",
+        phone: userData.businessPhone || userData.phone || "",
         email: normalizedEmail,
       },
       workTime: {
@@ -215,7 +250,6 @@ function buildStoreHandle(uid: string, userData: any, email: string): string {
   const base =
     userData?.businessName ||
     userData?.storeName ||
-    `${userData?.ownerName || ""} ${userData?.ownerSurname || ""}`.trim() ||
     (email ? email.split("@")[0] : "store");
 
   const slug = slugify(String(base)) || "store";
@@ -227,19 +261,31 @@ function buildStoreHandle(uid: string, userData: any, email: string): string {
  * Checks if email, phone, or business name is already taken in Firestore
  */
 async function checkAvailability(email: string, userData: any, role: string, currentUid?: string) {
-  const phone = (userData.ownerPhone || userData.phone || "").trim();
+  const phone = (
+    userData.phone ||
+    userData.businessPhone ||
+    userData.ownerPhone ||
+    ""
+  ).trim();
 
   // 1. Check Phone
   if (phone) {
-    const usersRef = collection(db, "users");
+    const usersRef = collection(db, PRIVATE_USERS_COLLECTION);
     
     // Check both potential phone fields
     const q1 = query(usersRef, where("phone", "==", phone));
     const q2 = query(usersRef, where("ownerPhone", "==", phone));
+    const q3 = query(usersRef, where("businessPhone", "==", phone));
     
-    const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+    const [snap1, snap2, snap3] = await Promise.all([
+      getDocs(q1),
+      getDocs(q2),
+      getDocs(q3),
+    ]);
     
-    const conflictingUser = [...snap1.docs, ...snap2.docs].find(d => !currentUid || d.id !== currentUid);
+    const conflictingUser = [...snap1.docs, ...snap2.docs, ...snap3.docs].find(
+      (d) => !currentUid || d.id !== currentUid
+    );
     
     if (conflictingUser) {
       throw new Error(`The phone number ${phone} is already linked to another account.`);
@@ -286,8 +332,7 @@ export function isEmailVerified(user: User | null | undefined) {
 }
 
 export function needsPhoneVerification(user: User | null | undefined) {
-  if (!user) return false;
-  return !user.phoneNumber;
+  return false;
 }
 
 export function formatAuthError(err: any): string {

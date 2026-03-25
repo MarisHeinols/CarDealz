@@ -31,11 +31,19 @@ const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({
         clearTimeout(timeout);
         setUser(currentUser);
         setLoading(false);
+
+        if (currentUser) {
+          import("~/services/usersService")
+            .then(({ migrateLegacyUserDoc }) =>
+              migrateLegacyUserDoc(currentUser.uid),
+            )
+            .catch(() => undefined);
+        }
       },
       (error) => {
         clearTimeout(timeout);
         setLoading(false);
-      }
+      },
     );
 
     return () => {
@@ -46,18 +54,20 @@ const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({
 
   if (loading) {
     return (
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: '100vh',
-          flexDirection: 'column',
-          gap: 2
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          flexDirection: "column",
+          gap: 2,
         }}
       >
         <CircularProgress />
-        <Typography variant="body2" color="text.secondary">Initializing Session...</Typography>
+        <Typography variant="body2" color="text.secondary">
+          Initializing Session...
+        </Typography>
       </Box>
     );
   }

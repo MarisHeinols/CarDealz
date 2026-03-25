@@ -77,6 +77,7 @@ const LoginPage = () => {
           navigate("/register?social=1");
           return;
         }
+
       }
       if (!isEmailVerified(user)) {
         try {
@@ -93,19 +94,6 @@ const LoginPage = () => {
             severity: "warning",
           }),
         );
-        return;
-      }
-
-      if (needsPhoneVerification(user)) {
-        dispatch(
-          showNotification({
-            message: t("auth.verifyPhonePrompt", {
-              defaultValue: "Please verify your phone number to continue.",
-            }),
-            severity: "info",
-          }),
-        );
-        navigate("/verify-phone");
         return;
       }
 
@@ -147,19 +135,7 @@ const LoginPage = () => {
           navigate("/register?social=1");
           return;
         }
-      }
 
-      if (needsPhoneVerification(user)) {
-        dispatch(
-          showNotification({
-            message: t("auth.verifyPhonePrompt", {
-              defaultValue: "Please verify your phone number to continue.",
-            }),
-            severity: "info",
-          }),
-        );
-        navigate("/verify-phone");
-        return;
       }
 
       dispatch(
@@ -220,7 +196,13 @@ const LoginPage = () => {
 
         <Divider sx={{ my: 2 }}>{t("common.or")}</Divider>
 
-        <Box component="form" onSubmit={(e: React.FormEvent) => { e.preventDefault(); handleLogin(); }}>
+        <Box
+          component="form"
+          onSubmit={(e: React.FormEvent) => {
+            e.preventDefault();
+            handleLogin();
+          }}
+        >
           <TextField
             fullWidth
             label={t("auth.email")}

@@ -26,7 +26,7 @@ import {
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { getAllBusinessUsers } from "~/services/businessesService";
-import type { UserProfileDoc } from "~/services/usersService";
+import type { PrivateUserProfileDoc } from "~/services/usersService";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "~/firebase/functions";
 
@@ -38,9 +38,10 @@ export default function SuperAdminPage() {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(true);
-  const [businesses, setBusinesses] = useState<UserProfileDoc[]>([]);
+  const [businesses, setBusinesses] = useState<PrivateUserProfileDoc[]>([]);
   const [busy, setBusy] = useState(false);
-  const [selectedDealer, setSelectedDealer] = useState<UserProfileDoc | null>(null);
+  const [selectedDealer, setSelectedDealer] =
+    useState<PrivateUserProfileDoc | null>(null);
   const [declineReason, setDeclineReason] = useState("");
   const [openDecline, setOpenDecline] = useState(false);
 
@@ -58,7 +59,11 @@ export default function SuperAdminPage() {
     }
   };
 
-  const handleUpdateStatus = async (uid: string, status: "approved" | "rejected", reason?: string) => {
+  const handleUpdateStatus = async (
+    uid: string,
+    status: "approved" | "rejected",
+    reason?: string,
+  ) => {
     setBusy(true);
     try {
       const { httpsCallable } = await import("firebase/functions");
@@ -77,7 +82,12 @@ export default function SuperAdminPage() {
   };
 
   const handleDeleteAccount = async (uid: string) => {
-    const ok = window.confirm(t("admin.dialogs.deleteConfirm", { defaultValue: "Are you sure you want to PERMANENTLY delete this profile? This will ERASE all their listings, leads, and account data forever. THIS CANNOT BE UNDONE." }));
+    const ok = window.confirm(
+      t("admin.dialogs.deleteConfirm", {
+        defaultValue:
+          "Are you sure you want to PERMANENTLY delete this profile? This will ERASE all their listings, leads, and account data forever. THIS CANNOT BE UNDONE.",
+      }),
+    );
     if (!ok) return;
 
     setBusy(true);
@@ -88,7 +98,14 @@ export default function SuperAdminPage() {
       await deleteUser({ uid });
       await loadBusinesses();
       const { showNotification } = await import("~/redux/slices/uiSlice");
-      dispatch(showNotification({ message: t("admin.messages.deletedSuccess", { defaultValue: "Profile deleted permanently." }), severity: "success" }));
+      dispatch(
+        showNotification({
+          message: t("admin.messages.deletedSuccess", {
+            defaultValue: "Profile deleted permanently.",
+          }),
+          severity: "success",
+        }),
+      );
     } catch (err: any) {
       console.error("Delete failed:", err);
       alert(err.message || "Delete failed");
@@ -97,9 +114,15 @@ export default function SuperAdminPage() {
     }
   };
 
-  const pending = businesses.filter(b => b.dealerVerificationStatus === "pending");
-  const approved = businesses.filter(b => b.dealerVerificationStatus === "approved");
-  const rejected = businesses.filter(b => b.dealerVerificationStatus === "rejected");
+  const pending = businesses.filter(
+    (b) => b.dealerVerificationStatus === "pending",
+  );
+  const approved = businesses.filter(
+    (b) => b.dealerVerificationStatus === "approved",
+  );
+  const rejected = businesses.filter(
+    (b) => b.dealerVerificationStatus === "rejected",
+  );
 
   if (loading) {
     return (
@@ -109,7 +132,13 @@ export default function SuperAdminPage() {
     );
   }
 
-  const BusinessTable = ({ rows, title }: { rows: UserProfileDoc[], title: string }) => (
+  const BusinessTable = ({
+    rows,
+    title,
+  }: {
+    rows: PrivateUserProfileDoc[];
+    title: string;
+  }) => (
     <Box sx={{ mb: 6 }}>
       <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
         {title} ({rows.length})
@@ -118,18 +147,36 @@ export default function SuperAdminPage() {
         <Table>
           <TableHead sx={{ bgcolor: "grey.50" }}>
             <TableRow>
-              <TableCell sx={{ fontWeight: 700 }}>{t("admin.table.businessName")}</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>{t("admin.table.owner")}</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>{t("admin.table.contact")}</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>{t("admin.table.location")}</TableCell>
-              {BILLING_ENABLED && <TableCell sx={{ fontWeight: 700 }}>{t("admin.table.billing", { defaultValue: "Billing" })}</TableCell>}
-              <TableCell sx={{ fontWeight: 700 }}>{t("admin.table.actions")}</TableCell>
+              <TableCell sx={{ fontWeight: 700 }}>
+                {t("admin.table.businessName")}
+              </TableCell>
+              <TableCell sx={{ fontWeight: 700 }}>
+                {t("admin.table.owner")}
+              </TableCell>
+              <TableCell sx={{ fontWeight: 700 }}>
+                {t("admin.table.contact")}
+              </TableCell>
+              <TableCell sx={{ fontWeight: 700 }}>
+                {t("admin.table.location")}
+              </TableCell>
+              {BILLING_ENABLED && (
+                <TableCell sx={{ fontWeight: 700 }}>
+                  {t("admin.table.billing", { defaultValue: "Billing" })}
+                </TableCell>
+              )}
+              <TableCell sx={{ fontWeight: 700 }}>
+                {t("admin.table.actions")}
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {rows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={BILLING_ENABLED ? 6 : 5} align="center" sx={{ py: 3, color: "text.secondary" }}>
+                <TableCell
+                  colSpan={BILLING_ENABLED ? 6 : 5}
+                  align="center"
+                  sx={{ py: 3, color: "text.secondary" }}
+                >
                   {t("admin.table.noBusinesses")}
                 </TableCell>
               </TableRow>
@@ -137,37 +184,68 @@ export default function SuperAdminPage() {
             {rows.map((b) => (
               <TableRow key={b.uid}>
                 <TableCell>
-                  <Typography fontWeight={700}>{b.storeName || b.businessName || "N/A"}</Typography>
-                  <Typography variant="caption" color="primary" sx={{ display: "block" }}>
-                    <strong>{t("admin.table.regNo")}</strong> {b.registrationNumber || "N/A"}
+                  <Typography fontWeight={700}>
+                    {b.storeName || b.businessName || "N/A"}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">@{b.storeHandle}</Typography>
+                  <Typography
+                    variant="caption"
+                    color="primary"
+                    sx={{ display: "block" }}
+                  >
+                    <strong>{t("admin.table.regNo")}</strong>{" "}
+                    {b.registrationNumber || "N/A"}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    @{b.storeHandle}
+                  </Typography>
                 </TableCell>
-                <TableCell>{b.ownerName} {b.ownerSurname}</TableCell>
+                <TableCell>-</TableCell>
                 <TableCell>
                   <Typography variant="body2">{b.email}</Typography>
-                  <Typography variant="body2" color="text.secondary">{b.businessPhone || b.phone || b.ownerPhone}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {b.businessPhone || b.phone}
+                  </Typography>
                   {b.website && (
-                    <Typography variant="caption" sx={{ mt: 0.5, display: "block" }}>
-                      <a href={b.website.startsWith("http") ? b.website : `https://${b.website}`} target="_blank" rel="noreferrer" style={{ color: "primary.main" }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ mt: 0.5, display: "block" }}
+                    >
+                      <a
+                        href={
+                          b.website.startsWith("http")
+                            ? b.website
+                            : `https://${b.website}`
+                        }
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{ color: "primary.main" }}
+                      >
                         {b.website.replace(/^https?:\/\//, "")}
                       </a>
                     </Typography>
                   )}
                 </TableCell>
-                <TableCell>{b.city}, {b.country}</TableCell>
+                <TableCell>
+                  {b.city}, {b.country}
+                </TableCell>
                 {BILLING_ENABLED && (
                   <TableCell>
-                    <Typography 
-                      variant="caption" 
+                    <Typography
+                      variant="caption"
                       fontWeight={700}
-                      sx={{ 
-                        px: 1, 
-                        py: 0.5, 
+                      sx={{
+                        px: 1,
+                        py: 0.5,
                         borderRadius: 1,
-                        bgcolor: b.billing?.status === "active" ? "success.light" : "error.light",
-                        color: b.billing?.status === "active" ? "success.dark" : "error.dark",
-                        textTransform: "uppercase"
+                        bgcolor:
+                          b.billing?.status === "active"
+                            ? "success.light"
+                            : "error.light",
+                        color:
+                          b.billing?.status === "active"
+                            ? "success.dark"
+                            : "error.dark",
+                        textTransform: "uppercase",
                       }}
                     >
                       {b.billing?.status || "Free"}
@@ -208,7 +286,9 @@ export default function SuperAdminPage() {
                       disabled={busy}
                       onClick={() => handleDeleteAccount(b.uid)}
                     >
-                      {t("admin.table.delete", { defaultValue: "Delete Profile" })}
+                      {t("admin.table.delete", {
+                        defaultValue: "Delete Profile",
+                      })}
                     </Button>
                   </Stack>
                 </TableCell>
@@ -253,7 +333,10 @@ export default function SuperAdminPage() {
           <Button
             variant="contained"
             color="error"
-            onClick={() => selectedDealer && handleUpdateStatus(selectedDealer.uid, "rejected", declineReason)}
+            onClick={() =>
+              selectedDealer &&
+              handleUpdateStatus(selectedDealer.uid, "rejected", declineReason)
+            }
             disabled={!declineReason.trim() || busy}
           >
             {t("common.confirm")}

@@ -26,9 +26,7 @@ export default function VerifyPhonePage() {
 
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
-  const [step, setStep] = useState<"enter_phone" | "enter_code">(
-    "enter_phone"
-  );
+  const [step, setStep] = useState<"enter_phone" | "enter_code">("enter_phone");
   const [loading, setLoading] = useState(false);
 
   const verifierRef = useRef<RecaptchaVerifier | null>(null);
@@ -47,12 +45,21 @@ export default function VerifyPhonePage() {
       return;
     }
 
-    // Pre-fill phone from user doc if available
+    // Only individuals must verify phone; business accounts are verified by admin.
     const fetchProfile = async () => {
-      const { getUserProfile } = await import("~/services/usersService");
-      const profile = await getUserProfile(user.uid);
-      if (profile && (profile.phone || profile.ownerPhone)) {
-        setPhone(profile.phone || profile.ownerPhone || "");
+      const { migrateLegacyUserDoc, getPrivateUserProfile } =
+        await import("~/services/usersService");
+      await migrateLegacyUserDoc(user.uid);
+      const profile = await getPrivateUserProfile(user.uid);
+      if (!profile) return;
+
+      if (profile.role === "business") {
+        navigate("/");
+        return;
+      }
+      const nextPhone = profile.phone || "";
+      if (nextPhone) {
+        setPhone(nextPhone);
       }
     };
     fetchProfile();
@@ -85,7 +92,7 @@ export default function VerifyPhonePage() {
         showNotification({
           message: t("verifyPhone.enterValidPhone"),
           severity: "error",
-        })
+        }),
       );
       return;
     }
@@ -93,25 +100,37 @@ export default function VerifyPhonePage() {
     setLoading(true);
     try {
       // 1. Check if number is blocked in Firestore (duplicate check across individual/business)
-      const { collection, getDocs, query, where } = await import("firebase/firestore");
+      const { collection, getDocs, query, where } =
+        await import("firebase/firestore");
       const { db } = await import("~/firebase/fireStore");
 
       const num = phone.replace(/[^\d+]/g, "").trim();
       console.log("[DEBUG] Sending SMS to clean number:", num);
 
       if (!num.startsWith("+")) {
-         throw { code: "custom/missing-plus-sign" };
+        throw { code: "custom/missing-plus-sign" };
       }
-      
+
       // Global minimum check (longest country code + shortest valid subscriber number)
       if (num.length < 8) {
         throw { code: "auth/invalid-phone-number" };
       }
 
-      const checkPhone = await getDocs(query(collection(db, "users"), where("phone", "==", num), where("uid", "!=", currentUser.uid)));
-      const checkOwner = await getDocs(query(collection(db, "users"), where("ownerPhone", "==", num), where("uid", "!=", currentUser.uid)));
+      const privateUsersRef = collection(db, "privateUsers");
 
-      if (!checkPhone.empty || !checkOwner.empty) {
+      const [checkPhone, checkOwner, checkBusinessPhone] = await Promise.all([
+        getDocs(query(privateUsersRef, where("phone", "==", num))),
+        getDocs(query(privateUsersRef, where("ownerPhone", "==", num))),
+        getDocs(query(privateUsersRef, where("businessPhone", "==", num))),
+      ]);
+
+      const conflict = [
+        ...checkPhone.docs,
+        ...checkOwner.docs,
+        ...checkBusinessPhone.docs,
+      ].find((d) => d.id !== currentUser.uid);
+
+      if (conflict) {
         throw { code: "custom/phone-in-use-firestore" };
       }
 
@@ -119,7 +138,7 @@ export default function VerifyPhonePage() {
       const confirmation = await linkWithPhoneNumber(
         currentUser,
         num,
-        verifier
+        verifier,
       );
       confirmationRef.current = confirmation;
       setStep("enter_code");
@@ -127,24 +146,29 @@ export default function VerifyPhonePage() {
         showNotification({
           message: t("verifyPhone.codeSent"),
           severity: "success",
-        })
+        }),
       );
     } catch (e: any) {
       console.error("Phone verification error:", e);
       dispatch(
         showNotification({
           message:
-            e?.code === "custom/phone-in-use-firestore" || e?.code === "auth/credential-already-in-use"
+            e?.code === "custom/phone-in-use-firestore" ||
+            e?.code === "auth/credential-already-in-use"
               ? t("verifyPhone.phoneInUse")
               : e?.code === "auth/invalid-phone-number"
                 ? t("verifyPhone.invalidPhone")
                 : e?.code === "custom/missing-plus-sign"
                   ? t("verifyPhone.missingPlus")
                   : e?.code === "auth/too-many-requests"
-                    ? t("verifyPhone.tooManyRequests", { code: e?.code || "unknown" })
-                    : t("verifyPhone.verificationFailed", { error: e?.code || e?.message || "unknown" }),
+                    ? t("verifyPhone.tooManyRequests", {
+                        code: e?.code || "unknown",
+                      })
+                    : t("verifyPhone.verificationFailed", {
+                        error: e?.code || e?.message || "unknown",
+                      }),
           severity: "error",
-        })
+        }),
       );
     } finally {
       setLoading(false);
@@ -158,7 +182,7 @@ export default function VerifyPhonePage() {
         showNotification({
           message: t("verifyPhone.requestFirst"),
           severity: "error",
-        })
+        }),
       );
       return;
     }
@@ -168,7 +192,7 @@ export default function VerifyPhonePage() {
         showNotification({
           message: t("verifyPhone.enterSmsCode"),
           severity: "error",
-        })
+        }),
       );
       return;
     }
@@ -180,7 +204,7 @@ export default function VerifyPhonePage() {
         showNotification({
           message: t("verifyPhone.verifySuccess"),
           severity: "success",
-        })
+        }),
       );
       navigate("/");
     } catch (e: any) {
@@ -193,7 +217,7 @@ export default function VerifyPhonePage() {
                 ? t("verifyPhone.codeExpired")
                 : e?.message || t("verifyPhone.failedToVerify"),
           severity: "error",
-        })
+        }),
       );
     } finally {
       setLoading(false);
@@ -238,11 +262,7 @@ export default function VerifyPhonePage() {
                 disabled={loading}
               />
 
-              <Button
-                variant="contained"
-                type="submit"
-                disabled={loading}
-              >
+              <Button variant="contained" type="submit" disabled={loading}>
                 {t("verifyPhone.sendCode")}
               </Button>
             </Box>

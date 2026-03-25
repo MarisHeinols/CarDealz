@@ -1,6 +1,5 @@
-import React, { useState } from "react";
-import { Box, Paper, Tabs, Tab, Typography, Button } from "@mui/material";
-import IndividualRegisterForm from "~/components/registerUserPageComponents/IndividualRegisterForm";
+import React from "react";
+import { Box, Paper, Typography, Button } from "@mui/material";
 import BusinessRegisterForm from "~/components/registerUserPageComponents/BusinessRegisterForm";
 import { useNavigate, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -15,7 +14,6 @@ const RegisterUserPage = () => {
 
   const { user: currentUser } = useAuth();
   const { profile } = useUserProfile();
-  const [tab, setTab] = useState(0);
 
   React.useEffect(() => {
     // If we're forcing profile completion but user is gone
@@ -31,8 +29,7 @@ const RegisterUserPage = () => {
   }, [navigate, socialMode, currentUser, profile?.role]);
 
   const handleRegisterSuccess = () => {
-    // Redirect to home page with a flag to show the phone verification popup
-    navigate("/?verify_phone=1");
+    navigate("/?registered=1");
   };
 
   return (
@@ -50,24 +47,25 @@ const RegisterUserPage = () => {
           {t("auth.registerTitle")}
         </Typography>
 
-        {socialMode && currentUser?.providerData?.some(p => p.providerId !== 'password') ? (
+        {socialMode &&
+        currentUser?.providerData?.some((p) => p.providerId !== "password") ? (
           <Typography
             variant="body2"
             color="text.secondary"
             align="center"
             mb={2}
           >
-            {t("auth.socialSignInSuccess", "You signed in successfully. Please complete your profile to continue.")}
+            {t(
+              "auth.socialSignInSuccess",
+              "You signed in successfully. Please complete your profile to continue.",
+            )}
           </Typography>
         ) : null}
 
-        <Tabs value={tab} onChange={(_, v) => setTab(v)} centered>
-          <Tab label={t("auth.individual")} />
-          <Tab label={t("auth.business")} />
-        </Tabs>
-
-        {tab === 0 && <IndividualRegisterForm socialMode={socialMode} onRegisterSuccess={handleRegisterSuccess} />}
-        {tab === 1 && <BusinessRegisterForm socialMode={socialMode} onRegisterSuccess={handleRegisterSuccess} />}
+        <BusinessRegisterForm
+          socialMode={socialMode}
+          onRegisterSuccess={handleRegisterSuccess}
+        />
 
         <Button
           sx={{ width: "100%", my: "1rem" }}

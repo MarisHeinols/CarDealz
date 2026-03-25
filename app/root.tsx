@@ -72,6 +72,27 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <script
           dangerouslySetInnerHTML={{
             __html: `
+          (function () {
+            try {
+              var token = ${JSON.stringify(String((import.meta as any).env?.VITE_CF_WEB_ANALYTICS_TOKEN || ""))};
+              if (!token) return;
+              var consent = window.localStorage && window.localStorage.getItem("balticauto_cookie_consent");
+              if (consent !== "true") return;
+              var s = document.createElement('script');
+              s.defer = true;
+              s.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+              s.setAttribute('data-cf-beacon', JSON.stringify({ token: token }));
+              document.head.appendChild(s);
+            } catch (e) {
+              return;
+            }
+          })();
+        `,
+          }}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
           // Silence known browser extension background errors (common in Brave/Chrome extensions)
           window.addEventListener('unhandledrejection', function(event) {
             const reason = event.reason;
@@ -106,16 +127,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const showVerifyPhone = searchParams.get("verify_phone") === "1";
+  const showRegistrationSuccess = searchParams.get("registered") === "1";
 
-  const handleCloseVerify = () => {
-    // Clear the param
+  const handleCloseSuccess = () => {
     const newParams = new URLSearchParams(searchParams);
-    newParams.delete("verify_phone");
+    newParams.delete("registered");
     setSearchParams(newParams, { replace: true });
-    // Then go to verify page
-    navigate("/verify-phone");
   };
 
   return (
@@ -136,8 +153,8 @@ export default function App() {
           <CookieBanner />
           <GlobalSnackbar />
           <VerificationDialog
-            open={showVerifyPhone}
-            onClose={handleCloseVerify}
+            open={showRegistrationSuccess}
+            onClose={handleCloseSuccess}
           />
         </Box>
       </RegistrationGuard>

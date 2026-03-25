@@ -1,17 +1,17 @@
 import {
-  addDoc,
   collection,
   deleteDoc,
   doc,
   getDocs,
   increment,
   query,
-  serverTimestamp,
   setDoc,
   updateDoc,
   where,
 } from "firebase/firestore";
 import { db } from "~/firebase/fireStore";
+import { httpsCallable } from "firebase/functions";
+import { functions } from "~/firebase/functions";
 import type {
   LeadDoc,
   LeadPreferredContactMethod,
@@ -47,10 +47,8 @@ function mapLeadDoc(id: string, data: any): LeadDoc {
 }
 
 export async function createLead(input: CreateLeadInput): Promise<LeadDoc> {
-  const ref = collection(db, "leads");
-  const nowIso = new Date().toISOString();
-
-  const res = await addDoc(ref, {
+  const call = httpsCallable(functions, "createLeadSecure");
+  const res = await call({
     listingId: input.listingId,
     dealerId: input.dealerId,
     buyerUid: input.buyerUid || null,
@@ -59,23 +57,17 @@ export async function createLead(input: CreateLeadInput): Promise<LeadDoc> {
     buyerPhone: input.buyerPhone || null,
     preferredContactMethod: input.preferredContactMethod,
     message: input.message,
-    status: "new" as LeadStatus,
-    createdAt: serverTimestamp(),
-    createdAtIso: nowIso,
   });
 
-  // Denormalize leadCount on listing for quick UI badges.
-  // Best-effort; if this fails we still keep the lead itself.
-  try {
-    await updateDoc(doc(db, "listings", input.listingId), {
-      leadCount: increment(1),
-    } as any);
-  } catch (e) {
-    console.error("Failed to increment leadCount", e);
+  const data = (res.data || {}) as any;
+  const leadId = String(data.leadId || "").trim();
+  const createdAtIso = String(data.createdAtIso || "").trim();
+  if (!leadId) {
+    throw new Error("Lead creation failed.");
   }
 
   return {
-    id: res.id,
+    id: leadId,
     listingId: input.listingId,
     dealerId: input.dealerId,
     buyerUid: input.buyerUid,
@@ -85,7 +77,7 @@ export async function createLead(input: CreateLeadInput): Promise<LeadDoc> {
     preferredContactMethod: input.preferredContactMethod,
     message: input.message,
     status: "new",
-    createdAt: nowIso,
+    createdAt: createdAtIso || new Date().toISOString(),
   };
 }
 
@@ -107,7 +99,7 @@ export async function updateLeadStatus(leadId: string, status: LeadStatus): Prom
     leadRef,
     {
       status,
-      updatedAt: serverTimestamp(),
+      updatedAtIso: new Date().toISOString(),
     } as any,
     { merge: true }
   );

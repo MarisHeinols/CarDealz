@@ -9,7 +9,11 @@ import { Box, CircularProgress, Typography } from "@mui/material";
 export function meta() {
   return [
     { title: "Sell Your Car - Create New Listing | BalticAuto" },
-    { name: "description", content: "List your car for sale on the most popular vehicle marketplace in the Baltics. Simple, fast, and secure process." },
+    {
+      name: "description",
+      content:
+        "List your car for sale on the most popular vehicle marketplace in the Baltics. Simple, fast, and secure process.",
+    },
   ];
 }
 
@@ -24,12 +28,6 @@ export default function NewListingRoute() {
 
   useEffect(() => {
     let cancelled = false;
-    
-    // Strict phone verification check
-    if (!user.phoneNumber) {
-      navigate("/verify-phone");
-      return;
-    }
 
     setAllowed(null);
     getUserProfile(user.uid)
@@ -43,7 +41,7 @@ export default function NewListingRoute() {
     return () => {
       cancelled = true;
     };
-  }, [user.uid, user.phoneNumber, navigate]);
+  }, [user.uid, navigate]);
 
   if (allowed === null) {
     return (

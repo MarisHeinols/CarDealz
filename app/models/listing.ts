@@ -5,12 +5,12 @@
  * ensuring consistency and type safety across the application.
  */
 
-import type { 
-  CarListingDetails, 
-  CarListingDetailsJson, 
+import type {
+  CarListingDetails,
+  CarListingDetailsJson,
   CarListingSummary,
   ListingImage,
-  SellerInfo 
+  SellerInfo
 } from "~/types/types";
 
 /**
@@ -47,6 +47,8 @@ export function createEmptyListing(): CarListingDetailsJson {
     description: "",
     seller: createEmptySeller(),
     viewCount: 0,
+    isSold: false,
+    deleted: false,
     lastViewed: new Date().toISOString(),
     createdAt: new Date().toISOString(),
   };
@@ -97,7 +99,7 @@ export function createEmptyListingSummary(): CarListingSummary {
  * Converts a full listing to a summary (for list views)
  */
 export function listingToSummary(listing: CarListingDetails | CarListingDetailsJson): CarListingSummary {
-  const primaryImage = Array.isArray(listing.images) 
+  const primaryImage = Array.isArray(listing.images)
     ? listing.images.find(img => img.isPrimary) || listing.images[0]
     : null;
 

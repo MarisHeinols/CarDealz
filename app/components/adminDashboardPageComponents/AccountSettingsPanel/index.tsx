@@ -13,13 +13,17 @@ import { useAppDispatch } from "~/redux/hooks";
 import { showNotification } from "~/redux/slices/uiSlice";
 import { useNavigate } from "react-router";
 import { auth } from "~/firebase/auth";
-
 import { useTranslation } from "react-i18next";
+import { useUserProfile } from "~/hooks/userStore/useUserProfile";
 
-const AccountSettingsPanel = ({ mustVerify }: { mustVerify?: boolean }) => {
+const AccountSettingsPanel = () => {
   const { t } = useTranslation();
   const appDispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { profile, loading } = useUserProfile();
+
+  const isVerified = Boolean(profile?.dealerVerified);
+  const vStatus = profile?.dealerVerificationStatus || "pending";
 
   return (
     <Box sx={{ maxWidth: 800, mx: "auto", mt: 2 }}>
@@ -27,38 +31,6 @@ const AccountSettingsPanel = ({ mustVerify }: { mustVerify?: boolean }) => {
         {t("dashboard.account.title", { defaultValue: "Account Settings" })}
       </Typography>
 
-      {mustVerify && (
-        <Box 
-          p={3} 
-          mb={4} 
-          sx={{ 
-            bgcolor: "error.light", 
-            borderRadius: 2, 
-            border: "1px solid",
-            borderColor: "error.main",
-            display: "flex", 
-            flexDirection: "column",
-            gap: 2 
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-            <Typography variant="subtitle1" fontWeight={800} color="error.dark">
-              {t("nav.verifyPhone", { defaultValue: "Verify Phone" })}
-            </Typography>
-          </Box>
-          <Typography variant="body2" color="error.dark">
-            {t("listingControl.phone_verification_required", { defaultValue: "Phone verification is required to access all features." })}
-          </Typography>
-          <Button 
-            variant="contained" 
-            color="error" 
-            fullWidth 
-            onClick={() => navigate("/verify-phone")}
-          >
-            {t("nav.verifyPhone", { defaultValue: "Verify Phone" })}
-          </Button>
-        </Box>
-      )}
       <Accordion defaultExpanded>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Typography fontWeight={600}>
@@ -67,6 +39,7 @@ const AccountSettingsPanel = ({ mustVerify }: { mustVerify?: boolean }) => {
         </AccordionSummary>
         <AccordionDetails>
           <Stack spacing={2}>
+            {/* Email Verification */}
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <Box 
                 sx={{ 
@@ -88,13 +61,14 @@ const AccountSettingsPanel = ({ mustVerify }: { mustVerify?: boolean }) => {
               </Typography>
             </Box>
 
+            {/* Dealer Verification */}
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <Box 
                 sx={{ 
                   width: 20, 
                   height: 20, 
                   borderRadius: "50%", 
-                  bgcolor: auth.currentUser?.phoneNumber ? "success.main" : "error.main",
+                  bgcolor: isVerified ? "success.main" : (vStatus === "rejected" ? "error.main" : "warning.main"),
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -102,11 +76,17 @@ const AccountSettingsPanel = ({ mustVerify }: { mustVerify?: boolean }) => {
                   fontSize: 14
                 }}
               >
-                {auth.currentUser?.phoneNumber ? "✓" : "!"}
+                {isVerified ? "✓" : (vStatus === "rejected" ? "✕" : "!")}
               </Box>
-              <Typography variant="body2" fontWeight={600}>
-                {t("dashboard.account.verification.phone", { defaultValue: "Phone Verified" })}
-              </Typography>
+              <Box>
+                <Typography variant="body2" fontWeight={600}>
+                  {isVerified 
+                    ? t("dashboard.account.verification.dealerVerified") 
+                    : (vStatus === "rejected" 
+                        ? t("dashboard.account.verification.rejected") 
+                        : t("dashboard.account.verification.pending"))}
+                </Typography>
+              </Box>
             </Box>
           </Stack>
         </AccordionDetails>

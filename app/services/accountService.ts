@@ -2,7 +2,9 @@ import { doc, updateDoc, writeBatch, collection, query, where, getDocs } from "f
 import { deleteUser, type User } from "firebase/auth";
 import { db } from "~/firebase/fireStore";
 
-const USERS_COLLECTION = "users";
+const PUBLIC_USERS_COLLECTION = "publicUsers";
+const PRIVATE_USERS_COLLECTION = "privateUsers";
+const LEGACY_USERS_COLLECTION = "users";
 const LISTINGS_COLLECTION = "listings";
 
 /**
@@ -10,11 +12,14 @@ const LISTINGS_COLLECTION = "listings";
  * This should hide their store and listings from public view.
  */
 export async function disableAccount(uid: string): Promise<void> {
-  const userRef = doc(db, USERS_COLLECTION, uid);
-  await updateDoc(userRef, {
+  const payload = {
     status: "disabled",
     disabledAt: new Date().toISOString(),
-  });
+  };
+  await Promise.all([
+    updateDoc(doc(db, PUBLIC_USERS_COLLECTION, uid), payload),
+    updateDoc(doc(db, PRIVATE_USERS_COLLECTION, uid), payload),
+  ]);
 
   // Also mark all their listings as draft or disabled
   const listingsRef = collection(db, LISTINGS_COLLECTION);
@@ -32,11 +37,14 @@ export async function disableAccount(uid: string): Promise<void> {
  * Re-activates a user's account.
  */
 export async function reActivateAccount(uid: string): Promise<void> {
-  const userRef = doc(db, USERS_COLLECTION, uid);
-  await updateDoc(userRef, {
+  const payload = {
     status: "active",
     reactivatedAt: new Date().toISOString(),
-  });
+  };
+  await Promise.all([
+    updateDoc(doc(db, PUBLIC_USERS_COLLECTION, uid), payload),
+    updateDoc(doc(db, PRIVATE_USERS_COLLECTION, uid), payload),
+  ]);
 }
 
 /**
@@ -71,7 +79,9 @@ export async function permanentDeleteAccount(user: User): Promise<void> {
 
   // 6. HARD DELETE the user document and private metadata
   batch.delete(doc(db, "privateUserMetadata", uid));
-  batch.delete(doc(db, USERS_COLLECTION, uid));
+  batch.delete(doc(db, PUBLIC_USERS_COLLECTION, uid));
+  batch.delete(doc(db, PRIVATE_USERS_COLLECTION, uid));
+  batch.delete(doc(db, LEGACY_USERS_COLLECTION, uid));
 
   // Execute all deletions
   await batch.commit();

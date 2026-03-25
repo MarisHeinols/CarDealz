@@ -2,6 +2,8 @@ import { collection, doc, getDoc, getDocs, query, where } from "firebase/firesto
 import { db } from "~/firebase/fireStore";
 import { cacheKeyStoreUidByHandle, getAnyCachedValue, setCachedValue } from "~/services/storeCache";
 
+const PUBLIC_USERS_COLLECTION = "publicUsers";
+
 export async function resolveStoreUidByHandle(handleOrUid: string): Promise<string | null> {
   const h = (handleOrUid || "").trim();
   if (!h) return null;
@@ -31,7 +33,7 @@ export async function resolveStoreUidByHandle(handleOrUid: string): Promise<stri
 
   // Fallback (for older accounts that might not have businessNames entry)
   // This might fail if rules are tightened, but it's a safety net.
-  const usersRef = collection(db, "users");
+  const usersRef = collection(db, PUBLIC_USERS_COLLECTION);
   const q = query(usersRef, where("storeHandle", "==", h));
   const snap = await getDocs(q);
   const first = snap.docs[0];
@@ -41,7 +43,7 @@ export async function resolveStoreUidByHandle(handleOrUid: string): Promise<stri
 }
 
 export async function getStoreHandleForUid(uid: string): Promise<string | null> {
-  const ref = doc(db, "users", uid);
+  const ref = doc(db, PUBLIC_USERS_COLLECTION, uid);
   const snap = await getDoc(ref);
   if (!snap.exists()) return null;
   const data = snap.data() as any;

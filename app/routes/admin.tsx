@@ -49,7 +49,7 @@ export default function AdminDashboardRoute() {
     );
   }
 
-  if (!allowed && !(!user?.phoneNumber && role === "business")) {
+  if (!allowed) {
     return (
       <Box p={6}>
         <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>
@@ -62,5 +62,5 @@ export default function AdminDashboardRoute() {
     );
   }
 
-  return <AdminDashboardPage mustVerify={!user?.phoneNumber} />;
+  return <AdminDashboardPage />;
 }

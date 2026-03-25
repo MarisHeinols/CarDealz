@@ -2,11 +2,14 @@ import { useEffect, useState } from "react";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "~/firebase/fireStore";
 import { useAuth } from "./useAuth";
-import type { UserProfileDoc } from "~/services/usersService";
+import type { PrivateUserProfileDoc } from "~/services/usersService";
+import { migrateLegacyUserDoc } from "~/services/usersService";
+
+const PRIVATE_USERS_COLLECTION = "privateUsers";
 
 export function useUserProfile() {
   const { user } = useAuth();
-  const [profile, setProfile] = useState<UserProfileDoc | null>(null);
+  const [profile, setProfile] = useState<PrivateUserProfileDoc | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -17,9 +20,10 @@ export function useUserProfile() {
     }
 
     setLoading(true);
-    const unsub = onSnapshot(doc(db, "users", user.uid), (snap) => {
+    migrateLegacyUserDoc(user.uid).catch(() => undefined);
+    const unsub = onSnapshot(doc(db, PRIVATE_USERS_COLLECTION, user.uid), (snap) => {
       if (snap.exists()) {
-        setProfile(snap.data() as UserProfileDoc);
+        setProfile(snap.data() as PrivateUserProfileDoc);
       } else {
         setProfile(null);
       }

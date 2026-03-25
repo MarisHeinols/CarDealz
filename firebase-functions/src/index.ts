@@ -30,6 +30,10 @@ const adminEmail = defineSecret("ADMIN_EMAIL");
 
 type DealerVerificationStatus = "pending" | "approved" | "rejected";
 
+const PUBLIC_USERS_COLLECTION = "publicUsers";
+const PRIVATE_USERS_COLLECTION = "privateUsers";
+const LEGACY_USERS_COLLECTION = "users";
+
 export const verifyDealerAccount = onCall(
   { 
     region: "europe-west1", 
@@ -54,24 +58,27 @@ export const verifyDealerAccount = onCall(
     }
 
     const db = admin.firestore();
-    const ref = db.doc(`users/${dealerUid}`);
-    const snap = await ref.get();
-    if (!snap.exists) throw new HttpsError("not-found", "Dealer user not found");
+    const privRef = db.doc(`${PRIVATE_USERS_COLLECTION}/${dealerUid}`);
+    const privSnap = await privRef.get();
+    if (!privSnap.exists) throw new HttpsError("not-found", "Dealer user not found");
 
-    const data = snap.data() as any;
+    const data = privSnap.data() as any;
     if (String(data?.role || "") !== "business") {
       throw new HttpsError("failed-precondition", "Target user is not a business account");
     }
 
     const dealerVerified = status === "approved";
-    await ref.set(
-      {
-        dealerVerificationStatus: status,
-        dealerVerified,
-        dealerVerificationUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      },
-      { merge: true },
-    );
+    const payload = {
+      dealerVerificationStatus: status,
+      dealerVerified,
+      dealerVerificationUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+    await Promise.all([
+      db.doc(`${PUBLIC_USERS_COLLECTION}/${dealerUid}`).set(payload, { merge: true }),
+      db.doc(`${PRIVATE_USERS_COLLECTION}/${dealerUid}`).set(payload, { merge: true }),
+      // keep legacy doc updated only if it exists
+      db.doc(`${LEGACY_USERS_COLLECTION}/${dealerUid}`).set(payload, { merge: true }),
+    ]);
 
     // Keep reason private
     if (reason) {
@@ -140,7 +147,9 @@ export const deleteUserByAdmin = onCall(
 
       // 6. Store settings, User doc, and private metadata
       batch.delete(db.doc(`storeSettings/${targetUid}`));
-      batch.delete(db.doc(`users/${targetUid}`));
+      batch.delete(db.doc(`${PUBLIC_USERS_COLLECTION}/${targetUid}`));
+      batch.delete(db.doc(`${PRIVATE_USERS_COLLECTION}/${targetUid}`));
+      batch.delete(db.doc(`${LEGACY_USERS_COLLECTION}/${targetUid}`));
       batch.delete(db.doc(`privateUserMetadata/${targetUid}`));
 
       await batch.commit();
@@ -214,7 +223,9 @@ export const deleteMyAccount = onCall(
 
       // 6. Docs
       batch.delete(db.doc(`storeSettings/${uid}`));
-      batch.delete(db.doc(`users/${uid}`));
+      batch.delete(db.doc(`${PUBLIC_USERS_COLLECTION}/${uid}`));
+      batch.delete(db.doc(`${PRIVATE_USERS_COLLECTION}/${uid}`));
+      batch.delete(db.doc(`${LEGACY_USERS_COLLECTION}/${uid}`));
       batch.delete(db.doc(`privateUserMetadata/${uid}`));
 
       await batch.commit();
@@ -233,7 +244,7 @@ export const deleteMyAccount = onCall(
 
 export const onBusinessRegistered = onDocumentCreated(
   {
-    document: "users/{uid}",
+    document: "privateUsers/{uid}",
     secrets: [smtpHost, smtpUser, smtpPass, smtpFrom, adminEmail],
   },
   async (event) => {
@@ -258,8 +269,7 @@ export const onBusinessRegistered = onDocumentCreated(
           <h2 style="color: #6a1b9a;">New Business requires approval</h2>
           <p><strong>Name:</strong> ${data.storeName || data.businessName || "N/A"}</p>
           <p><strong>Email:</strong> ${data.email || "N/A"}</p>
-          <p><strong>Phone:</strong> ${data.businessPhone || data.phone || data.ownerPhone || "N/A"}</p>
-          <p><strong>Owner:</strong> ${data.ownerName || ""} ${data.ownerSurname || ""}</p>
+          <p><strong>Phone:</strong> ${data.businessPhone || data.phone || "N/A"}</p>
           <p>Please log in to the admin dashboard to verify and approve or decline this registration.</p>
         </div>
       `;
@@ -279,7 +289,7 @@ export const onBusinessRegistered = onDocumentCreated(
 
 export const onDealerVerificationUpdated = onDocumentUpdated(
   {
-    document: "users/{uid}",
+    document: "privateUsers/{uid}",
     secrets: [smtpHost, smtpUser, smtpPass, smtpFrom],
   },
   async (event) => {
@@ -311,7 +321,7 @@ export const onDealerVerificationUpdated = onDocumentUpdated(
         const html = `
           <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: auto; border: 1px solid #eee; padding: 20px; border-radius: 10px;">
             <h2 style="color: ${isApproved ? "#4caf50" : "#d32f2f"};">Business Account Status Update</h2>
-            <p>Hello ${after.ownerName || after.name || "Dealer"},</p>
+            <p>Hello ${after.storeName || after.businessName || after.name || "Dealer"},</p>
             <p>Your business registration for <strong>${after.storeName || after.businessName || "your dealership"}</strong> has been <strong>${isApproved ? "Approved" : "Declined"}</strong>.</p>
             ${isApproved ? `<p>You can now log in and start publishing your car listings!</p>` : reasonStr}
             <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"/>
@@ -337,6 +347,179 @@ export const onDealerVerificationUpdated = onDocumentUpdated(
 function getGemini() {
   return new GoogleGenAI({ apiKey: geminiApiKey.value() });
 }
+
+function normalizeIp(raw: any): string {
+  const xff = String(raw?.headers?.["x-forwarded-for"] || "");
+  const first = xff.split(",")[0]?.trim();
+  const ip = first || String(raw?.ip || "").trim();
+  return ip || "unknown";
+}
+
+function isValidEmail(v: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+}
+
+function clampStr(v: any, max: number): string {
+  const s = String(v || "").trim();
+  return s.length > max ? s.slice(0, max) : s;
+}
+
+function normalizeForProfanityScan(v: string): string {
+  // Lowercase + normalize diacritics + make separators uniform.
+  // Keep Cyrillic/Latin letters and digits; everything else becomes spaces.
+  const lowered = (v || "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ё/g, "е");
+  return lowered.replace(/[^\p{L}\p{N}]+/gu, " ").replace(/\s+/g, " ").trim();
+}
+
+function containsProfanity(v: string): boolean {
+  const text = normalizeForProfanityScan(v);
+  if (!text) return false;
+
+  // High-signal list covering English, Russian and Latvian.
+  // Tuned to minimise false positives while catching clear abuse.
+  const patterns: RegExp[] = [
+    // ── English ──────────────────────────────────────────────────────────────
+    /\b(fuck|fucking|fucked|fucker|shit|shitty|bitch|bitching|asshole|bastard|cunt|dick|dickhead|cock|cocksucker|motherfucker|whore|slut|nigger|faggot|retard)\b/i,
+    // ── Russian (Cyrillic – common obscene roots & derivatives) ─────────────
+    /\b(бля|блять|бляд|блядь|блядский|сука|суки|сучка|хуй|хуйня|хуев|хуило|хуита|пизд|пизда|пиздец|пиздит|ёб|ёба|еба|ебать|ебало|ебан|нахуй|захуй|похуй|уёбок|уебок|манда|залупа|мудак|мудила|мразь|ублюдок|блядина|шлюха|проститутка|педик|педераст|гандон|долбоёб|долбоеб)\b/i,
+    // ── Latvian ──────────────────────────────────────────────────────────────
+    /\b(pizd|pizda|pizdet|pizdulis|dirsa|dirsā|dirst|kuce|sukas|mauka|maukas|pakaļa|muds|mudit|sūds|fuck|jebi|jebies|jebties)\b/i,
+  ];
+
+  return patterns.some((p) => p.test(text));
+}
+
+export const createLeadSecure = onCall(
+  {
+    region: "europe-west1",
+    cors: ["http://localhost:5173", "https://baltic-auto.net"],
+    invoker: "public",
+  },
+  async (request: CallableRequest) => {
+    if (!request.data) throw new HttpsError("invalid-argument", "Request body is empty");
+
+    const db = admin.firestore();
+    const ip = normalizeIp((request as any).rawRequest);
+
+    const listingId = clampStr((request.data as any).listingId, 120);
+    const dealerId = clampStr((request.data as any).dealerId, 120);
+    const buyerName = clampStr((request.data as any).buyerName, 120);
+    const message = clampStr((request.data as any).message, 2000);
+    const preferredContactMethod = clampStr((request.data as any).preferredContactMethod, 20);
+
+    const buyerUidRaw = (request.data as any).buyerUid;
+    const buyerUid = buyerUidRaw ? clampStr(buyerUidRaw, 128) : null;
+
+    const buyerEmailRaw = (request.data as any).buyerEmail;
+    const buyerEmail = buyerEmailRaw ? clampStr(buyerEmailRaw, 254).toLowerCase() : null;
+
+    const buyerPhoneRaw = (request.data as any).buyerPhone;
+    const buyerPhone = buyerPhoneRaw ? clampStr(buyerPhoneRaw, 32) : null;
+
+    // If authenticated, enforce UID match.
+    if (request.auth?.uid && buyerUid && request.auth.uid !== buyerUid) {
+      throw new HttpsError("permission-denied", "buyerUid mismatch");
+    }
+
+    if (!listingId || !dealerId) {
+      throw new HttpsError("invalid-argument", "Missing listingId/dealerId");
+    }
+    if (!buyerName || buyerName.length < 2) {
+      throw new HttpsError("invalid-argument", "Name is required");
+    }
+    if (!message || message.length < 5) {
+      throw new HttpsError("invalid-argument", "Message is too short");
+    }
+
+    if (containsProfanity(buyerName) || containsProfanity(message)) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Message contains prohibited language.",
+      );
+    }
+    if (preferredContactMethod !== "email" && preferredContactMethod !== "phone") {
+      throw new HttpsError("invalid-argument", "Invalid preferredContactMethod");
+    }
+    if (preferredContactMethod === "email") {
+      if (!buyerEmail || !isValidEmail(buyerEmail)) {
+        throw new HttpsError("invalid-argument", "Valid email required");
+      }
+    }
+    if (preferredContactMethod === "phone") {
+      if (!buyerPhone || buyerPhone.replace(/[^\d+]/g, "").length < 8) {
+        throw new HttpsError("invalid-argument", "Valid phone required");
+      }
+    }
+
+    // Verify listing belongs to dealerId.
+    const listingRef = db.doc(`listings/${listingId}`);
+    const listingSnap = await listingRef.get();
+    if (!listingSnap.exists) {
+      throw new HttpsError("not-found", "Listing not found");
+    }
+    const listing = listingSnap.data() as any;
+    if (String(listing?.sellerId || "") !== dealerId) {
+      throw new HttpsError("failed-precondition", "Invalid dealer for listing");
+    }
+
+    // Rate limit: max 3 leads per 10 minutes per IP per dealer.
+    const windowMs = 10 * 60 * 1000;
+    const maxCount = 3;
+    const now = Date.now();
+    const rateKey = `leads_${dealerId}_${ip}`;
+    const rateRef = db.doc(`rateLimits/${rateKey}`);
+
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(rateRef);
+      const data = snap.exists ? (snap.data() as any) : null;
+      const resetAt = typeof data?.resetAt === "number" ? data.resetAt : 0;
+      const count = typeof data?.count === "number" ? data.count : 0;
+
+      if (!resetAt || now > resetAt) {
+        tx.set(rateRef, { count: 1, resetAt: now + windowMs, updatedAt: now }, { merge: true });
+        return;
+      }
+
+      if (count >= maxCount) {
+        throw new HttpsError("resource-exhausted", "Too many requests. Please try again later.");
+      }
+      tx.set(rateRef, { count: count + 1, resetAt, updatedAt: now }, { merge: true });
+    });
+
+    const createdAtIso = new Date().toISOString();
+    const leadRef = db.collection("leads").doc();
+    await leadRef.set({
+      listingId,
+      dealerId,
+      buyerUid: buyerUid || null,
+      buyerName,
+      buyerEmail: buyerEmail || null,
+      buyerPhone: buyerPhone || null,
+      preferredContactMethod,
+      message,
+      status: "new",
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAtIso,
+      sourceIp: ip,
+    });
+
+    // best-effort increment
+    try {
+      await listingRef.set(
+        { leadCount: admin.firestore.FieldValue.increment(1) },
+        { merge: true },
+      );
+    } catch {
+      // ignore
+    }
+
+    return { ok: true, leadId: leadRef.id, createdAtIso };
+  },
+);
 
 export const geminiAnalyzeCarImage = onCall(
   {

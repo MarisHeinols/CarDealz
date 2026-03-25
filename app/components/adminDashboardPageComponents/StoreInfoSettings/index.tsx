@@ -1,5 +1,16 @@
 import { useTranslation } from "react-i18next";
-import { Box, TextField, Typography, Stack, Grid, Checkbox, FormControlLabel, CircularProgress, Button, Divider } from "@mui/material";
+import {
+  Box,
+  TextField,
+  Typography,
+  Stack,
+  Grid,
+  Checkbox,
+  FormControlLabel,
+  CircularProgress,
+  Button,
+  Divider,
+} from "@mui/material";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -42,20 +53,40 @@ const StoreInfoSettings = () => {
       const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
       if (userDoc.exists()) {
         const data = userDoc.data();
-        const newPhone = data.businessPhone || data.ownerPhone || data.phone || contact.phone;
-        const newEmail = data.businessEmail || data.ownerEmail || data.email || contact.email;
+        const newPhone = data.businessPhone || data.phone || contact.phone;
+        const newEmail = data.businessEmail || data.email || contact.email;
         const newWebsite = data.website || contact.website;
-        if (newPhone !== contact.phone || newEmail !== contact.email || newWebsite !== contact.website) {
-          dispatch(setContactInfo({ phone: newPhone, email: newEmail, website: newWebsite }));
+        if (
+          newPhone !== contact.phone ||
+          newEmail !== contact.email ||
+          newWebsite !== contact.website
+        ) {
+          dispatch(
+            setContactInfo({
+              phone: newPhone,
+              email: newEmail,
+              website: newWebsite,
+            }),
+          );
         }
         if (data.storeName && data.storeName !== name) {
           dispatch(setStoreName(data.storeName));
         }
-        dispatch(showNotification({ message: t("dashboard.settings.storeInfo.reloadedSuccess"), severity: "success" }));
+        dispatch(
+          showNotification({
+            message: t("dashboard.settings.storeInfo.reloadedSuccess"),
+            severity: "success",
+          }),
+        );
       }
     } catch (error) {
       console.error("Failed to fetch user data", error);
-      dispatch(showNotification({ message: t("dashboard.settings.storeInfo.reloadError"), severity: "error" }));
+      dispatch(
+        showNotification({
+          message: t("dashboard.settings.storeInfo.reloadError"),
+          severity: "error",
+        }),
+      );
     } finally {
       setLoadingUserData(false);
     }
@@ -67,7 +98,11 @@ const StoreInfoSettings = () => {
     }
   }, []);
 
-  const handleWorkTimeChange = (day: string, field: "open" | "close" | "isClosed", value: any) => {
+  const handleWorkTimeChange = (
+    day: string,
+    field: "open" | "close" | "isClosed",
+    value: any,
+  ) => {
     dispatch(
       setWorkTime({
         ...workTime,
@@ -75,11 +110,14 @@ const StoreInfoSettings = () => {
           ...workTime[day],
           [field]: value,
         },
-      })
+      }),
     );
   };
 
-  const handleLocationChange = (field: "adress" | "lat" | "lng", value: string) => {
+  const handleLocationChange = (
+    field: "adress" | "lat" | "lng",
+    value: string,
+  ) => {
     const newLoc = { ...location, cords: { ...location.cords } };
     if (field === "adress") {
       newLoc.adress = value;
@@ -112,7 +150,9 @@ const StoreInfoSettings = () => {
         <Divider />
 
         <Box>
-          <Typography variant="subtitle2" sx={{ mb: 2 }}>{t("dashboard.settings.storeInfo.locationTitle")}</Typography>
+          <Typography variant="subtitle2" sx={{ mb: 2 }}>
+            {t("dashboard.settings.storeInfo.locationTitle")}
+          </Typography>
           <Stack spacing={2}>
             <TextField
               label={t("dashboard.settings.storeInfo.address")}
@@ -142,10 +182,26 @@ const StoreInfoSettings = () => {
         <Divider />
 
         <Box>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-            <Typography variant="subtitle2">{t("dashboard.settings.storeInfo.contactTitle")}</Typography>
-            <Button size="small" variant="text" onClick={handleFetchUserData} disabled={loadingUserData}>
-              {loadingUserData ? <CircularProgress size={16} /> : t("dashboard.settings.storeInfo.reloadCta")}
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            sx={{ mb: 1 }}
+          >
+            <Typography variant="subtitle2">
+              {t("dashboard.settings.storeInfo.contactTitle")}
+            </Typography>
+            <Button
+              size="small"
+              variant="text"
+              onClick={handleFetchUserData}
+              disabled={loadingUserData}
+            >
+              {loadingUserData ? (
+                <CircularProgress size={16} />
+              ) : (
+                t("dashboard.settings.storeInfo.reloadCta")
+              )}
             </Button>
           </Stack>
           <Stack spacing={2}>
@@ -159,7 +215,7 @@ const StoreInfoSettings = () => {
                     ...contact,
                     phone: e.target.value,
                     email: contact.email,
-                  })
+                  }),
                 )
               }
             />
@@ -173,7 +229,7 @@ const StoreInfoSettings = () => {
                     ...contact,
                     phone: contact.phone,
                     email: e.target.value,
-                  })
+                  }),
                 )
               }
             />
@@ -186,7 +242,7 @@ const StoreInfoSettings = () => {
                   setContactInfo({
                     ...contact,
                     website: e.target.value,
-                  })
+                  }),
                 )
               }
             />
@@ -196,14 +252,22 @@ const StoreInfoSettings = () => {
         <Divider />
 
         <Box>
-          <Typography variant="subtitle2" sx={{ mb: 2 }}>{t("dashboard.settings.storeInfo.workTimeTitle")}</Typography>
+          <Typography variant="subtitle2" sx={{ mb: 2 }}>
+            {t("dashboard.settings.storeInfo.workTimeTitle")}
+          </Typography>
           <Stack spacing={1.5}>
             {DAYS_OF_WEEK.map((day) => {
-               const wt = workTime[day] || { open: "09:00", close: "18:00", isClosed: false };
-               return (
+              const wt = workTime[day] || {
+                open: "09:00",
+                close: "18:00",
+                isClosed: false,
+              };
+              return (
                 <Grid container spacing={1} alignItems="center" key={day}>
                   <Grid size={{ xs: 3 }}>
-                    <Typography variant="body2">{t(`dashboard.settings.storeInfo.days.${day}`)}</Typography>
+                    <Typography variant="body2">
+                      {t(`dashboard.settings.storeInfo.days.${day}`)}
+                    </Typography>
                   </Grid>
                   <Grid size={{ xs: 3 }}>
                     <TextField
@@ -211,9 +275,11 @@ const StoreInfoSettings = () => {
                       size="small"
                       disabled={wt.isClosed}
                       value={wt.open}
-                      onChange={(e) => handleWorkTimeChange(day, "open", e.target.value)}
-                      inputProps={{ 
-                        onClick: (e: any) => e.target.showPicker?.() 
+                      onChange={(e) =>
+                        handleWorkTimeChange(day, "open", e.target.value)
+                      }
+                      inputProps={{
+                        onClick: (e: any) => e.target.showPicker?.(),
                       }}
                     />
                   </Grid>
@@ -223,9 +289,11 @@ const StoreInfoSettings = () => {
                       size="small"
                       disabled={wt.isClosed}
                       value={wt.close}
-                      onChange={(e) => handleWorkTimeChange(day, "close", e.target.value)}
-                      inputProps={{ 
-                        onClick: (e: any) => e.target.showPicker?.() 
+                      onChange={(e) =>
+                        handleWorkTimeChange(day, "close", e.target.value)
+                      }
+                      inputProps={{
+                        onClick: (e: any) => e.target.showPicker?.(),
                       }}
                     />
                   </Grid>
@@ -235,7 +303,13 @@ const StoreInfoSettings = () => {
                         <Checkbox
                           size="small"
                           checked={wt.isClosed}
-                          onChange={(e) => handleWorkTimeChange(day, "isClosed", e.target.checked)}
+                          onChange={(e) =>
+                            handleWorkTimeChange(
+                              day,
+                              "isClosed",
+                              e.target.checked,
+                            )
+                          }
                         />
                       }
                       label={t("dashboard.settings.storeInfo.closed")}

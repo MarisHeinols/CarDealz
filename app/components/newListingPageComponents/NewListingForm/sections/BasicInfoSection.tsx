@@ -273,7 +273,7 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
             >
               {COUNTRIES.map((c) => (
                 <MenuItem key={c} value={c}>
-                  {c}
+                  {t(`common.countries.${c}`, c)}
                 </MenuItem>
               ))}
             </Select>

@@ -12,25 +12,27 @@ import { getUserProfile } from "./usersService";
  * @throws Error if validation fails
  */
 export async function createListing(
-  userId: string, 
+  userId: string,
   listing: CarListingDetailsJson
 ): Promise<string> {
   // 0. Verify business status (Force fresh check)
   const profile = await getUserProfile(userId, true);
-  if (!profile) throw new Error("User profile not found.");
-  
+  if (!profile) throw new Error("errors.profileNotFound");
+
   if (profile.role === "business") {
     const isApproved = profile.dealerVerified || profile.dealerVerificationStatus === "approved";
     if (!isApproved) {
-      throw new Error("Your business account is not yet approved by the administrator. Please wait for the verification email.");
+      throw new Error("errors.businessNotApproved");
     }
   }
 
   // Validate listing before submission
   const validation = validateListing(listing);
   if (!validation.isValid) {
-    const errorMessages = validation.errors.map(e => `${e.field}: ${e.message}`).join(", ");
-    throw new Error(`Listing validation failed: ${errorMessages}`);
+    throw new Error(JSON.stringify({ 
+      key: "errors.validationFailed", 
+      validationErrors: validation.errors 
+    }));
   }
 
   // Generate ID if not provided
@@ -42,6 +44,7 @@ export async function createListing(
     ...listing,
     id: listingId,
     sellerId: userId,
+    isSold: false,
     deleted: false,
     createdAt: serverTimestamp(),
     lastViewed: serverTimestamp(),
@@ -51,7 +54,7 @@ export async function createListing(
   await setDoc(listingRef, listingData);
 
   // Update user's listings array
-  const userRef = doc(db, "users", userId);
+  const userRef = doc(db, "privateUsers", userId);
   await updateDoc(userRef, { listings: arrayUnion(listingId) });
 
   return listingId;
@@ -83,8 +86,8 @@ export async function deleteListing(
   await setDoc(listingRef, { deleted: true }, { merge: true });
 
   // Remove from user's listings array
-  const userRef = doc(db, "users", userId);
-  await updateDoc(userRef, { 
+  const userRef = doc(db, "privateUsers", userId);
+  await updateDoc(userRef, {
     listings: arrayUnion(listingId) // Note: Firebase doesn't have arrayRemove for this use case
   });
 }
