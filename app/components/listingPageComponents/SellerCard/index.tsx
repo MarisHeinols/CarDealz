@@ -15,6 +15,7 @@ import {
   TextField,
   CircularProgress,
 } from "@mui/material";
+import ConfirmDialog from "../../shared/ConfirmDialog";
 import React from "react";
 import type { SellerInfo } from "~/types/types";
 import PhoneIcon from "@mui/icons-material/Phone";
@@ -55,6 +56,7 @@ const SellerCard = ({ seller, sellerId, listingId, compact }: Props) => {
 
   const [priceOpen, setPriceOpen] = useState(false);
   const [soldOpen, setSoldOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [price, setPrice] = useState<string>("");
   const [soldPrice, setSoldPrice] = useState<string>("");
 
@@ -112,18 +114,17 @@ const SellerCard = ({ seller, sellerId, listingId, compact }: Props) => {
     }
   };
 
-  const deleteListing = async () => {
+  const handleDeleteClick = () => {
     closeManage();
+    setDeleteOpen(true);
+  };
+
+  const submitDelete = async () => {
     if (!listingId) return;
-    const ok = window.confirm(
-      t("listing.deleteConfirm", {
-        defaultValue: "Delete this listing? This cannot be undone.",
-      }),
-    );
-    if (!ok) return;
     setBusy(true);
     try {
       await deleteListingFromDb(listingId);
+      setDeleteOpen(false);
       navigate("/admin");
     } finally {
       setBusy(false);
@@ -261,6 +262,17 @@ const SellerCard = ({ seller, sellerId, listingId, compact }: Props) => {
           </>
         )}
       </Stack>
+      <ConfirmDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={submitDelete}
+        title={t("listingControl.deleteListing")}
+        message={t("listing.deleteConfirm")}
+        confirmText={t("common.delete")}
+        cancelText={t("common.cancel")}
+        loading={busy}
+        severity="error"
+      />
     </Paper>
   );
 };

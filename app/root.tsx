@@ -13,17 +13,17 @@ import { Box, CircularProgress, Typography, Button } from "@mui/material";
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import "./i18n";
+import { store } from "./redux/store";
+import { Provider } from "react-redux";
+import { FirebaseAuthProvider } from "./provider/FirebaseAuthProvider";
+import { UserPreferencesProvider } from "~/context/UserPreferencesContext";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider } from "@mui/material/styles";
 import theme from "./mui/theme";
 import Header from "./components/shared/Header";
 import Footer from "./components/shared/Footer";
 import CookieBanner from "./components/shared/CookieBanner";
-import { store } from "./redux/store";
-import { Provider } from "react-redux";
-import { FirebaseAuthProvider } from "./provider/FirebaseAuthProvider";
-import { UserPreferencesProvider } from "./context/UserPreferencesContext";
+import i18n from "./i18n";
 import GlobalSnackbar from "./components/shared/GlobalSnackbar";
 import RegistrationGuard from "./components/shared/RegistrationGuard";
 import VerificationDialog from "./components/shared/VerificationDialog";
@@ -45,17 +45,18 @@ export const links: Route.LinksFunction = () => [
 function GlobalProviders({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={store}>
-      <ThemeProvider theme={theme}>
-        <UserPreferencesProvider>
-          <CssBaseline />
-          {children}
-        </UserPreferencesProvider>
-      </ThemeProvider>
+      <UserPreferencesProvider>
+        <FirebaseAuthProvider>
+          <ThemeProvider theme={theme}>
+            <CssBaseline />
+            {children}
+          </ThemeProvider>
+        </FirebaseAuthProvider>
+      </UserPreferencesProvider>
     </Provider>
   );
 }
 
-import i18n from "./i18n";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -136,29 +137,27 @@ export default function App() {
   };
 
   return (
-    <FirebaseAuthProvider>
-      <RegistrationGuard>
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            minHeight: "100vh",
-          }}
-        >
-          <Header />
-          <Box component="main" sx={{ flexGrow: 1 }}>
-            <Outlet />
-          </Box>
-          <Footer />
-          <CookieBanner />
-          <GlobalSnackbar />
-          <VerificationDialog
-            open={showRegistrationSuccess}
-            onClose={handleCloseSuccess}
-          />
+    <RegistrationGuard>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          minHeight: "100vh",
+        }}
+      >
+        <Header />
+        <Box component="main" sx={{ flexGrow: 1 }}>
+          <Outlet />
         </Box>
-      </RegistrationGuard>
-    </FirebaseAuthProvider>
+        <Footer />
+        <CookieBanner />
+        <GlobalSnackbar />
+        <VerificationDialog
+          open={showRegistrationSuccess}
+          onClose={handleCloseSuccess}
+        />
+      </Box>
+    </RegistrationGuard>
   );
 }
 

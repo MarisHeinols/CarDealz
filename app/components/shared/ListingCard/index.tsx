@@ -41,6 +41,7 @@ import { showNotification } from "~/redux/slices/uiSlice";
 import { useAppSelector } from "~/redux/hooks";
 import { useTheme } from "@mui/material/styles";
 import type { StoreTheme } from "~/redux/slices/storeSettingsSlice";
+import ConfirmDialog from "../ConfirmDialog";
 
 const conditionTierVariantMap = {
   new: "levelHigh",
@@ -83,6 +84,7 @@ const ListingCard = ({
   const [priceOpen, setPriceOpen] = useState(false);
   const [soldOpen, setSoldOpen] = useState(false);
   const [saleOpen, setSaleOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [price, setPrice] = useState<string>("");
   const [soldPrice, setSoldPrice] = useState<string>("");
   const [salePrice, setSalePrice] = useState<string>("");
@@ -123,9 +125,7 @@ const ListingCard = ({
 
   const confirmDelete = (e: React.MouseEvent) => {
     handleClose(e);
-    if (window.confirm(t("listingControl.confirmDelete"))) {
-      submitDelete();
-    }
+    setDeleteOpen(true);
   };
 
   const submitPrice = async () => {
@@ -155,6 +155,7 @@ const ListingCard = ({
       }
       invalidateCache(cacheKeyAllListings());
       dispatch(showNotification({ message: t("pricing.listingDeleted"), severity: "success" }));
+      setDeleteOpen(false);
       onRefresh?.();
     } catch (e) {
       dispatch(showNotification({ message: t("pricing.listingDeleteFailed"), severity: "error" }));
@@ -590,6 +591,18 @@ const ListingCard = ({
           </Dialog>
         </>
       )}
+
+      <ConfirmDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={submitDelete}
+        title={t("listingControl.deleteListing")}
+        message={t("listing.deleteConfirm")}
+        confirmText={t("common.delete")}
+        cancelText={t("common.cancel")}
+        loading={busy}
+        severity="error"
+      />
     </Card>
   );
 };

@@ -118,13 +118,13 @@ export const registerUser = async (
         cords,
       },
       theme: {
-        primary: "rgb(122, 0, 129)",
-        secondary: "#ffffff",
-        background: "#ffffff",
-        accent: "#4caf50",
-        heading: "#111827",
+        primary: "#ffffff",
+        secondary: "#f8fafc",
+        background: "#f1f5f9",
+        accent: "#2563eb",
+        heading: "#0f172a",
         isTextLight: false,
-        layout: "classic" as const,
+        layout: "modern" as const,
       },
       isEditMode: false,
     };
@@ -226,13 +226,13 @@ export const completeSocialRegistration = async (
         cords,
       },
       theme: {
-        primary: "rgb(122, 0, 129)",
-        secondary: "#ffffff",
-        background: "#ffffff",
-        accent: "#4caf50",
-        heading: "#111827",
+        primary: "#ffffff",
+        secondary: "#f8fafc",
+        background: "#f1f5f9",
+        accent: "#2563eb",
+        heading: "#0f172a",
         isTextLight: false,
-        layout: "classic" as const,
+        layout: "modern" as const,
       },
       isEditMode: false,
     };
@@ -335,19 +335,20 @@ export function needsPhoneVerification(user: User | null | undefined) {
   return false;
 }
 
-export function formatAuthError(err: any): string {
+export function formatAuthError(err: any, t?: (key: string) => string): string {
   const code = String(err?.code || "");
-  if (code === "auth/invalid-email") return "Invalid email address.";
-  if (code === "auth/user-disabled") return "This account has been disabled.";
-  if (code === "auth/user-not-found") return "No account found with this email.";
-  if (code === "auth/wrong-password") return "Incorrect password.";
-  if (code === "auth/invalid-credential") return "Incorrect email or password.";
-  if (code === "auth/email-already-in-use") return "An account with this email already exists.";
-  if (code === "auth/weak-password") return "Password is too weak (minimum 6 characters).";
-  if (code === "auth/popup-closed-by-user") return "Sign-in popup was closed.";
+  const tr = (key: string, fallback: string) => t ? t(`auth.firebaseErrors.${key}`) || fallback : fallback;
+  if (code === "auth/invalid-email") return tr("invalidEmail", "Invalid email address.");
+  if (code === "auth/user-disabled") return tr("userDisabled", "This account has been disabled.");
+  if (code === "auth/user-not-found") return tr("userNotFound", "No account found with this email.");
+  if (code === "auth/wrong-password") return tr("wrongPassword", "Incorrect password.");
+  if (code === "auth/invalid-credential") return tr("invalidCredential", "Incorrect email or password.");
+  if (code === "auth/email-already-in-use") return tr("emailAlreadyInUse", "An account with this email already exists.");
+  if (code === "auth/weak-password") return tr("weakPassword", "Password is too weak (minimum 6 characters).");
+  if (code === "auth/popup-closed-by-user") return tr("popupClosed", "Sign-in popup was closed.");
   if (code === "auth/account-exists-with-different-credential")
-    return "An account already exists with the same email but different sign-in method.";
+    return tr("accountExistsDifferentCredential", "An account already exists with the same email but different sign-in method.");
   if (code === "auth/too-many-requests")
-    return "Too many attempts. Please wait a bit and try again.";
-  return err?.message || "Authentication failed.";
+    return tr("tooManyRequests", "Too many attempts. Please wait a bit and try again.");
+  return err?.message || tr("genericError", "Authentication failed.");
 }

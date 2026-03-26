@@ -138,6 +138,19 @@ export const lt = {
       confirmRegisteredDealer: "Patvirtinu, kad esu registruotas pardavėjas.",
       registrationNumber: "Įmonės kodas / PVM kodas",
       website: "Įmonės svetainė (neprivaloma)",
+      firebaseErrors: {
+        invalidEmail: "Neteisingas el. pašto adresas.",
+        userDisabled: "Ši paskyra yra išjungta.",
+        userNotFound: "Paskyra su šiuo el. paštu nerasta.",
+        wrongPassword: "Neteisingas slaptažodis.",
+        invalidCredential: "Neteisingas el. paštas arba slaptažodis.",
+        emailAlreadyInUse: "Paskyra su šiuo el. paštu jau egzistuoja.",
+        weakPassword: "Slaptažodis per silpnas (mažiausiai 6 simboliai).",
+        popupClosed: "Prisijungimo langas buvo uždarytas.",
+        accountExistsDifferentCredential: "Paskyra su šiuo el. paštu jau egzistuoja, bet su kitu prisijungimo metodu.",
+        tooManyRequests: "Per daug bandymų. Palaukite ir bandykite vėliau.",
+        genericError: "Autentifikacija nepavyko.",
+      },
     },
     pricing: {
       title: "Kainos",
@@ -403,6 +416,8 @@ export const lt = {
       color_Other: "Kita",
       views: "{{count}} peržiūros",
       carNotFound: "Automobilis nerastas",
+      listingNotFound: "Skelbimas neegzistuoja",
+      backToHome: "Spustelėkite čia, kad grįžtumėte į pagrindinį puslapį",
     },
     about: {
       buyer: {

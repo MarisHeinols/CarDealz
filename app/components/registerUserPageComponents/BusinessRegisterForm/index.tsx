@@ -253,7 +253,7 @@ const BusinessRegisterForm = ({
       onRegisterSuccess();
     } catch (err: any) {
       dispatch(
-        showNotification({ message: formatAuthError(err), severity: "error" }),
+        showNotification({ message: formatAuthError(err, t), severity: "error" }),
       );
     } finally {
       setIsLoading(false);

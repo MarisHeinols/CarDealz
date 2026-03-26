@@ -106,7 +106,7 @@ const LoginPage = () => {
       navigate("/");
     } catch (err: any) {
       dispatch(
-        showNotification({ message: formatAuthError(err), severity: "error" }),
+        showNotification({ message: formatAuthError(err, t), severity: "error" }),
       );
     } finally {
       setIsLoading(false);
@@ -147,7 +147,7 @@ const LoginPage = () => {
       navigate("/");
     } catch (err: any) {
       dispatch(
-        showNotification({ message: formatAuthError(err), severity: "error" }),
+        showNotification({ message: formatAuthError(err, t), severity: "error" }),
       );
     } finally {
       setIsLoading(false);

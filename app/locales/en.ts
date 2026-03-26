@@ -34,6 +34,36 @@ export const en = {
       validationFailed: "Listing validation failed: {{errors}}",
       createFailed: "Failed to create listing",
     },
+    admin: {
+      title: "Super Admin Panel",
+      tabs: {
+        pending: "Pending Approvals",
+        approved: "Approved Dealers",
+        rejected: "Rejected Applications",
+      },
+      dialogs: {
+        deleteConfirm: "Are you sure you want to PERMANENTLY delete this profile? This will ERASE all their listings, leads, and account data forever. THIS CANNOT BE UNDONE.",
+        declineTitle: "Decline Application",
+        declineDesc: "Please provide a reason why this dealer was declined. It will be sent to the dealer by email.",
+        declineLabel: "Decline reason",
+      },
+      messages: {
+        deletedSuccess: "Profile deleted permanently.",
+      },
+      table: {
+        businessName: "Business Name",
+        owner: "Owner",
+        contact: "Contact",
+        location: "Location",
+        billing: "Billing",
+        actions: "Actions",
+        noBusinesses: "No businesses found.",
+        approve: "Approve",
+        decline: "Decline",
+        delete: "Delete Profile",
+        regNo: "Reg. no.:",
+      },
+    },
     fields: {
       make: "Make",
       model: "Model",
@@ -147,6 +177,7 @@ export const en = {
       fieldsRequired: "First name and surname are required.",
       businessNameRequired: "Business name is required.",
       ownerFieldsRequired: "Owner first name and surname are required.",
+      invalidPhone: "Phone number must start with '+' and have at least 8 characters.",
       profileCreated: "Profile created.",
       accountCreated: "Account created. Please check your email to verify it.",
       checkEmailTitle: "Check Your Email",
@@ -157,6 +188,19 @@ export const en = {
       registrationSuccessDesc: "Please check your inbox to verify your email. Our administrators will review your account and grant full access within the next 24 hours. In the meantime, feel free to explore the platform.",
       onlyVerifiedDealersNote: "Please note: Only verified dealers can register and publish listings on this platform.",
       confirmRegisteredDealer: "I confirm that I am a registered dealer.",
+      firebaseErrors: {
+        invalidEmail: "Invalid email address.",
+        userDisabled: "This account has been disabled.",
+        userNotFound: "No account found with this email.",
+        wrongPassword: "Incorrect password.",
+        invalidCredential: "Incorrect email or password.",
+        emailAlreadyInUse: "An account with this email already exists.",
+        weakPassword: "Password is too weak (minimum 6 characters).",
+        popupClosed: "Sign-in popup was closed.",
+        accountExistsDifferentCredential: "An account already exists with the same email but different sign-in method.",
+        tooManyRequests: "Too many attempts. Please wait a bit and try again.",
+        genericError: "Authentication failed.",
+      },
     },
     pricing: {
       title: "Pricing",
@@ -427,6 +471,8 @@ export const en = {
       color_Other: "Other",
       views: "{{count}} views",
       carNotFound: "This car doesn't exist anymore.",
+      listingNotFound: "Listing does not exist",
+      backToHome: "Click here to go to home page",
     },
     about: {
       buyer: {

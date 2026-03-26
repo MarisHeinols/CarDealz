@@ -43,6 +43,8 @@ import { useNavigate } from "react-router";
 import { useAppDispatch } from "~/redux/hooks";
 import { showNotification } from "~/redux/slices/uiSlice";
 import { invalidateCache, cacheKeyAllListings, cacheKeyOwnerListings } from "~/services/listingsCache";
+import ConfirmDialog from "~/components/shared/ConfirmDialog";
+import ListingNotFound from "~/components/listingPageComponents/ListingNotFound";
 
 type Props = {
   id: string;
@@ -62,17 +64,9 @@ const ListingPage = ({ id }: Props) => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!loading && !car) {
-      dispatch(
-        showNotification({
-          message: t("carValues.carNotFound"),
-          severity: "error",
-        }),
-      );
-      navigate("/");
-    }
-  }, [loading, car, navigate, dispatch, t]);
+  if (!loading && !car) {
+    return <ListingNotFound />;
+  }
 
   const isOwner = Boolean(user?.uid && car?.sellerId && user.uid === car.sellerId);
 
@@ -81,6 +75,7 @@ const ListingPage = ({ id }: Props) => {
   const [priceOpen, setPriceOpen] = useState(false);
   const [soldOpen, setSoldOpen] = useState(false);
   const [saleOpen, setSaleOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [price, setPrice] = useState<string>("");
   const [soldPrice, setSoldPrice] = useState<string>("");
   const [salePrice, setSalePrice] = useState<string>("");
@@ -152,19 +147,19 @@ const ListingPage = ({ id }: Props) => {
     }
   };
 
-  const deleteListing = async () => {
+  const handleDeleteClick = () => {
     closeManage();
-    const ok = window.confirm(
-      t("listing.deleteConfirm", {
-        defaultValue: "Delete this listing? This cannot be undone.",
-      }),
-    );
-    if (!ok) return;
+    setDeleteOpen(true);
+  };
+
+  const submitDelete = async () => {
     setBusy(true);
     try {
       await deleteListingFromDb(id);
       invalidateCache(cacheKeyAllListings());
       if (car?.sellerId) invalidateCache(cacheKeyOwnerListings(car.sellerId));
+      setDeleteOpen(false);
+      dispatch(showNotification({ message: t("pricing.listingDeleted"), severity: "success" }));
       navigate("/admin");
     } finally {
       setBusy(false);
@@ -396,7 +391,7 @@ const ListingPage = ({ id }: Props) => {
                           {t("listingControl.markAsSold")}
                         </MenuItem>
                       )}
-                      <MenuItem onClick={deleteListing} disabled={busy} sx={{ color: "error.main" }}>
+                      <MenuItem onClick={handleDeleteClick} disabled={busy} sx={{ color: "error.main" }}>
                         <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
                         {t("listingControl.deleteListing")}
                       </MenuItem>
@@ -589,6 +584,18 @@ const ListingPage = ({ id }: Props) => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <ConfirmDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={submitDelete}
+        title={t("listingControl.deleteListing")}
+        message={t("listing.deleteConfirm")}
+        confirmText={t("common.delete")}
+        cancelText={t("common.cancel")}
+        loading={busy}
+        severity="error"
+      />
     </AppContainer>
   );
 };

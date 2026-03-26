@@ -138,6 +138,19 @@ export const et = {
       confirmRegisteredDealer: "Kinnitan, et olen registreeritud edasimüüja.",
       registrationNumber: "Registrinumber / KMKR number",
       website: "Ettevõtte veebisait (valikuline)",
+      firebaseErrors: {
+        invalidEmail: "Vigane e-posti aadress.",
+        userDisabled: "See konto on keelatud.",
+        userNotFound: "Selle e-postiga kontot ei leitud.",
+        wrongPassword: "Vale parool.",
+        invalidCredential: "Vale e-post või parool.",
+        emailAlreadyInUse: "Selle e-postiga konto on juba olemas.",
+        weakPassword: "Parool on liiga nõrk (vähemalt 6 tähemärki).",
+        popupClosed: "Sisselogimise aken suleti.",
+        accountExistsDifferentCredential: "Selle e-postiga konto on juba olemas, kuid erineva sisselogimismeetodiga.",
+        tooManyRequests: "Liiga palju katseid. Palun oota ja proovi uuesti.",
+        genericError: "Autentimine ebaõnnestus.",
+      },
     },
     pricing: {
       title: "Hinnakiri",
@@ -403,6 +416,8 @@ export const et = {
       color_Other: "Muu",
       views: "{{count}} vaatamist",
       carNotFound: "Seda autot ei leitud.",
+      listingNotFound: "Kuulutust ei eksisteeri",
+      backToHome: "Vajuta siia, et minna avalehele",
     },
     about: {
       buyer: {

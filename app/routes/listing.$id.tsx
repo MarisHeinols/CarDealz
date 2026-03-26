@@ -1,6 +1,7 @@
 import ListingPage from "~/pages/ListingPage";
 import type { Route } from "./+types/listing.$id";
-import { useParams } from "react-router";
+import { useParams, isRouteErrorResponse } from "react-router";
+import ListingNotFound from "~/components/listingPageComponents/ListingNotFound";
 
 export async function loader({ params }: Route.LoaderArgs) {
   const { id } = params;
@@ -33,4 +34,14 @@ export default function ListingRoute() {
   if (!id) return <div>Not found</div>;
 
   return <ListingPage id={id} />;
+}
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  if (isRouteErrorResponse(error) && error.status === 404) {
+    return <ListingNotFound />;
+  }
+  
+  // For other errors, we can fall back to the root error boundary
+  // or show a generic error here.
+  throw error;
 }

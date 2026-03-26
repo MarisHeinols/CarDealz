@@ -403,6 +403,8 @@ export const de = {
       color_Other: "Sonstige",
       views: "{{count}} Aufrufe",
       carNotFound: "Zusatztext: Auto existiert nicht mehr.",
+      listingNotFound: "Inserat existiert nicht",
+      backToHome: "Klicken Sie hier, um zur Startseite zu gelangen",
     },
     about: {
       buyer: {

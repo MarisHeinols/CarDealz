@@ -138,6 +138,19 @@ export const es = {
       confirmRegisteredDealer: "Confirmo que soy un distribuidor registrado.",
       registrationNumber: "Número de registro / CIF/NIF",
       website: "Sitio web de la empresa (opcional)",
+      firebaseErrors: {
+        invalidEmail: "Dirección de correo inválida.",
+        userDisabled: "Esta cuenta ha sido deshabilitada.",
+        userNotFound: "No se encontró ninguna cuenta con este correo.",
+        wrongPassword: "Contraseña incorrecta.",
+        invalidCredential: "Correo o contraseña incorrectos.",
+        emailAlreadyInUse: "Ya existe una cuenta con este correo.",
+        weakPassword: "La contraseña es demasiado débil (mínimo 6 caracteres).",
+        popupClosed: "La ventana de inicio de sesión fue cerrada.",
+        accountExistsDifferentCredential: "Ya existe una cuenta con este correo pero con un método de inicio de sesión diferente.",
+        tooManyRequests: "Demasiados intentos. Por favor espere e inténtelo de nuevo.",
+        genericError: "La autenticación falló.",
+      },
     },
     pricing: {
       title: "Precios",
@@ -403,6 +416,8 @@ export const es = {
       color_Other: "Otro",
       views: "{{count}} visitas",
       carNotFound: "No existe el coche",
+      listingNotFound: "El anuncio no existe",
+      backToHome: "Haga clic aquí para ir a la página de inicio",
     },
     about: {
       buyer: {

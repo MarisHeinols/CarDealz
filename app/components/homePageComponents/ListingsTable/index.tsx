@@ -29,6 +29,7 @@ import { markListingAsSold, markAsSale, stopSale } from "~/services/listingsServ
 import { useAppDispatch } from "~/redux/hooks";
 import { showNotification } from "~/redux/slices/uiSlice";
 import { invalidateCache, cacheKeyOwnerListings, cacheKeyAllListings } from "~/services/listingsCache";
+import ConfirmDialog from "../../shared/ConfirmDialog";
 
 const ListingsTable = ({
   rows,
@@ -54,6 +55,7 @@ const ListingsTable = ({
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const sortLabel = (key: SortKey, label: string) => (
     <TableSortLabel
       active={sortKey === key}
@@ -340,8 +342,7 @@ const ListingsTable = ({
             const id = activeId;
             closeMenu(e);
             if (!id || !onDelete) return;
-            const confirmed = window.confirm(t("table.confirmDeleteListing"));
-            if (confirmed) onDelete(id);
+            setDeleteOpen(true);
           }}
           sx={{ color: "error.main" }}
         >
@@ -349,6 +350,22 @@ const ListingsTable = ({
           {t("table.deleteListing")}
         </MenuItem>
       </Menu>
+
+      <ConfirmDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={() => {
+          if (activeId && onDelete) {
+            onDelete(activeId);
+            setDeleteOpen(false);
+          }
+        }}
+        title={t("table.deleteListing")}
+        message={t("listing.deleteConfirm")}
+        confirmText={t("common.delete")}
+        cancelText={t("common.cancel")}
+        severity="error"
+      />
     </TableContainer>
   );
 };

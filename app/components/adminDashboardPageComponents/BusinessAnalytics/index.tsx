@@ -17,7 +17,11 @@ export default function BusinessAnalytics() {
   const [leads, setLeads] = useState<LeadDoc[]>([]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
     Promise.all([
       getListingsByOwner(user.uid, { includeSold: true }),
       getLeadsByDealer(user.uid)
@@ -26,18 +30,13 @@ export default function BusinessAnalytics() {
         setListings(dataLists);
         setLeads(dataLeads);
       })
+      .catch(() => {
+        // Keep empty arrays on error
+      })
       .finally(() => {
         setLoading(false);
       });
   }, [user]);
-
-  if (loading) {
-    return (
-      <Box p={4} display="flex" justifyContent="center">
-        <CircularProgress />
-      </Box>
-    );
-  }
 
   // Active listings vs Sold listings
   const { activeListings, soldListings } = useMemo(() => ({
@@ -229,6 +228,14 @@ export default function BusinessAnalytics() {
       </Typography>
     </Box>
   );
+
+  if (loading) {
+    return (
+      <Box p={4} display="flex" justifyContent="center">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box>

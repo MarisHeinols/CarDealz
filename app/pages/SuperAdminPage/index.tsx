@@ -29,6 +29,7 @@ import { getAllBusinessUsers } from "~/services/businessesService";
 import type { PrivateUserProfileDoc } from "~/services/usersService";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "~/firebase/functions";
+import ConfirmDialog from "~/components/shared/ConfirmDialog";
 
 import { useAppDispatch } from "~/redux/hooks";
 import { BILLING_ENABLED } from "~/config/billing";
@@ -44,6 +45,8 @@ export default function SuperAdminPage() {
     useState<PrivateUserProfileDoc | null>(null);
   const [declineReason, setDeclineReason] = useState("");
   const [openDecline, setOpenDecline] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteUid, setDeleteUid] = useState<string | null>(null);
 
   useEffect(() => {
     loadBusinesses();
@@ -81,14 +84,14 @@ export default function SuperAdminPage() {
     }
   };
 
-  const handleDeleteAccount = async (uid: string) => {
-    const ok = window.confirm(
-      t("admin.dialogs.deleteConfirm", {
-        defaultValue:
-          "Are you sure you want to PERMANENTLY delete this profile? This will ERASE all their listings, leads, and account data forever. THIS CANNOT BE UNDONE.",
-      }),
-    );
-    if (!ok) return;
+  const handleDeleteClick = (uid: string) => {
+    setDeleteUid(uid);
+    setDeleteOpen(true);
+  };
+
+  const submitDelete = async () => {
+    if (!deleteUid) return;
+    const uid = deleteUid;
 
     setBusy(true);
     try {
@@ -97,6 +100,8 @@ export default function SuperAdminPage() {
       const deleteUser = httpsCallable(functions, "deleteUserByAdmin");
       await deleteUser({ uid });
       await loadBusinesses();
+      setDeleteOpen(false);
+      setDeleteUid(null);
       const { showNotification } = await import("~/redux/slices/uiSlice");
       dispatch(
         showNotification({
@@ -284,7 +289,7 @@ export default function SuperAdminPage() {
                       variant="text"
                       color="error"
                       disabled={busy}
-                      onClick={() => handleDeleteAccount(b.uid)}
+                      onClick={() => handleDeleteClick(b.uid)}
                     >
                       {t("admin.table.delete", {
                         defaultValue: "Delete Profile",
@@ -343,6 +348,18 @@ export default function SuperAdminPage() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <ConfirmDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={submitDelete}
+        title={t("admin.table.delete")}
+        message={t("admin.dialogs.deleteConfirm")}
+        confirmText={t("common.delete")}
+        cancelText={t("common.cancel")}
+        loading={busy}
+        severity="error"
+      />
     </Container>
   );
 }

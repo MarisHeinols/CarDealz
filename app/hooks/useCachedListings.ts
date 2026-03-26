@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { CarListingSummary } from "~/types/types";
 import {
   cacheKeyAllListings,
@@ -22,7 +22,8 @@ const DEFAULT_TTL_MS = 60 * 1000; // 1 minute: keeps UI fast but stays reasonabl
 
 export function useAllListingsCached(ttlMs: number = DEFAULT_TTL_MS): Result {
   const cacheKey = useMemo(() => cacheKeyAllListings(), []);
-  return useCachedListings(cacheKey, () => getAllListings(), ttlMs);
+  const fetcher = useCallback(() => getAllListings(), []);
+  return useCachedListings(cacheKey, fetcher, ttlMs);
 }
 
 export function useOwnerListingsCached(
@@ -33,11 +34,11 @@ export function useOwnerListingsCached(
     () => (userId ? cacheKeyOwnerListings(userId) : null),
     [userId]
   );
-  return useCachedListings(
-    cacheKey,
+  const fetcher = useCallback(
     () => (userId ? getListingsByOwner(userId!) : Promise.resolve([])),
-    ttlMs
+    [userId]
   );
+  return useCachedListings(cacheKey, fetcher, ttlMs);
 }
 
 function useCachedListings(
@@ -101,7 +102,7 @@ function useCachedListings(
     return () => {
       cancelled = true;
     };
-  }, [cacheKey, ttlMs, fetcher]);
+  }, [cacheKey, ttlMs]); // fetcher removed from deps because it's either stable or we only care about cacheKey changes
 
   const refresh = async () => {
     if (!cacheKey) return;

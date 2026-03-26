@@ -55,6 +55,9 @@ const Listings = () => {
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [sellerFilter]);
 
+  // DISBLED AUTO-FILTER BY LOCATION: It causes empty pages when combined with server-side pagination.
+  // We keep the logic but don't execute it to allow users to manually choose.
+  /*
   React.useEffect(() => {
     if (filtersTouched) return;
     const loc = prefs.location;
@@ -70,6 +73,7 @@ const Listings = () => {
       return { ...prev, country: nextCountry, city: nextCity };
     });
   }, [prefs.location, filtersTouched]);
+  */
 
   // If ?seller= is set, filter listings to that seller only
   const displayedListings = sellerFilter
