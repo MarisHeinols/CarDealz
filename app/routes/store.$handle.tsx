@@ -4,6 +4,9 @@ import type { Route } from "./+types/store.$handle";
 
 export async function loader({ params }: Route.LoaderArgs) {
   const { handle } = params;
+  if (!handle || typeof handle !== "string" || !handle.trim()) {
+    return { storeTitle: "Store" };
+  }
   const { resolveStoreUidByHandle } =
     await import("~/services/storeHandleService");
   const { loadStoreSettingsFromDb } =
@@ -16,7 +19,8 @@ export async function loader({ params }: Route.LoaderArgs) {
     const settings = await loadStoreSettingsFromDb(uid);
     const storeName = settings?.name || handle;
     return { storeTitle: storeName };
-  } catch {
+  } catch (e) {
+    console.error("Store loader failed", { handle, error: e });
     return { storeTitle: handle };
   }
 }

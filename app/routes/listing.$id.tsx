@@ -5,8 +5,17 @@ import ListingNotFound from "~/components/listingPageComponents/ListingNotFound"
 
 export async function loader({ params }: Route.LoaderArgs) {
   const { id } = params;
+  if (!id || typeof id !== "string" || !id.trim()) {
+    throw new Response("Not Found", { status: 404 });
+  }
   const { getListingDetails } = await import("~/services/listingsService");
-  const listing = await getListingDetails(id);
+  let listing = null;
+  try {
+    listing = await getListingDetails(id);
+  } catch (e) {
+    console.error("Listing loader failed", { id, error: e });
+    throw new Response("Failed to load listing", { status: 500 });
+  }
   if (!listing) {
     throw new Response("Not Found", { status: 404 });
   }
@@ -17,9 +26,17 @@ export function meta({ data, params }: Route.MetaArgs) {
   if (!data?.listing) return [{ title: "Listing Not Found | BalticAuto" }];
   const { year, make, model, price, location, description } = data.listing;
   const safePrice = typeof price === "number" ? price.toLocaleString() : "N/A";
-  const title = `${year || ""} ${make || ""} ${model || ""} for sale in ${location || ""} - €${safePrice} | BalticAuto`.replace(/\s+/g, ' ').trim();
-  const desc = description?.slice(0, 160) || `Check out this ${year || "car"} ${make || ""} ${model || ""} on BalticAuto.`.replace(/\s+/g, ' ');
-  
+  const title =
+    `${year || ""} ${make || ""} ${model || ""} for sale in ${location || ""} - €${safePrice} | BalticAuto`
+      .replace(/\s+/g, " ")
+      .trim();
+  const desc =
+    description?.slice(0, 160) ||
+    `Check out this ${year || "car"} ${make || ""} ${model || ""} on BalticAuto.`.replace(
+      /\s+/g,
+      " ",
+    );
+
   return [
     { title },
     { name: "description", content: desc },
@@ -41,7 +58,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   if (isRouteErrorResponse(error) && error.status === 404) {
     return <ListingNotFound />;
   }
-  
+
   // For other errors, we can fall back to the root error boundary
   // or show a generic error here.
   throw error;

@@ -176,8 +176,8 @@ const ListingPage = ({ id }: Props) => {
                 images={
                   Array.isArray(car.images)
                     ? car.images.map(
-                        (img: { url: any; thumbnailUrl?: any }) => img.url,
-                      )
+                      (img: { url: any; thumbnailUrl?: any }) => img.url,
+                    )
                     : []
                 }
               />
@@ -268,11 +268,11 @@ const ListingPage = ({ id }: Props) => {
                       mutate((prev) =>
                         prev
                           ? {
-                              ...prev,
-                              price: p,
-                              isOnSale: false,
-                              salePrice: null,
-                            }
+                            ...prev,
+                            price: p,
+                            isOnSale: false,
+                            salePrice: null,
+                          }
                           : prev,
                       )
                     }
@@ -280,12 +280,12 @@ const ListingPage = ({ id }: Props) => {
                       mutate((prev) =>
                         prev
                           ? {
-                              ...prev,
-                              isSold: true,
-                              soldPrice: sp,
-                              isOnSale: false,
-                              salePrice: null,
-                            }
+                            ...prev,
+                            isSold: true,
+                            soldPrice: sp,
+                            isOnSale: false,
+                            salePrice: null,
+                          }
                           : prev,
                       )
                     }
@@ -328,8 +328,8 @@ const ListingPage = ({ id }: Props) => {
                 label={
                   car.conditionTier
                     ? t(`carValues.condition_${car.conditionTier}`, {
-                        defaultValue: car.conditionTier,
-                      })
+                      defaultValue: car.conditionTier,
+                    })
                     : t("details.na")
                 }
                 size="small"
@@ -337,7 +337,7 @@ const ListingPage = ({ id }: Props) => {
                   car.conditionTier === "new"
                     ? "levelHigh"
                     : car.conditionTier === "slightly_used" ||
-                        car.conditionTier === "first_payment"
+                      car.conditionTier === "first_payment"
                       ? "levelMedium"
                       : "levelLow"
                 }

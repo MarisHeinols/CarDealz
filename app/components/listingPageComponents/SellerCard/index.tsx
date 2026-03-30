@@ -28,6 +28,7 @@ import { useState } from "react";
 import ContactDealerDialog from "./ContactDealerDialog";
 import { useAuth } from "~/hooks/userStore/useAuth";
 import { getStoreHandleForUid } from "~/services/storeHandleService";
+import { loadStoreSettingsFromDb } from "~/services/storeSettingsService";
 import {
   deleteListingFromDb,
   markListingAsSold,
@@ -48,6 +49,8 @@ const SellerCard = ({ seller, sellerId, listingId, compact }: Props) => {
   const { user } = useAuth();
   const isOwner = Boolean(user?.uid && sellerId && user.uid === sellerId);
 
+  const [businessEmail, setBusinessEmail] = useState<string | null>(null);
+
   const [resolvingStore, setResolvingStore] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -60,6 +63,28 @@ const SellerCard = ({ seller, sellerId, listingId, compact }: Props) => {
   const [price, setPrice] = useState<string>("");
   const [soldPrice, setSoldPrice] = useState<string>("");
 
+  React.useEffect(() => {
+    let cancelled = false;
+    setBusinessEmail(null);
+
+    if (!sellerId || !seller?.isDealer) return;
+
+    loadStoreSettingsFromDb(sellerId)
+      .then((settings) => {
+        const email = (settings as any)?.contact?.email;
+        if (!cancelled) {
+          setBusinessEmail(
+            typeof email === "string" && email.trim() ? email.trim() : null,
+          );
+        }
+      })
+      .catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sellerId, seller?.isDealer]);
+
   const closeManage = () => setManageAnchor(null);
 
   const visitStore = async () => {
@@ -67,7 +92,11 @@ const SellerCard = ({ seller, sellerId, listingId, compact }: Props) => {
     setResolvingStore(true);
     try {
       const handle = await getStoreHandleForUid(sellerId);
-      navigate(`/store/${handle || sellerId}`);
+      const target = (handle || sellerId).trim();
+      navigate(`/store/${encodeURIComponent(target)}`);
+    } catch (e) {
+      console.error("Failed to resolve store handle", { sellerId, error: e });
+      navigate(`/store/${encodeURIComponent(sellerId)}`);
     } finally {
       setResolvingStore(false);
     }
@@ -133,6 +162,8 @@ const SellerCard = ({ seller, sellerId, listingId, compact }: Props) => {
 
   if (!seller) return null;
 
+  const displayEmail = businessEmail || seller.email;
+
   return (
     <Paper
       elevation={compact ? 0 : 1}
@@ -174,11 +205,11 @@ const SellerCard = ({ seller, sellerId, listingId, compact }: Props) => {
           </Stack>
         )}
 
-        {seller.email && (
+        {displayEmail && (
           <Stack direction="row" spacing={1} alignItems="center">
             <EmailIcon sx={{ fontSize: 16 }} color="action" />
             <Typography variant={compact ? "body2" : "body1"}>
-              {seller.email}
+              {displayEmail}
             </Typography>
           </Stack>
         )}

@@ -268,7 +268,19 @@ export default function StorePage({ handle }: { handle: string }) {
           getUserProfile(uid),
         ]);
         if (cancelled) return;
-        setProfile(userProfile);
+        if (!userProfile) {
+          // Some deployments/users may have storeSettings saved even if the public profile doc is missing.
+          // In that case, treat this as a published business storefront with a minimal profile.
+          if (settings) {
+            setProfile({ uid, role: "business", status: "active" });
+          } else {
+            setNotFound(true);
+            setLoadingStore(false);
+            return;
+          }
+        } else {
+          setProfile(userProfile);
+        }
 
         // Handle disabled accounts
         const isOwner = Boolean(uid && viewerUid === uid);
@@ -278,17 +290,9 @@ export default function StorePage({ handle }: { handle: string }) {
           return;
         }
 
-        if (userProfile) {
-          if (!userProfile) {
-            setNotFound(true);
-            setLoadingStore(false);
-            return;
-          }
-
-          // Businesses get a full storefront; individuals get a simple profile page.
-          if (settings) setStorefront(settings);
-          setLoadingStore(false);
-        }
+        // Businesses get a full storefront; individuals get a simple profile page.
+        if (settings) setStorefront(settings);
+        setLoadingStore(false);
       })
       .catch((e) => {
         console.error(e);
@@ -526,7 +530,6 @@ export default function StorePage({ handle }: { handle: string }) {
               >
                 {t("store.inventory")}
               </Typography>
-
 
               <StoreListingsGrid
                 listings={table.rows}

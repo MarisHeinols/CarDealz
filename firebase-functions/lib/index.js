@@ -542,9 +542,6 @@ exports.geminiEstimateMarketValue = (0, https_1.onCall)({
     invoker: "public",
     secrets: [geminiApiKey],
 }, async (request) => {
-    const uid = request.auth?.uid;
-    if (!uid)
-        throw new https_1.HttpsError("unauthenticated", "Login required");
     const listing = request.data?.listing || {};
     const make = String(listing?.make || "");
     const model = String(listing?.model || "");

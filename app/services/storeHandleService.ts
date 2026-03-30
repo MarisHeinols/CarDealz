@@ -8,22 +8,25 @@ export async function resolveStoreUidByHandle(handleOrUid: string): Promise<stri
   const h = (handleOrUid || "").trim();
   if (!h) return null;
 
+  const normalized = h.toLowerCase();
+
   // Backwards compatibility: if someone passes a UID, we can just use it.
   // Firebase Auth UIDs are typically 28+ chars; this is a heuristic.
-  if (h.length >= 20 && !h.includes("/")) {
+  // IMPORTANT: store handles can also be long. Only treat as UID when it's alphanumeric-only.
+  if (/^[A-Za-z0-9]{20,}$/.test(h)) {
     return h;
   }
 
-  const cached = getAnyCachedValue<string>(cacheKeyStoreUidByHandle(h));
+  const cached = getAnyCachedValue<string>(cacheKeyStoreUidByHandle(normalized));
   if (cached) return cached;
 
   try {
-    const slugRef = doc(db, "businessNames", h.toLowerCase());
+    const slugRef = doc(db, "businessNames", normalized);
     const slugSnap = await getDoc(slugRef);
     if (slugSnap.exists()) {
       const uid = slugSnap.data()?.uid;
       if (uid) {
-        setCachedValue(cacheKeyStoreUidByHandle(h), uid);
+        setCachedValue(cacheKeyStoreUidByHandle(normalized), uid);
         return uid;
       }
     }
@@ -34,12 +37,19 @@ export async function resolveStoreUidByHandle(handleOrUid: string): Promise<stri
   // Fallback (for older accounts that might not have businessNames entry)
   // This might fail if rules are tightened, but it's a safety net.
   const usersRef = collection(db, PUBLIC_USERS_COLLECTION);
-  const q = query(usersRef, where("storeHandle", "==", h));
-  const snap = await getDocs(q);
-  const first = snap.docs[0];
-  if (!first) return null;
-  setCachedValue(cacheKeyStoreUidByHandle(h), first.id);
-  return first.id;
+
+  // Firestore string equality is case-sensitive. Try both the raw and normalized handle.
+  const handlesToTry = normalized === h ? [h] : [h, normalized];
+  for (const candidate of handlesToTry) {
+    const q = query(usersRef, where("storeHandle", "==", candidate));
+    const snap = await getDocs(q);
+    const first = snap.docs[0];
+    if (first) {
+      setCachedValue(cacheKeyStoreUidByHandle(normalized), first.id);
+      return first.id;
+    }
+  }
+  return null;
 }
 
 export async function getStoreHandleForUid(uid: string): Promise<string | null> {

@@ -229,6 +229,9 @@ export async function updateListingFields(
 }
 
 export async function getListingDetails(listingId: string): Promise<any | null> {
+  if (!listingId || typeof listingId !== "string" || !listingId.trim()) {
+    return null;
+  }
   const listingRef = doc(db, "listings", listingId);
   const snapshot = await getDoc(listingRef);
   if (snapshot.exists() && !snapshot.data().deleted) {
