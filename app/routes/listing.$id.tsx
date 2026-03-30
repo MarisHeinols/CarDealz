@@ -3,7 +3,7 @@ import type { Route } from "./+types/listing.$id";
 import { useParams, isRouteErrorResponse } from "react-router";
 import ListingNotFound from "~/components/listingPageComponents/ListingNotFound";
 
-export async function loader({ params }: Route.LoaderArgs) {
+export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { id } = params;
   if (!id || typeof id !== "string" || !id.trim()) {
     throw new Response("Not Found", { status: 404 });
@@ -23,7 +23,20 @@ export async function loader({ params }: Route.LoaderArgs) {
 }
 
 export function meta({ data, params }: Route.MetaArgs) {
-  if (!data?.listing) return [{ title: "Listing Not Found | BalticAuto" }];
+  // With clientLoader, data may not be available on initial SSR
+  // Return default meta and let the client update it after loading
+  if (!data?.listing) {
+    const id = params.id;
+    return [
+      {
+        title: id
+          ? `Car Listing | BalticAuto`
+          : "Listing Not Found | BalticAuto",
+      },
+      { name: "description", content: "View car details on BalticAuto" },
+    ];
+  }
+
   const { year, make, model, price, location, description } = data.listing;
   const safePrice = typeof price === "number" ? price.toLocaleString() : "N/A";
   const title =
