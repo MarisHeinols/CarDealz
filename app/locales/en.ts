@@ -22,6 +22,7 @@ export const en = {
       save_error: "Failed to save settings.",
       saving: "Saving...",
       useMyLocation: "Use my location",
+      copiedToClipboard: "Copied to clipboard",
       countries: {
         Latvia: "Latvia",
         Estonia: "Estonia",

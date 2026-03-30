@@ -17,6 +17,7 @@ export const lv = {
       confirm: "Apstiprināt",
       confirm_action: "Vai esat pārliecināti?",
       useMyLocation: "Izmantot manu atrašanās vietu",
+      copiedToClipboard: "Nokopēts starpliktuvē",
       countries: {
         Latvia: "Latvija",
         Estonia: "Igaunija",

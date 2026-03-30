@@ -14,6 +14,7 @@ export const lt = {
       results: "rezultatai",
       unit_km: "km",
       useMyLocation: "Naudoti mano vietą",
+      copiedToClipboard: "Nukopijuota į iškarpinę",
       countries: {
         Latvia: "Latvija",
         Estonia: "Estija",

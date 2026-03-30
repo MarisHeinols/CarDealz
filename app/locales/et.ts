@@ -14,6 +14,7 @@ export const et = {
       results: "tulemust",
       unit_km: "km",
       useMyLocation: "Kasuta minu asukohta",
+      copiedToClipboard: "Kopeeritud lõikelauale",
       countries: {
         Latvia: "Läti",
         Estonia: "Eesti",
