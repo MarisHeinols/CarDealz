@@ -56,6 +56,7 @@ const ListingPage = ({ id }: Props) => {
     listing: car,
     loading,
     refreshing,
+    mutate,
   } = useCachedListingDetails<any>(id);
   const [marketRefreshDoneForId, setMarketRefreshDoneForId] = useState<
     string | null
@@ -101,6 +102,7 @@ const ListingPage = ({ id }: Props) => {
     setBusy(true);
     try {
       await updateListingPrice(id, n);
+      mutate((prev) => prev ? { ...prev, price: n, isOnSale: false, salePrice: null } : prev);
       invalidateCache(cacheKeyAllListings());
       if (car?.sellerId) invalidateCache(cacheKeyOwnerListings(car.sellerId));
       setPriceOpen(false);
@@ -117,6 +119,7 @@ const ListingPage = ({ id }: Props) => {
     setBusy(true);
     try {
       await markListingAsSold(id, n);
+      mutate((prev) => prev ? { ...prev, isSold: true, soldPrice: n, isOnSale: false, salePrice: null } : prev);
       invalidateCache(cacheKeyAllListings());
       if (car?.sellerId) invalidateCache(cacheKeyOwnerListings(car.sellerId));
       setSoldOpen(false);
@@ -134,6 +137,7 @@ const ListingPage = ({ id }: Props) => {
     try {
       const { updateListingStatus } = await import("~/services/listingsService");
       await updateListingStatus(id, newStatus);
+      mutate((prev) => prev ? { ...prev, status: newStatus } : prev);
       invalidateCache(cacheKeyAllListings());
       if (car.sellerId) invalidateCache(cacheKeyOwnerListings(car.sellerId));
       dispatch(showNotification({ 
@@ -171,6 +175,7 @@ const ListingPage = ({ id }: Props) => {
     setBusy(true);
     try {
       await stopSale(id);
+      mutate((prev) => prev ? { ...prev, isOnSale: false, salePrice: null } : prev);
       invalidateCache(cacheKeyAllListings());
       if (car?.sellerId) invalidateCache(cacheKeyOwnerListings(car.sellerId));
       dispatch(showNotification({ message: t("listingControl.saleStopped", { defaultValue: "Sale ended" }), severity: "info" }));
@@ -186,6 +191,7 @@ const ListingPage = ({ id }: Props) => {
     setBusy(true);
     try {
       await markAsSale(id, n);
+      mutate((prev) => prev ? { ...prev, isOnSale: true, salePrice: n } : prev);
       invalidateCache(cacheKeyAllListings());
       if (car?.sellerId) invalidateCache(cacheKeyOwnerListings(car.sellerId));
       setSaleOpen(false);
@@ -278,7 +284,7 @@ const ListingPage = ({ id }: Props) => {
               }}
             >
               <ImageCarousel
-                images={car.images.map((img: { url: any }) => img.url)}
+                images={Array.isArray(car.images) ? car.images.map((img: { url: any }) => img.url) : []}
               />
             </Box>
 
@@ -304,7 +310,7 @@ const ListingPage = ({ id }: Props) => {
                 </Typography>
                 <SpecLevelChip level={specLevel} />
               </Stack>
-              <SpecSheet features={car.features} isOwner={isOwner} listingId={id} />
+              <SpecSheet features={car.features} isOwner={isOwner} listingId={id} mutate={mutate} />
             </Box>
           </Stack>
         </Grid>
@@ -402,7 +408,7 @@ const ListingPage = ({ id }: Props) => {
             </Stack>
 
             <Typography variant="h4" color="primary" fontWeight={900}>
-              €{car.price.toLocaleString("en-US")}
+              €{typeof car.price === "number" ? car.price.toLocaleString("en-US") : "N/A"}
             </Typography>
 
             <Stack
@@ -434,14 +440,14 @@ const ListingPage = ({ id }: Props) => {
 
               <Chip label={car.location} size="small" variant="levelNeutral" sx={{ px: 0.5 }} />
 
-              <Chip
+                <Chip
                 label={
-                  car.seller.isDealer
+                  car.seller?.isDealer
                     ? t("listing.dealer")
                     : t("listing.privateSeller")
                 }
                 size="small"
-                variant={car.seller.isDealer ? "levelHigh" : "levelLow"}
+                variant={car.seller?.isDealer ? "levelHigh" : "levelLow"}
                 sx={{ px: 0.5 }}
               />
             </Stack>
@@ -451,7 +457,7 @@ const ListingPage = ({ id }: Props) => {
 
             <MarketValueBar price={car.price} marketRange={car.marketRange} />
 
-            <DetailsCard listing={car} isOwner={isOwner} />
+            <DetailsCard listing={car} isOwner={isOwner} mutate={mutate} />
 
             <Box>
               <Typography

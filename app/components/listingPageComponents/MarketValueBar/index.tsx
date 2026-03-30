@@ -23,7 +23,7 @@ const getColor = (value: number): "success" | "warning" | "error" => {
 };
 
 const MarketValueBar = ({ price, marketRange }: Props) => {
-  if (!marketRange || (marketRange.min === 0 && marketRange.max === 0)) {
+  if (typeof price !== "number" || !marketRange || (marketRange.min === 0 && marketRange.max === 0)) {
     return null;
   }
 

@@ -16,8 +16,9 @@ export async function loader({ params }: Route.LoaderArgs) {
 export function meta({ data, params }: Route.MetaArgs) {
   if (!data?.listing) return [{ title: "Listing Not Found | BalticAuto" }];
   const { year, make, model, price, location, description } = data.listing;
-  const title = `${year} ${make} ${model} for sale in ${location} - €${price.toLocaleString()} | BalticAuto`;
-  const desc = description?.slice(0, 160) || `Check out this ${year} ${make} ${model} on BalticAuto.`;
+  const safePrice = typeof price === "number" ? price.toLocaleString() : "N/A";
+  const title = `${year || ""} ${make || ""} ${model || ""} for sale in ${location || ""} - €${safePrice} | BalticAuto`.replace(/\s+/g, ' ').trim();
+  const desc = description?.slice(0, 160) || `Check out this ${year || "car"} ${make || ""} ${model || ""} on BalticAuto.`.replace(/\s+/g, ' ');
   
   return [
     { title },

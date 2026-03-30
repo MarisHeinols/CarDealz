@@ -131,6 +131,8 @@ const SellerCard = ({ seller, sellerId, listingId, compact }: Props) => {
     }
   };
 
+  if (!seller) return null;
+
   return (
     <Paper
       elevation={compact ? 0 : 1}

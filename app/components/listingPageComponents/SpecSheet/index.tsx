@@ -23,20 +23,23 @@ import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 import { useTranslation } from "react-i18next";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { updateListingFields } from "~/services/listingsService";
+import { invalidateCache, cacheKeyListingDetails } from "~/services/listingsCache";
 
 interface Props {
   features: CarFeature[];
   isOwner?: boolean;
   listingId?: string;
+  mutate?: (updater: (prev: any) => any) => void;
 }
 
-const SpecSheet = ({ features, isOwner, listingId }: Props) => {
+const SpecSheet = ({ features, isOwner, listingId, mutate }: Props) => {
   const { t } = useTranslation();
   const grouped = groupFeatures();
-  const featureSet = new Set(features);
+  const safeFeatures = features || [];
+  const featureSet = new Set(safeFeatures);
 
   const [open, setOpen] = useState(false);
-  const [tempFeatures, setTempFeatures] = useState<CarFeature[]>(features);
+  const [tempFeatures, setTempFeatures] = useState<CarFeature[]>(safeFeatures);
   const [busy, setBusy] = useState(false);
 
   const handleToggleFeature = (f: CarFeature) => {
@@ -50,6 +53,10 @@ const SpecSheet = ({ features, isOwner, listingId }: Props) => {
     setBusy(true);
     try {
       await updateListingFields(listingId, { features: tempFeatures });
+      if (mutate) {
+        mutate((prev: any) => prev ? { ...prev, features: tempFeatures } : prev);
+      }
+      invalidateCache(cacheKeyListingDetails(listingId));
       setOpen(false);
     } catch (err) {
       console.error(err);
@@ -65,7 +72,7 @@ const SpecSheet = ({ features, isOwner, listingId }: Props) => {
           size="small"
           sx={{ position: "absolute", top: 8, right: 8 }}
           onClick={() => {
-            setTempFeatures(features);
+            setTempFeatures(safeFeatures);
             setOpen(true);
           }}
         >

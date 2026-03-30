@@ -3,6 +3,7 @@ import { getListingDetails } from "~/services/listingsService";
 import {
   cacheKeyListingDetails,
   getCache,
+  setCache,
   isFresh,
   getOrFetch,
 } from "~/services/listingsCache";
@@ -13,6 +14,7 @@ type Result<T> = {
   refreshing: boolean;
   lastUpdatedAt: number | null;
   error: string | null;
+  mutate: (updater: (prev: T | null) => T | null) => void;
 };
 
 const DEFAULT_TTL_MS = 60 * 1000; // 1 minute
@@ -64,6 +66,16 @@ export function useCachedListingDetails<T = any>(
     };
   }, [key, listingId, ttlMs]);
 
-  return { listing, loading, refreshing, lastUpdatedAt, error };
+  const mutate = (updater: (prev: T | null) => T | null) => {
+    setListing((prev) => {
+      const updated = updater(prev);
+      if (updated) {
+        setCache(key, updated);
+      }
+      return updated;
+    });
+  };
+
+  return { listing, loading, refreshing, lastUpdatedAt, error, mutate };
 }
 

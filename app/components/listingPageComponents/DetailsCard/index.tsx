@@ -16,13 +16,15 @@ import type { CarListingDetails } from "~/types/types";
 import { useTranslation } from "react-i18next";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { updateListingFields } from "~/services/listingsService";
+import { invalidateCache, cacheKeyListingDetails } from "~/services/listingsCache";
 
 interface Props {
   listing: CarListingDetails;
   isOwner?: boolean;
+  mutate?: (updater: (prev: any) => any) => void;
 }
 
-const DetailsCard = ({ listing, isOwner }: Props) => {
+const DetailsCard = ({ listing, isOwner, mutate }: Props) => {
   const { t } = useTranslation();
   const [editData, setEditData] = useState<{
     key: string;
@@ -45,6 +47,10 @@ const DetailsCard = ({ listing, isOwner }: Props) => {
           : editData.value;
 
       await updateListingFields(listing.id, { [editData.key]: value });
+      if (mutate) {
+        mutate((prev: any) => prev ? { ...prev, [editData.key]: value } : prev);
+      }
+      invalidateCache(cacheKeyListingDetails(listing.id));
       setEditData(null);
     } catch (error) {
       console.error("Failed to update field:", error);
