@@ -33,7 +33,7 @@ import { getBusinessUsers } from "~/services/businessesService";
 import { loadStoreSettingsFromDb } from "~/services/storeSettingsService";
 import { useAllListingsForStatsCached } from "~/hooks/useCachedListingsForStats";
 import BusinessesMap from "~/components/businessesPageComponents/BusinessesMap";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import { useUserPreferences } from "~/context/UserPreferencesContext";
 import { COUNTRIES } from "~/constants/countries";
 import { useCities } from "~/hooks/useCities";
@@ -61,6 +61,7 @@ const PAGE_SIZE = 10;
 export default function BusinessesPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const prefs = useUserPreferences();
   const listingsStats = useAllListingsForStatsCached();
   const [loading, setLoading] = useState(true);
@@ -158,7 +159,7 @@ export default function BusinessesPage() {
     return () => {
       cancelled = true;
     };
-  }, [t]);
+  }, [t, location.key]);
 
   const rowsWithStats = useMemo(() => {
     const now = Date.now();

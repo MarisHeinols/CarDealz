@@ -7,22 +7,9 @@ export async function loader({ params }: Route.LoaderArgs) {
   if (!handle || typeof handle !== "string" || !handle.trim()) {
     return { storeTitle: "Store" };
   }
-  const { resolveStoreUidByHandle } =
-    await import("~/services/storeHandleService");
-  const { loadStoreSettingsFromDb } =
-    await import("~/services/storeSettingsService");
-
-  try {
-    const uid = await resolveStoreUidByHandle(handle);
-    if (!uid) return { storeTitle: handle };
-
-    const settings = await loadStoreSettingsFromDb(uid);
-    const storeName = settings?.name || handle;
-    return { storeTitle: storeName };
-  } catch (e) {
-    console.error("Store loader failed", { handle, error: e });
-    return { storeTitle: handle };
-  }
+  // Return handle as title; StorePage component fetches actual data client-side
+  // Server-side Firebase isn't initialized, so we avoid Firestore calls here
+  return { storeTitle: handle };
 }
 
 export function meta({ data, params }: Route.MetaArgs) {
