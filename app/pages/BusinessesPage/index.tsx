@@ -52,7 +52,7 @@ type BusinessRow = {
   reviewCount: number;
 };
 
-type SortKey = "reviews" | "views" | "soldLast30d" | "name";
+type SortKey = "views" | "soldLast30d" | "name";
 
 type SortDir = "asc" | "desc";
 
@@ -72,7 +72,7 @@ export default function BusinessesPage() {
   const [country, setCountry] = useState<string>("all");
   const [city, setCity] = useState<string>("");
 
-  const [sortKey, setSortKey] = useState<SortKey>("reviews");
+  const [sortKey, setSortKey] = useState<SortKey>("views");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(1);
 
@@ -85,15 +85,10 @@ export default function BusinessesPage() {
     const loc = prefs.location;
     if (!loc) return;
     const nextCountry = loc.country ? loc.country : "all";
-    const nextCity = loc.city || "";
 
     setCountry((prev) => {
       if (prev && prev !== "all") return prev;
       return nextCountry;
-    });
-    setCity((prev) => {
-      if (prev) return prev;
-      return nextCity;
     });
   }, [prefs.location, filtersTouched]);
 
@@ -224,8 +219,7 @@ export default function BusinessesPage() {
       if (sortKey === "views") return dir * (a.viewsTotal - b.viewsTotal);
       if (sortKey === "soldLast30d")
         return dir * (a.soldLast30d - b.soldLast30d);
-
-      return dir * (a.reviewCount - b.reviewCount);
+      return 0;
     });
   }, [filtered, sortDir, sortKey]);
 
@@ -342,7 +336,9 @@ export default function BusinessesPage() {
                   }}
                   sx={{ minWidth: { md: 190 } }}
                 >
-                  <MenuItem value="all">{t("businesses.allCountries")}</MenuItem>
+                  <MenuItem value="all">
+                    {t("businesses.allCountries")}
+                  </MenuItem>
                   {COUNTRIES.map((c) => (
                     <MenuItem key={c} value={c}>
                       {t(`common.countries.${c}`, c)}
@@ -400,15 +396,17 @@ export default function BusinessesPage() {
                   onChange={(e) => setSortKey(e.target.value as SortKey)}
                   sx={{ minWidth: { md: 170 } }}
                 >
-                  <MenuItem value="reviews">{t("businesses.sort.reviews")}</MenuItem>
-                  <MenuItem value="views">{t("businesses.sort.views")}</MenuItem>
-                  <MenuItem value="soldLast30d">{t("businesses.sort.sold")}</MenuItem>
+                  <MenuItem value="views">
+                    {t("businesses.sort.views")}
+                  </MenuItem>
+                  <MenuItem value="soldLast30d">
+                    {t("businesses.sort.sold")}
+                  </MenuItem>
                   <MenuItem value="name">{t("businesses.sort.name")}</MenuItem>
                 </Select>
               </Grid>
             </Grid>
           </Paper>
-
 
           <Box sx={{ mt: 2 }}>
             <Typography variant="h6" fontWeight={800} sx={{ mb: 1 }}>
@@ -443,7 +441,16 @@ export default function BusinessesPage() {
                         >
                           {b.name.slice(0, 1).toUpperCase()}
                         </Avatar>
-                        <Typography fontWeight={800} sx={{ mb: 0.5 }}>
+                        <Typography
+                          fontWeight={800}
+                          noWrap
+                          sx={{
+                            mb: 0.5,
+                            height: 24,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
                           {b.name}
                         </Typography>
                         <Typography
@@ -455,14 +462,7 @@ export default function BusinessesPage() {
                           {b.locationText || "—"}
                         </Typography>
 
-                        <Stack spacing={1}>
-                          <Chip
-                            size="small"
-                            variant="outlined"
-                            label={t("sellerCard.reviewsCount", {
-                              count: b.reviewCount,
-                            })}
-                          />
+                        <Stack spacing={1} sx={{ mt: "auto" }}>
                           <Chip
                             size="small"
                             variant="outlined"
@@ -517,15 +517,6 @@ export default function BusinessesPage() {
                   </TableCell>
                   <TableCell sx={{ width: 180, fontWeight: 700 }}>
                     {t("businesses.table.location")}
-                  </TableCell>
-                  <TableCell sx={{ width: 160, fontWeight: 700 }}>
-                    <TableSortLabel
-                      active={sortKey === "reviews"}
-                      direction={sortKey === "reviews" ? sortDir : "asc"}
-                      onClick={() => toggleSort("reviews")}
-                    >
-                      {t("businesses.table.reviews")}
-                    </TableSortLabel>
                   </TableCell>
                   <TableCell sx={{ width: 120, fontWeight: 700 }} align="right">
                     <TableSortLabel
@@ -589,11 +580,6 @@ export default function BusinessesPage() {
                           {b.locationText || "—"}
                         </Typography>
                       </Stack>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" color="text.secondary">
-                        {b.reviewCount}
-                      </Typography>
                     </TableCell>
                     <TableCell align="right">
                       <Typography fontWeight={700}>{b.viewsTotal}</Typography>

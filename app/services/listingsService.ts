@@ -256,42 +256,28 @@ export async function getListingDetails(listingId: string): Promise<any | null> 
 const UNIQUE_VIEW_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 /**
- * Increments viewCount once per viewer per time window.
- * Viewer key is the logged-in uid when available; otherwise a browser-local anonymous key.
+ * Increments viewCount once per viewer per time window using Cloud Function.
+ * Works for both authenticated and anonymous users.
  */
-export async function recordUniqueListingView(listingId: string, viewerUid?: string | null): Promise<void> {
+export async function recordUniqueListingView(listingId: string, _viewerUid?: string | null): Promise<void> {
   if (typeof window === "undefined") return;
   if (!listingId) return;
 
-  const anonKey = getOrCreateAnonViewerId();
-  const viewerKey = viewerUid || anonKey;
-  const storageKey = `balticauto.viewed.${listingId}.${viewerKey}`;
-
+  // Use localStorage to reduce duplicate calls within the same session
+  const storageKey = `balticauto.viewed.${listingId}`;
   const lastRaw = window.localStorage.getItem(storageKey);
   const last = lastRaw ? Number(lastRaw) : 0;
   if (Number.isFinite(last) && last > 0 && Date.now() - last < UNIQUE_VIEW_WINDOW_MS) {
-    return;
+    return; // Already recorded recently in this browser
   }
 
-  // Mark locally first to avoid double counts if user refreshes quickly.
-  window.localStorage.setItem(storageKey, String(Date.now()));
-
-  const listingRef = doc(db, "listings", listingId);
-  await updateDoc(listingRef, {
-    viewCount: increment(1),
-    lastViewed: serverTimestamp(),
-  } as any);
-}
-
-function getOrCreateAnonViewerId(): string {
   try {
-    const key = "balticauto.anonViewerId";
-    const existing = window.localStorage.getItem(key);
-    if (existing) return existing;
-    const id = `anon_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
-    window.localStorage.setItem(key, id);
-    return id;
-  } catch {
-    return "anon";
+    const functions = await import("~/firebase/functions");
+    const { httpsCallable } = await import("firebase/functions");
+    const recordView = httpsCallable(functions.functions, "recordListingView");
+    await recordView({ listingId });
+    window.localStorage.setItem(storageKey, String(Date.now()));
+  } catch (err) {
+    console.error("Failed to record listing view:", err);
   }
 }

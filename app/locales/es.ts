@@ -67,6 +67,15 @@ export const es = {
       nov: "Nov",
       dec: "Dic",
     },
+    days: {
+      monday: "Lunes",
+      tuesday: "Martes",
+      wednesday: "Miércoles",
+      thursday: "Jueves",
+      friday: "Viernes",
+      saturday: "Sábado",
+      sunday: "Domingo",
+    },
     nav: {
       listings: "Anuncios",
       businesses: "Empresas",

@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sitemap = exports.stripeWebhook = exports.createPortalSession = exports.createCheckoutSession = exports.onLeadCreated = exports.geminiEstimateMarketValue = exports.geminiAnalyzeCarImage = exports.createLeadSecure = exports.onDealerVerificationUpdated = exports.onBusinessRegistered = exports.deleteMyAccount = exports.deleteUserByAdmin = exports.verifyDealerAccount = exports.BILLING_ENABLED = void 0;
+exports.recordListingView = exports.sitemap = exports.stripeWebhook = exports.createPortalSession = exports.createCheckoutSession = exports.onLeadCreated = exports.geminiEstimateMarketValue = exports.geminiAnalyzeCarImage = exports.createLeadSecure = exports.onDealerVerificationUpdated = exports.onBusinessRegistered = exports.deleteMyAccount = exports.deleteUserByAdmin = exports.verifyDealerAccount = exports.BILLING_ENABLED = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const v2_1 = require("firebase-functions/v2");
 const params_1 = require("firebase-functions/params");
@@ -830,4 +830,49 @@ exports.sitemap = (0, https_1.onRequest)({ region: "europe-west1", cors: true, i
         firebase_functions_1.logger.error("Sitemap generation failed:", err);
         res.status(500).send("Internal Server Error");
     }
+});
+/**
+ * Record a unique listing view (public callable)
+ * Uses viewer UID if authenticated, or IP-based fingerprint if anonymous
+ */
+const VIEW_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
+exports.recordListingView = (0, https_1.onCall)({
+    region: "europe-west1",
+    cors: ["http://localhost:5173", "https://baltic-auto.net"],
+    invoker: "public",
+}, async (request) => {
+    const db = admin.firestore();
+    const listingId = String(request.data?.listingId || "").trim();
+    if (!listingId)
+        throw new https_1.HttpsError("invalid-argument", "Missing listingId");
+    // Verify listing exists
+    const listingRef = db.doc(`listings/${listingId}`);
+    const listingSnap = await listingRef.get();
+    if (!listingSnap.exists)
+        throw new https_1.HttpsError("not-found", "Listing not found");
+    // Build viewer key: authenticated uid > IP-based anonymous id
+    const viewerUid = request.auth?.uid || null;
+    const ip = normalizeIp(request.rawRequest);
+    const viewerKey = viewerUid || `anon_${ip.replace(/[^0-9a-zA-Z]/g, "_")}`;
+    // Check recent view in rateLimits collection
+    const rateKey = `view_${listingId}_${viewerKey}`;
+    const rateRef = db.doc(`rateLimits/${rateKey}`);
+    const now = Date.now();
+    const shouldIncrement = await db.runTransaction(async (tx) => {
+        const snap = await tx.get(rateRef);
+        const data = snap.exists ? snap.data() : null;
+        const lastView = data?.lastView || 0;
+        if (now - lastView < VIEW_WINDOW_MS) {
+            return false; // Already viewed within window
+        }
+        tx.set(rateRef, { lastView: now, viewerKey, listingId }, { merge: true });
+        return true;
+    });
+    if (shouldIncrement) {
+        await listingRef.set({
+            viewCount: admin.firestore.FieldValue.increment(1),
+            lastViewed: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+    }
+    return { ok: true, incremented: shouldIncrement };
 });

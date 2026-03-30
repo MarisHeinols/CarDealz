@@ -946,3 +946,62 @@ export const sitemap = onRequest(
   }
 );
 
+/**
+ * Record a unique listing view (public callable)
+ * Uses viewer UID if authenticated, or IP-based fingerprint if anonymous
+ */
+const VIEW_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+export const recordListingView = onCall(
+  {
+    region: "europe-west1",
+    cors: ["http://localhost:5173", "https://baltic-auto.net"],
+    invoker: "public",
+  },
+  async (request: CallableRequest) => {
+    const db = admin.firestore();
+    const listingId = String((request.data as any)?.listingId || "").trim();
+    if (!listingId) throw new HttpsError("invalid-argument", "Missing listingId");
+
+    // Verify listing exists
+    const listingRef = db.doc(`listings/${listingId}`);
+    const listingSnap = await listingRef.get();
+    if (!listingSnap.exists) throw new HttpsError("not-found", "Listing not found");
+
+    // Build viewer key: authenticated uid > IP-based anonymous id
+    const viewerUid = request.auth?.uid || null;
+    const ip = normalizeIp((request as any).rawRequest);
+    const viewerKey = viewerUid || `anon_${ip.replace(/[^0-9a-zA-Z]/g, "_")}`;
+
+    // Check recent view in rateLimits collection
+    const rateKey = `view_${listingId}_${viewerKey}`;
+    const rateRef = db.doc(`rateLimits/${rateKey}`);
+
+    const now = Date.now();
+    const shouldIncrement = await db.runTransaction(async (tx) => {
+      const snap = await tx.get(rateRef);
+      const data = snap.exists ? (snap.data() as any) : null;
+      const lastView = data?.lastView || 0;
+
+      if (now - lastView < VIEW_WINDOW_MS) {
+        return false; // Already viewed within window
+      }
+
+      tx.set(rateRef, { lastView: now, viewerKey, listingId }, { merge: true });
+      return true;
+    });
+
+    if (shouldIncrement) {
+      await listingRef.set(
+        {
+          viewCount: admin.firestore.FieldValue.increment(1),
+          lastViewed: admin.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+    }
+
+    return { ok: true, incremented: shouldIncrement };
+  }
+);
+

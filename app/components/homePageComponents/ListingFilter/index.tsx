@@ -60,7 +60,13 @@ const DISPLAY_COLORS = [
   "Purple",
 ];
 
-const ListingsFilters = ({ filters, onChange, onReset, noBorder, sx }: Props) => {
+const ListingsFilters = ({
+  filters,
+  onChange,
+  onReset,
+  noBorder,
+  sx,
+}: Props) => {
   const { t } = useTranslation();
   const set = (key: keyof ListingsFiltersState, value: string) => {
     let finalValue = value;
@@ -98,7 +104,7 @@ const ListingsFilters = ({ filters, onChange, onReset, noBorder, sx }: Props) =>
           {t("filters.searchTitle")}
         </Typography>
       )}
- 
+
       <TextField
         fullWidth
         placeholder={t("filters.searchPlaceholder")}
@@ -106,7 +112,7 @@ const ListingsFilters = ({ filters, onChange, onReset, noBorder, sx }: Props) =>
         onChange={(e) => set("search", e.target.value)}
         sx={{ mb: 3 }}
       />
- 
+
       <Grid container spacing={2}>
         {/* Brand */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -121,7 +127,7 @@ const ListingsFilters = ({ filters, onChange, onReset, noBorder, sx }: Props) =>
             )}
           />
         </Grid>
- 
+
         {/* Model */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Autocomplete
@@ -155,7 +161,7 @@ const ListingsFilters = ({ filters, onChange, onReset, noBorder, sx }: Props) =>
             )}
           />
         </Grid>
- 
+
         {/* Country */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <TextField
@@ -173,7 +179,7 @@ const ListingsFilters = ({ filters, onChange, onReset, noBorder, sx }: Props) =>
             ))}
           </TextField>
         </Grid>
- 
+
         {/* City */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Autocomplete
@@ -207,7 +213,7 @@ const ListingsFilters = ({ filters, onChange, onReset, noBorder, sx }: Props) =>
             )}
           />
         </Grid>
- 
+
         {/* Year */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <TextField
@@ -225,7 +231,7 @@ const ListingsFilters = ({ filters, onChange, onReset, noBorder, sx }: Props) =>
             ))}
           </TextField>
         </Grid>
- 
+
         {/* Condition */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <TextField
@@ -243,20 +249,22 @@ const ListingsFilters = ({ filters, onChange, onReset, noBorder, sx }: Props) =>
             ))}
           </TextField>
         </Grid>
- 
+
         {/* Color */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Autocomplete
             options={DISPLAY_COLORS}
             value={filters.color === "all" ? "" : filters.color}
-            getOptionLabel={(option) => option ? t(`carValues.color_${option}`) : ""}
+            getOptionLabel={(option) =>
+              option ? t(`carValues.color_${option}`) : ""
+            }
             onChange={(_, newValue) => set("color", newValue || "all")}
             renderInput={(params) => (
               <TextField {...params} label={t("filters.color")} fullWidth />
             )}
           />
         </Grid>
- 
+
         {/* Price Range */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Stack direction="row" spacing={1}>
@@ -278,7 +286,7 @@ const ListingsFilters = ({ filters, onChange, onReset, noBorder, sx }: Props) =>
             />
           </Stack>
         </Grid>
- 
+
         {/* Mileage Range */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Stack direction="row" spacing={1}>

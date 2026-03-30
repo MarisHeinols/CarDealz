@@ -67,6 +67,15 @@ export const et = {
       nov: "Nov",
       dec: "Det",
     },
+    days: {
+      monday: "Esmaspäev",
+      tuesday: "Teisipäev",
+      wednesday: "Kolmapäev",
+      thursday: "Neljapäev",
+      friday: "Reede",
+      saturday: "Laupäev",
+      sunday: "Pühapäev",
+    },
     nav: {
       listings: "Kuulutused",
       businesses: "Ettevõtted",

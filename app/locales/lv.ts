@@ -70,6 +70,15 @@ export const lv = {
       nov: "Nov",
       dec: "Dec",
     },
+    days: {
+      monday: "Pirmdiena",
+      tuesday: "Otrdiena",
+      wednesday: "Trešdiena",
+      thursday: "Ceturtdiena",
+      friday: "Piektdiena",
+      saturday: "Sestdiena",
+      sunday: "Svētdiena",
+    },
     nav: {
       listings: "Sludinājumi",
       businesses: "Uzņēmumi",

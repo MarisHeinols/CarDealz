@@ -67,6 +67,15 @@ export const lt = {
       nov: "Lap",
       dec: "Gru",
     },
+    days: {
+      monday: "Pirmadienis",
+      tuesday: "Antradienis",
+      wednesday: "Trečiadienis",
+      thursday: "Ketvirtadienis",
+      friday: "Penktadienis",
+      saturday: "Šeštadienis",
+      sunday: "Sekmadienis",
+    },
     nav: {
       listings: "Skelbimai",
       businesses: "Įmonės",
