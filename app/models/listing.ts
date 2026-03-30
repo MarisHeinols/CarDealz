@@ -71,6 +71,7 @@ export function createEmptyListingImage(id?: string): ListingImage {
   return {
     id: id || generateImageId(),
     url: "",
+    thumbnailUrl: "",
     isPrimary: false,
   };
 }
@@ -114,7 +115,7 @@ export function listingToSummary(listing: CarListingDetails | CarListingDetailsJ
     location: listing.location,
     color: listing.color,
     marketRange: listing.marketRange,
-    thumbnailUrl: primaryImage?.url || "",
+    thumbnailUrl: (primaryImage as any)?.thumbnailUrl || primaryImage?.url || "",
     viewCount: listing.viewCount,
     status: (listing as any).status,
   };

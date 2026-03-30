@@ -14,7 +14,7 @@ const categoryWeights: Record<FeatureCategory, number> = {
 };
 
 export const calculateSpecScore = (features?: string[]) => {
-  if (!features) return 0;
+  if (!Array.isArray(features)) return 0;
   return features.reduce((score, f) => {
     const def = featureDefinitions[f as keyof typeof featureDefinitions];
     if (!def) return score;

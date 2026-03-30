@@ -1,9 +1,11 @@
 import React from "react";
 import {
   Box,
+  Button,
   Chip,
   Divider,
   Grid,
+  LinearProgress,
   Paper,
   Stack,
   Typography,
@@ -31,19 +33,8 @@ import { auth } from "~/firebase/auth";
 import AppContainer from "~/components/shared/AppContainer";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "~/hooks/userStore/useAuth";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import EditIcon from "@mui/icons-material/Edit";
-import PeopleIcon from "@mui/icons-material/People";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import DeleteIcon from "@mui/icons-material/Delete";
-import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
-import { Menu, MenuItem, IconButton, Dialog, DialogTitle, DialogContent, TextField, DialogActions, Button } from "@mui/material";
-import { deleteListingFromDb, markListingAsSold, updateListingPrice, markAsSale, stopSale } from "~/services/listingsService";
+import ListingOwnerActions from "~/components/shared/ListingOwnerActions";
 import { useNavigate } from "react-router";
-import { useAppDispatch } from "~/redux/hooks";
-import { showNotification } from "~/redux/slices/uiSlice";
-import { invalidateCache, cacheKeyAllListings, cacheKeyOwnerListings } from "~/services/listingsCache";
-import ConfirmDialog from "~/components/shared/ConfirmDialog";
 import ListingNotFound from "~/components/listingPageComponents/ListingNotFound";
 
 type Props = {
@@ -51,7 +42,6 @@ type Props = {
 };
 
 const ListingPage = ({ id }: Props) => {
-  const dispatch = useAppDispatch();
   const {
     listing: car,
     loading,
@@ -61,145 +51,26 @@ const ListingPage = ({ id }: Props) => {
   const [marketRefreshDoneForId, setMarketRefreshDoneForId] = useState<
     string | null
   >(null);
+  const [marketValueLoading, setMarketValueLoading] = useState(false);
+  const [marketValueError, setMarketValueError] = useState<string | null>(null);
   const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  const hasMarketRange =
+    car &&
+    car.marketRange &&
+    typeof car.marketRange.min === "number" &&
+    typeof car.marketRange.max === "number" &&
+    !(car.marketRange.min === 0 && car.marketRange.max === 0);
 
   if (!loading && !car) {
     return <ListingNotFound />;
   }
 
-  const isOwner = Boolean(user?.uid && car?.sellerId && user.uid === car.sellerId);
-
-  const [manageAnchor, setManageAnchor] = useState<null | HTMLElement>(null);
-  const [busy, setBusy] = useState(false);
-  const [priceOpen, setPriceOpen] = useState(false);
-  const [soldOpen, setSoldOpen] = useState(false);
-  const [saleOpen, setSaleOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [price, setPrice] = useState<string>("");
-  const [soldPrice, setSoldPrice] = useState<string>("");
-  const [salePrice, setSalePrice] = useState<string>("");
-
-  const closeManage = () => setManageAnchor(null);
-
-  const openEditPrice = () => {
-    closeManage();
-    setPrice(car?.price?.toString() || "");
-    setPriceOpen(true);
-  };
-
-  const openMarkSold = () => {
-    closeManage();
-    setSoldPrice(car?.price?.toString() || "");
-    setSoldOpen(true);
-  };
-
-  const submitPrice = async () => {
-    if (!car) return;
-    const n = Number(price);
-    if (!Number.isFinite(n) || n <= 0) return;
-    setBusy(true);
-    try {
-      await updateListingPrice(id, n);
-      mutate((prev) => prev ? { ...prev, price: n, isOnSale: false, salePrice: null } : prev);
-      invalidateCache(cacheKeyAllListings());
-      if (car?.sellerId) invalidateCache(cacheKeyOwnerListings(car.sellerId));
-      setPriceOpen(false);
-      dispatch(showNotification({ message: t("pricing.priceUpdated"), severity: "success" }));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const submitSold = async () => {
-    if (!car) return;
-    const n = Number(soldPrice);
-    if (!Number.isFinite(n) || n <= 0) return;
-    setBusy(true);
-    try {
-      await markListingAsSold(id, n);
-      mutate((prev) => prev ? { ...prev, isSold: true, soldPrice: n, isOnSale: false, salePrice: null } : prev);
-      invalidateCache(cacheKeyAllListings());
-      if (car?.sellerId) invalidateCache(cacheKeyOwnerListings(car.sellerId));
-      setSoldOpen(false);
-      dispatch(showNotification({ message: t("listingControl.soldSuccess"), severity: "success" }));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleToggleStatus = async () => {
-    if (!car) return;
-    closeManage();
-    const newStatus = car.status === "draft" ? "published" : "draft";
-    setBusy(true);
-    try {
-      const { updateListingStatus } = await import("~/services/listingsService");
-      await updateListingStatus(id, newStatus);
-      mutate((prev) => prev ? { ...prev, status: newStatus } : prev);
-      invalidateCache(cacheKeyAllListings());
-      if (car.sellerId) invalidateCache(cacheKeyOwnerListings(car.sellerId));
-      dispatch(showNotification({ 
-        message: newStatus === "published" ? t("listingControl.publishedSuccess") : t("listingControl.draftSuccess"), 
-        severity: "success" 
-      }));
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleDeleteClick = () => {
-    closeManage();
-    setDeleteOpen(true);
-  };
-
-  const submitDelete = async () => {
-    setBusy(true);
-    try {
-      await deleteListingFromDb(id);
-      invalidateCache(cacheKeyAllListings());
-      if (car?.sellerId) invalidateCache(cacheKeyOwnerListings(car.sellerId));
-      setDeleteOpen(false);
-      dispatch(showNotification({ message: t("pricing.listingDeleted"), severity: "success" }));
-      navigate("/admin");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleStopSale = async () => {
-    closeManage();
-    setBusy(true);
-    try {
-      await stopSale(id);
-      mutate((prev) => prev ? { ...prev, isOnSale: false, salePrice: null } : prev);
-      invalidateCache(cacheKeyAllListings());
-      if (car?.sellerId) invalidateCache(cacheKeyOwnerListings(car.sellerId));
-      dispatch(showNotification({ message: t("listingControl.saleStopped", { defaultValue: "Sale ended" }), severity: "info" }));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const submitSale = async () => {
-    if (!car) return;
-    const n = Number(salePrice);
-    if (!Number.isFinite(n) || n <= 0) return;
-    setBusy(true);
-    try {
-      await markAsSale(id, n);
-      mutate((prev) => prev ? { ...prev, isOnSale: true, salePrice: n } : prev);
-      invalidateCache(cacheKeyAllListings());
-      if (car?.sellerId) invalidateCache(cacheKeyOwnerListings(car.sellerId));
-      setSaleOpen(false);
-      dispatch(showNotification({ message: t("listingControl.saleApplied"), severity: "success" }));
-    } finally {
-      setBusy(false);
-    }
-  };
+  const isOwner = Boolean(
+    user?.uid && car?.sellerId && user.uid === car.sellerId,
+  );
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -223,10 +94,14 @@ const ListingPage = ({ id }: Props) => {
       !Number.isFinite(last) || Date.now() - last > 30 * 24 * 60 * 60 * 1000;
     if (!isStale) {
       setMarketRefreshDoneForId(id);
+      setMarketValueLoading(false);
+      setMarketValueError(null);
       return;
     }
 
     let cancelled = false;
+    setMarketValueLoading(!hasMarketRange);
+    setMarketValueError(null);
     estimateMarketValue(car)
       .then(async (mv) => {
         const updates = {
@@ -234,18 +109,32 @@ const ListingPage = ({ id }: Props) => {
           marketRangeUpdatedAt: new Date().toISOString(),
         };
         if (cancelled) return;
-        // Update Firestore; UI will refresh naturally next fetch, but we also optimistically update the local object.
-        await updateListingFields(id, updates);
+
+        // Always update UI locally so guests can see the deal/market range.
+        mutate((prev) => (prev ? { ...prev, ...updates } : prev));
+
+        // Persist only when we have an authenticated user (Firestore rules typically block anonymous writes).
+        if (auth.currentUser?.uid) {
+          await updateListingFields(id, updates);
+        }
       })
-      .catch(console.error)
+      .catch((err) => {
+        console.error(err);
+        if (cancelled) return;
+        const msg = err instanceof Error ? err.message : String(err);
+        setMarketValueError(msg || "Market value estimate failed");
+      })
       .finally(() => {
-        if (!cancelled) setMarketRefreshDoneForId(id);
+        if (!cancelled) {
+          setMarketRefreshDoneForId(id);
+          setMarketValueLoading(false);
+        }
       });
 
     return () => {
       cancelled = true;
     };
-  }, [car, id, marketRefreshDoneForId]);
+  }, [car, id, marketRefreshDoneForId, hasMarketRange]);
 
   if (loading) {
     return (
@@ -284,7 +173,13 @@ const ListingPage = ({ id }: Props) => {
               }}
             >
               <ImageCarousel
-                images={Array.isArray(car.images) ? car.images.map((img: { url: any }) => img.url) : []}
+                images={
+                  Array.isArray(car.images)
+                    ? car.images.map(
+                        (img: { url: any; thumbnailUrl?: any }) => img.url,
+                      )
+                    : []
+                }
               />
             </Box>
 
@@ -310,7 +205,12 @@ const ListingPage = ({ id }: Props) => {
                 </Typography>
                 <SpecLevelChip level={specLevel} />
               </Stack>
-              <SpecSheet features={car.features} isOwner={isOwner} listingId={id} mutate={mutate} />
+              <SpecSheet
+                features={car.features}
+                isOwner={isOwner}
+                listingId={id}
+                mutate={mutate}
+              />
             </Box>
           </Stack>
         </Grid>
@@ -354,61 +254,67 @@ const ListingPage = ({ id }: Props) => {
                   {t("carValues.views", { count: car.viewCount })}
                 </Typography>
 
-                {isOwner && (
-                  <>
-                    <IconButton size="small" onClick={(e) => setManageAnchor(e.currentTarget)}>
-                      <MoreVertIcon />
-                    </IconButton>
-                    <Menu
-                      anchorEl={manageAnchor}
-                      open={Boolean(manageAnchor)}
-                      onClose={closeManage}
-                    >
-                      <MenuItem onClick={() => { closeManage(); navigate("/admin", { state: { tabIndex: 1 } }); }} disabled={busy}>
-                        <PeopleIcon fontSize="small" sx={{ mr: 1 }} />
-                        {t("listingControl.goToLeads")}
-                      </MenuItem>
-                      <MenuItem onClick={openEditPrice} disabled={busy}>
-                        <EditIcon fontSize="small" sx={{ mr: 1 }} />
-                        {t("listingControl.changePrice")}
-                      </MenuItem>
-                      <MenuItem 
-                        onClick={() => {
-                          if (car?.isOnSale) {
-                            handleStopSale();
-                          } else {
-                            closeManage();
-                            setSalePrice((car.price * 0.9).toString());
-                            setSaleOpen(true);
-                          }
-                        }} 
-                        disabled={busy}
-                      >
-                        <AttachMoneyIcon fontSize="small" sx={{ mr: 1, color: "error.main" }} />
-                        {car?.isOnSale ? t("listingControl.stopSale") : t("listingControl.putOnSale")}
-                      </MenuItem>
-                      <MenuItem onClick={handleToggleStatus} disabled={busy}>
-                         <CheckCircleOutlineIcon fontSize="small" sx={{ mr: 1, color: car.status === "draft" ? "primary.main" : "text.secondary" }} />
-                         {car.status === "draft" ? t("listingControl.publish") : t("listingControl.moveToDraft")}
-                      </MenuItem>
-                      {!car.isSold && (
-                        <MenuItem onClick={openMarkSold} disabled={busy} sx={{ color: "success.main" }}>
-                          <CheckCircleOutlineIcon fontSize="small" sx={{ mr: 1 }} />
-                          {t("listingControl.markAsSold")}
-                        </MenuItem>
-                      )}
-                      <MenuItem onClick={handleDeleteClick} disabled={busy} sx={{ color: "error.main" }}>
-                        <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
-                        {t("listingControl.deleteListing")}
-                      </MenuItem>
-                    </Menu>
-                  </>
-                )}
+                {isOwner ? (
+                  <ListingOwnerActions
+                    enabled
+                    listingId={id}
+                    sellerId={car.sellerId}
+                    status={car.status}
+                    price={car.price}
+                    isOnSale={car.isOnSale}
+                    salePrice={car.salePrice}
+                    isSold={car.isSold}
+                    onPriceChanged={(p) =>
+                      mutate((prev) =>
+                        prev
+                          ? {
+                              ...prev,
+                              price: p,
+                              isOnSale: false,
+                              salePrice: null,
+                            }
+                          : prev,
+                      )
+                    }
+                    onSold={(sp) =>
+                      mutate((prev) =>
+                        prev
+                          ? {
+                              ...prev,
+                              isSold: true,
+                              soldPrice: sp,
+                              isOnSale: false,
+                              salePrice: null,
+                            }
+                          : prev,
+                      )
+                    }
+                    onSaleApplied={(p) =>
+                      mutate((prev) =>
+                        prev ? { ...prev, isOnSale: true, salePrice: p } : prev,
+                      )
+                    }
+                    onSaleStopped={() =>
+                      mutate((prev) =>
+                        prev
+                          ? { ...prev, isOnSale: false, salePrice: null }
+                          : prev,
+                      )
+                    }
+                    onStatusChanged={(s) =>
+                      mutate((prev) => (prev ? { ...prev, status: s } : prev))
+                    }
+                    onDeleted={() => navigate("/admin")}
+                  />
+                ) : null}
               </Stack>
             </Stack>
 
             <Typography variant="h4" color="primary" fontWeight={900}>
-              €{typeof car.price === "number" ? car.price.toLocaleString("en-US") : "N/A"}
+              €
+              {typeof car.price === "number"
+                ? car.price.toLocaleString("en-US")
+                : "N/A"}
             </Typography>
 
             <Stack
@@ -431,16 +337,21 @@ const ListingPage = ({ id }: Props) => {
                   car.conditionTier === "new"
                     ? "levelHigh"
                     : car.conditionTier === "slightly_used" ||
-                      car.conditionTier === "first_payment"
+                        car.conditionTier === "first_payment"
                       ? "levelMedium"
                       : "levelLow"
                 }
                 sx={{ textTransform: "capitalize", px: 0.5 }}
               />
 
-              <Chip label={car.location} size="small" variant="levelNeutral" sx={{ px: 0.5 }} />
+              <Chip
+                label={car.location}
+                size="small"
+                variant="levelNeutral"
+                sx={{ px: 0.5 }}
+              />
 
-                <Chip
+              <Chip
                 label={
                   car.seller?.isDealer
                     ? t("listing.dealer")
@@ -452,10 +363,58 @@ const ListingPage = ({ id }: Props) => {
               />
             </Stack>
 
-
             <Divider />
 
-            <MarketValueBar price={car.price} marketRange={car.marketRange} />
+            {marketValueLoading && !hasMarketRange ? (
+              <Box sx={{ mt: 3 }}>
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  sx={{ mb: 1 }}
+                >
+                  <Typography variant="subtitle2">
+                    {t("carValues.marketValueEstimate", {
+                      defaultValue: "Market Value",
+                    })}
+                  </Typography>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    {t("carValues.estimating", {
+                      defaultValue: "AI Analyzing…",
+                    })}
+                  </Typography>
+                </Stack>
+                <LinearProgress sx={{ height: 8, borderRadius: 4 }} />
+              </Box>
+            ) : marketValueError ? (
+              <Box sx={{ mt: 3 }}>
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  sx={{ mb: 1 }}
+                >
+                  <Typography variant="subtitle2">
+                    {t("carValues.marketValueEstimate", {
+                      defaultValue: "Market Value",
+                    })}
+                  </Typography>
+                  <Button
+                    size="small"
+                    onClick={() => {
+                      setMarketRefreshDoneForId(null);
+                    }}
+                  >
+                    {t("common.retry", { defaultValue: "Retry" })}
+                  </Button>
+                </Stack>
+                <Typography variant="body2" color="text.secondary">
+                  {t("carValues.marketValueFailed", {
+                    defaultValue: "Could not load market value right now.",
+                  })}
+                </Typography>
+              </Box>
+            ) : (
+              <MarketValueBar price={car.price} marketRange={car.marketRange} />
+            )}
 
             <DetailsCard listing={car} isOwner={isOwner} mutate={mutate} />
 
@@ -477,131 +436,6 @@ const ListingPage = ({ id }: Props) => {
           </Paper>
         </Grid>
       </Grid>
-
-      {/* Owner Action Dialogs */}
-      <Dialog
-        open={priceOpen}
-        onClose={() => setPriceOpen(false)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle>{t("listing.owner.editPrice", { defaultValue: "Edit price" })}</DialogTitle>
-        <DialogContent dividers>
-          <TextField
-            autoFocus
-            label={t("listing.owner.newPrice", { defaultValue: "New price" })}
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            fullWidth
-            type="number"
-            inputProps={{ min: 1 }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setPriceOpen(false)} disabled={busy}>
-            {t("common.cancel", { defaultValue: "Cancel" })}
-          </Button>
-          <Button
-            variant="contained"
-            onClick={submitPrice}
-            disabled={busy}
-          >
-            {busy ? (
-              <CircularProgress size={18} color="inherit" />
-            ) : (
-              t("common.save", { defaultValue: "Save" })
-            )}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog
-        open={soldOpen}
-        onClose={() => setSoldOpen(false)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle>{t("listing.owner.markSold", { defaultValue: "Mark as Sold" })}</DialogTitle>
-        <DialogContent dividers>
-          <TextField
-            autoFocus
-            label={t("listing.owner.soldPrice", { defaultValue: "Sold price" })}
-            value={soldPrice}
-            onChange={(e) => setSoldPrice(e.target.value)}
-            fullWidth
-            type="number"
-            inputProps={{ min: 1 }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setSoldOpen(false)} disabled={busy}>
-            {t("common.cancel", { defaultValue: "Cancel" })}
-          </Button>
-          <Button
-            variant="contained"
-            onClick={submitSold}
-            disabled={busy}
-          >
-            {busy ? (
-              <CircularProgress size={18} color="inherit" />
-            ) : (
-              t("common.confirm", { defaultValue: "Confirm" })
-            )}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog
-        open={saleOpen}
-        onClose={() => setSaleOpen(false)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle>{t("listingControl.putOnSale")}</DialogTitle>
-        <DialogContent dividers>
-          <Typography variant="body2" sx={{ mb: 2 }} color="text.secondary">
-            {t("listingControl.setSalePriceDesc")}
-          </Typography>
-          <TextField
-            autoFocus
-            label={t("listing.owner.newPrice", { defaultValue: "Sale price" })}
-            value={salePrice}
-            onChange={(e) => setSalePrice(e.target.value)}
-            fullWidth
-            type="number"
-            inputProps={{ min: 1 }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setSaleOpen(false)} disabled={busy}>
-            {t("common.cancel", { defaultValue: "Cancel" })}
-          </Button>
-          <Button
-            variant="contained"
-            color="error"
-            onClick={submitSale}
-            disabled={busy}
-          >
-            {busy ? (
-              <CircularProgress size={18} color="inherit" />
-            ) : (
-              t("listingControl.applySale")
-            )}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <ConfirmDialog
-        open={deleteOpen}
-        onClose={() => setDeleteOpen(false)}
-        onConfirm={submitDelete}
-        title={t("listingControl.deleteListing")}
-        message={t("listing.deleteConfirm")}
-        confirmText={t("common.delete")}
-        cancelText={t("common.cancel")}
-        loading={busy}
-        severity="error"
-      />
     </AppContainer>
   );
 };

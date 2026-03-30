@@ -14,6 +14,7 @@ function normalizeCondition(cond: string): string {
 
 // Helper to convert Firestore document data to our Summary type
 export function mapListingToSummary(id: string, data: any): CarListingSummary {
+  const firstImg = Array.isArray(data.images) ? data.images[0] : null;
   return {
     id,
     make: data.make || "",
@@ -25,7 +26,7 @@ export function mapListingToSummary(id: string, data: any): CarListingSummary {
     location: data.location || "",
     color: data.color || "",
     marketRange: data.marketRange || { min: 0, max: 0 },
-    thumbnailUrl: data.images?.[0]?.url || data.thumbnailUrl || "",
+    thumbnailUrl: firstImg?.thumbnailUrl || firstImg?.url || data.thumbnailUrl || "",
     viewCount: data.viewCount || 0,
     leadCount: typeof data.leadCount === "number" ? data.leadCount : 0,
     createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt,
@@ -232,13 +233,19 @@ export async function getListingDetails(listingId: string): Promise<any | null> 
   const snapshot = await getDoc(listingRef);
   if (snapshot.exists() && !snapshot.data().deleted) {
     const data = snapshot.data();
-    return {
+    const result = {
       ...data,
       id: snapshot.id,
       conditionTier: normalizeCondition(data.conditionTier),
       createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt,
       soldAt: data.soldAt?.toDate ? data.soldAt.toDate().toISOString() : data.soldAt,
+      marketRangeUpdatedAt: data.marketRangeUpdatedAt?.toDate
+        ? data.marketRangeUpdatedAt.toDate().toISOString()
+        : data.marketRangeUpdatedAt,
     };
+    
+    // Strip all undefined fields deeply to prevent React Router SSR 500 serialization crashes.
+    return JSON.parse(JSON.stringify(result));
   }
   return null;
 }

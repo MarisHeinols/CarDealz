@@ -17,7 +17,6 @@ import {
 } from "@mui/material";
 
 import type { CarListingSummary, SortDir, SortKey } from "~/types/types";
-import DealIndicator from "../DealIndicator";
 import { Link as RouterLink, useNavigate } from "react-router";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
@@ -25,10 +24,18 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { markListingAsSold, markAsSale, stopSale } from "~/services/listingsService";
+import {
+  markListingAsSold,
+  markAsSale,
+  stopSale,
+} from "~/services/listingsService";
 import { useAppDispatch } from "~/redux/hooks";
 import { showNotification } from "~/redux/slices/uiSlice";
-import { invalidateCache, cacheKeyOwnerListings, cacheKeyAllListings } from "~/services/listingsCache";
+import {
+  invalidateCache,
+  cacheKeyOwnerListings,
+  cacheKeyAllListings,
+} from "~/services/listingsCache";
 import ConfirmDialog from "../../shared/ConfirmDialog";
 
 const ListingsTable = ({
@@ -115,14 +122,7 @@ const ListingsTable = ({
             <TableCell sx={{ width: 120 }}>
               {sortLabel("mileage", t("table.mileage"))}
             </TableCell>
-            <TableCell
-              sx={{
-                width: { xs: 80, md: 140 },
-                textAlign: "center",
-              }}
-            >
-              {t("table.deal")}
-            </TableCell>
+
             <TableCell
               sx={{
                 display: { md: "none", lg: "table-cell" },
@@ -155,7 +155,12 @@ const ListingsTable = ({
               </TableCell>
 
               <TableCell>
-                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
+                  flexWrap="wrap"
+                >
                   <Typography variant="body2" fontWeight={600}>
                     {l.make}
                   </Typography>
@@ -194,7 +199,7 @@ const ListingsTable = ({
                     l.conditionTier === "new"
                       ? "levelHigh"
                       : l.conditionTier === "slightly_used" ||
-                        l.conditionTier === "first_payment"
+                          l.conditionTier === "first_payment"
                         ? "levelMedium"
                         : "levelLow"
                   }
@@ -204,15 +209,6 @@ const ListingsTable = ({
               <TableCell>€{l.price.toLocaleString("en-US")}</TableCell>
 
               <TableCell>{l.mileage} km</TableCell>
-
-              <TableCell
-                sx={{
-                  width: { xs: 80, md: 140 },
-                  textAlign: "center",
-                }}
-              >
-                <DealIndicator price={l.price} marketRange={l.marketRange} />
-              </TableCell>
 
               <TableCell
                 sx={{
@@ -281,7 +277,8 @@ const ListingsTable = ({
               if (salePriceStr && !isNaN(Number(salePriceStr))) {
                 markAsSale(id, Number(salePriceStr)).then(() => {
                   const sellerId = listing.sellerId;
-                  if (sellerId) invalidateCache(cacheKeyOwnerListings(sellerId));
+                  if (sellerId)
+                    invalidateCache(cacheKeyOwnerListings(sellerId));
                   invalidateCache(cacheKeyAllListings());
                   onRefresh?.();
                 });
@@ -289,7 +286,10 @@ const ListingsTable = ({
             }
           }}
         >
-          <AttachMoneyIcon fontSize="small" sx={{ mr: 1, color: "error.main" }} />
+          <AttachMoneyIcon
+            fontSize="small"
+            sx={{ mr: 1, color: "error.main" }}
+          />
           {activeId && rows.find((r) => r.id === activeId)?.isOnSale
             ? t("listingControl.stopSale")
             : t("listingControl.putOnSale")}
@@ -318,7 +318,8 @@ const ListingsTable = ({
                 if (!isNaN(soldPrice) && soldPrice > 0) {
                   markListingAsSold(id, soldPrice).then(() => {
                     const sellerId = listing.sellerId;
-                    if (sellerId) invalidateCache(cacheKeyOwnerListings(sellerId));
+                    if (sellerId)
+                      invalidateCache(cacheKeyOwnerListings(sellerId));
                     invalidateCache(cacheKeyAllListings());
                     dispatch(
                       showNotification({

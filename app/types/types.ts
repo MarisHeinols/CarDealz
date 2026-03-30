@@ -158,6 +158,7 @@ export interface BusinessRegisterData {
 export interface ListingImage {
   id: string;
   url: string;
+  thumbnailUrl?: string;
   isPrimary?: boolean;
 }
 
@@ -255,7 +256,7 @@ export type CarListingDetailsJson = {
    * Optional for backwards compatibility with older listings.
    */
   marketRangeUpdatedAt?: string;
-  images: { id: string; url: string; isPrimary?: boolean }[];
+  images: { id: string; url: string; thumbnailUrl?: string; isPrimary?: boolean }[];
   features: string[];
   description: string;
   seller: {

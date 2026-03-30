@@ -7,41 +7,14 @@ import {
   Stack,
   Chip,
   Box,
-  IconButton,
-  Button,
-  Menu,
-  MenuItem,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  CircularProgress,
 } from "@mui/material";
 import { useNavigate } from "react-router";
 import type { CarListingSummary } from "~/types/types";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import DeleteIcon from "@mui/icons-material/Delete";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import EditIcon from "@mui/icons-material/Edit";
-import PeopleIcon from "@mui/icons-material/People";
-import { useState } from "react";
+import ListingOwnerActions from "~/components/shared/ListingOwnerActions";
 import { useTranslation } from "react-i18next";
-import {
-  updateListingPrice,
-  deleteListingFromDb,
-  markListingAsSold,
-  markAsSale,
-  stopSale,
-  updateListingStatus,
-} from "~/services/listingsService";
-import { invalidateCache, cacheKeyOwnerListings, cacheKeyAllListings } from "~/services/listingsCache";
-import { useAppDispatch } from "~/redux/hooks";
-import { showNotification } from "~/redux/slices/uiSlice";
 import { useAppSelector } from "~/redux/hooks";
 import { useTheme } from "@mui/material/styles";
 import type { StoreTheme } from "~/redux/slices/storeSettingsSlice";
-import ConfirmDialog from "../ConfirmDialog";
 
 const conditionTierVariantMap = {
   new: "levelHigh",
@@ -77,165 +50,6 @@ const ListingCard = ({
 
   const color = activeTheme?.isTextLight ? "white" : "inherit";
   const isMinimal = activeTheme?.layout === "minimal";
-  const dispatch = useAppDispatch();
-
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [busy, setBusy] = useState(false);
-  const [priceOpen, setPriceOpen] = useState(false);
-  const [soldOpen, setSoldOpen] = useState(false);
-  const [saleOpen, setSaleOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [price, setPrice] = useState<string>("");
-  const [soldPrice, setSoldPrice] = useState<string>("");
-  const [salePrice, setSalePrice] = useState<string>("");
-
-  const handleActionMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    event.preventDefault();
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    setAnchorEl(null);
-  };
-
-  const openLeads = (e: React.MouseEvent) => {
-    handleClose(e);
-    navigate("/admin", { state: { tabIndex: 1 } });
-  };
-
-  const openEditPrice = (e: React.MouseEvent) => {
-    handleClose(e);
-    setPrice(listing.price.toString());
-    setPriceOpen(true);
-  };
-
-  const openMarkSold = (e: React.MouseEvent) => {
-    handleClose(e);
-    setSoldPrice(listing.price.toString());
-    setSoldOpen(true);
-  };
-  const openSale = (e: React.MouseEvent) => {
-    handleClose(e);
-    setSalePrice(listing.isOnSale && listing.salePrice ? listing.salePrice.toString() : (listing.price * 0.9).toString());
-    setSaleOpen(true);
-  };
-
-  const confirmDelete = (e: React.MouseEvent) => {
-    handleClose(e);
-    setDeleteOpen(true);
-  };
-
-  const submitPrice = async () => {
-    const n = Number(price);
-    if (!Number.isFinite(n) || n <= 0) return;
-    setBusy(true);
-    try {
-      await updateListingPrice(listing.id, n);
-      if (listing.sellerId) invalidateCache(cacheKeyOwnerListings(listing.sellerId));
-      invalidateCache(cacheKeyAllListings());
-      dispatch(showNotification({ message: t("pricing.priceUpdated"), severity: "success" }));
-      setPriceOpen(false);
-      onRefresh?.();
-    } catch (e) {
-      dispatch(showNotification({ message: t("pricing.priceUpdateFailed"), severity: "error" }));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const submitDelete = async () => {
-    setBusy(true);
-    try {
-      await deleteListingFromDb(listing.id);
-      if (listing.sellerId) {
-        invalidateCache(cacheKeyOwnerListings(listing.sellerId));
-      }
-      invalidateCache(cacheKeyAllListings());
-      dispatch(showNotification({ message: t("pricing.listingDeleted"), severity: "success" }));
-      setDeleteOpen(false);
-      onRefresh?.();
-    } catch (e) {
-      dispatch(showNotification({ message: t("pricing.listingDeleteFailed"), severity: "error" }));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const submitSold = async () => {
-    const n = Number(soldPrice);
-    if (!Number.isFinite(n) || n <= 0) return;
-    setBusy(true);
-    try {
-      await markListingAsSold(listing.id, n);
-      if (listing.sellerId) {
-        invalidateCache(cacheKeyOwnerListings(listing.sellerId));
-      }
-      invalidateCache(cacheKeyAllListings());
-      dispatch(showNotification({ message: t("listingControl.soldSuccess"), severity: "success" }));
-      setSoldOpen(false);
-      onRefresh?.();
-    } catch (e) {
-      dispatch(showNotification({ message: t("auth.loginFailed"), severity: "error" }));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const submitSale = async () => {
-    const n = Number(salePrice);
-    if (!Number.isFinite(n) || n <= 0) return;
-    setBusy(true);
-    try {
-      await markAsSale(listing.id, n);
-      if (listing.sellerId) invalidateCache(cacheKeyOwnerListings(listing.sellerId));
-      invalidateCache(cacheKeyAllListings());
-      dispatch(showNotification({ message: t("listing.saleApplied", { defaultValue: "Sale applied successfully." }), severity: "success" }));
-      setSaleOpen(false);
-      onRefresh?.();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleStopSale = async (e: React.MouseEvent) => {
-    handleClose(e);
-    setBusy(true);
-    try {
-      await stopSale(listing.id);
-      if (listing.sellerId) invalidateCache(cacheKeyOwnerListings(listing.sellerId));
-      invalidateCache(cacheKeyAllListings());
-      onRefresh?.();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleToggleStatus = async (e: React.MouseEvent) => {
-    handleClose(e);
-    const newStatus = listing.status === "draft" ? "published" : "draft";
-    setBusy(true);
-    try {
-      await updateListingStatus(listing.id, newStatus);
-      if (listing.sellerId) invalidateCache(cacheKeyOwnerListings(listing.sellerId));
-      invalidateCache(cacheKeyAllListings());
-      dispatch(showNotification({ 
-        message: newStatus === "published" ? t("listingControl.publishedSuccess", { defaultValue: "Listing published!" }) : t("listingControl.draftSuccess", { defaultValue: "Listing moved to draft." }), 
-        severity: "success" 
-      }));
-      onRefresh?.();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setBusy(false);
-    }
-  };
 
   return (
     <Card
@@ -266,13 +80,25 @@ const ListingCard = ({
           alignItems: "stretch",
         }}
       >
-        <Box sx={{ position: "relative" }}>
+        <Box
+          sx={{
+            position: "relative",
+            width: "100%",
+            aspectRatio: isMinimal ? "16 / 9" : "4 / 3",
+            overflow: "hidden",
+          }}
+        >
           <CardMedia
             component="img"
-            height={isMinimal ? 160 : 180}
             image={listing.thumbnailUrl}
             alt={`${listing.make} ${listing.model}`}
-            sx={{ objectFit: "cover" }}
+            sx={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+            }}
           />
           <Chip
             label={t(`carValues.condition_${listing.conditionTier}`)}
@@ -288,19 +114,19 @@ const ListingCard = ({
           />
 
           {isOwner && listing.status === "draft" && (
-             <Chip
-             label={t("form.status_draft")}
-             size="small"
-             color="warning"
-             variant="filled"
-             sx={{
-               position: "absolute",
-               bottom: 12,
-               left: 12,
-               fontWeight: 700,
-               boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
-             }}
-           />
+            <Chip
+              label={t("form.status_draft")}
+              size="small"
+              color="warning"
+              variant="filled"
+              sx={{
+                position: "absolute",
+                bottom: 12,
+                left: 12,
+                fontWeight: 700,
+                boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
+              }}
+            />
           )}
         </Box>
 
@@ -353,7 +179,7 @@ const ListingCard = ({
                 fontWeight={600}
                 sx={{
                   color: useStoreTheme
-                    ? (activeTheme?.accent || muiTheme.palette.primary.main)
+                    ? activeTheme?.accent || muiTheme.palette.primary.main
                     : muiTheme.palette.primary.main,
                 }}
               >
@@ -393,216 +219,42 @@ const ListingCard = ({
                 opacity: 0.8,
               }}
             >
-              {listing.mileage.toLocaleString(undefined)} {t("common.unit_km")} • {listing.location}
+              {listing.mileage.toLocaleString(undefined)} {t("common.unit_km")}{" "}
+              • {listing.location}
             </Typography>
           </Stack>
         </CardContent>
       </CardActionArea>
 
-      {/* Owner Menu Button */}
-      {isOwner && (
-        <IconButton
-          size="small"
-          onClick={handleActionMenu}
+      {isOwner ? (
+        <Box
           sx={{
             position: "absolute",
             top: 8,
             right: 8,
-            backgroundColor: "rgba(255,255,255,0.85)",
-            backdropFilter: "blur(6px)",
-            border: "1px solid rgba(0,0,0,0.08)",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
             zIndex: 10,
-            "&:hover": {
-              backgroundColor: "rgba(255,255,255,1)",
-            },
           }}
         >
-          <MoreVertIcon fontSize="small" />
-        </IconButton>
-      )}
-
-      {/* Action Menu & Dialogs */}
-      {isOwner && (
-        <>
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleClose}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <MenuItem onClick={openLeads} disabled={busy}>
-              <PeopleIcon fontSize="small" sx={{ mr: 1 }} />
-              {t("listingControl.goToLeads")}
-            </MenuItem>
-            <MenuItem onClick={openEditPrice} disabled={busy}>
-              <EditIcon fontSize="small" sx={{ mr: 1 }} />
-              {t("listingControl.changePrice")}
-            </MenuItem>
-            
-            {listing.isOnSale ? (
-              <MenuItem onClick={handleStopSale} disabled={busy}>
-                <EditIcon fontSize="small" sx={{ mr: 1, color: "error.main" }} />
-                {t("listingControl.stopSale", { defaultValue: "End Sale" })}
-              </MenuItem>
-            ) : (
-              <MenuItem onClick={openSale} disabled={busy}>
-                <EditIcon fontSize="small" sx={{ mr: 1, color: "error.main" }} />
-                {t("listingControl.putOnSale", { defaultValue: "Put on Sale" })}
-              </MenuItem>
-            )}
-
-            <MenuItem onClick={handleToggleStatus} disabled={busy}>
-               <CheckCircleOutlineIcon fontSize="small" sx={{ mr: 1, color: listing.status === "draft" ? "primary.main" : "text.secondary" }} />
-               {listing.status === "draft" ? t("listingControl.publish", { defaultValue: "Publish" }) : t("listingControl.moveToDraft", { defaultValue: "Move to Draft" })}
-            </MenuItem>
-            
-            {!listing.isSold && (
-              <MenuItem
-                onClick={openMarkSold}
-                disabled={busy}
-                sx={{ color: "success.main" }}
-              >
-                <CheckCircleOutlineIcon fontSize="small" sx={{ mr: 1 }} />
-                {t("listingControl.markAsSold")}
-              </MenuItem>
-            )}
-            <MenuItem
-              onClick={confirmDelete}
-              disabled={busy}
-              sx={{ color: "error.main" }}
-            >
-              <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
-              {t("listingControl.deleteListing")}
-            </MenuItem>
-          </Menu>
-
-          <Dialog
-            open={priceOpen}
-            onClose={() => setPriceOpen(false)}
-            maxWidth="xs"
-            fullWidth
-          >
-            <DialogTitle>{t("listingControl.changePrice")}</DialogTitle>
-            <DialogContent dividers>
-              <TextField
-                autoFocus
-                label={t("form.newPrice")}
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                fullWidth
-                type="number"
-                inputProps={{ min: 1 }}
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setPriceOpen(false)} disabled={busy}>
-                {t("common.cancel")}
-              </Button>
-              <Button variant="contained" onClick={submitPrice} disabled={busy}>
-                {busy ? (
-                  <CircularProgress size={18} color="inherit" />
-                ) : (
-                  t("common.save")
-                )}
-              </Button>
-            </DialogActions>
-          </Dialog>
-
-          <Dialog
-            open={soldOpen}
-            onClose={() => setSoldOpen(false)}
-            maxWidth="xs"
-            fullWidth
-          >
-            <DialogTitle>{t("listingControl.markAsSold")}</DialogTitle>
-            <DialogContent dividers>
-              <Typography variant="body2" sx={{ mb: 2 }}>
-                {t("listingControl.askSoldPrice")}
-              </Typography>
-              <TextField
-                autoFocus
-                label={t("form.soldPrice")}
-                value={soldPrice}
-                onChange={(e) => setSoldPrice(e.target.value)}
-                fullWidth
-                type="number"
-                inputProps={{ min: 1 }}
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setSoldOpen(false)} disabled={busy}>
-                {t("common.cancel")}
-              </Button>
-              <Button
-                variant="contained"
-                onClick={submitSold}
-                disabled={busy}
-                color="success"
-              >
-                {busy ? (
-                  <CircularProgress size={18} color="inherit" />
-                ) : (
-                  t("listingControl.markAsSold")
-                )}
-              </Button>
-            </DialogActions>
-          </Dialog>
-
-          {/* Sale Dialog */}
-          <Dialog
-            open={saleOpen}
-            onClose={() => setSaleOpen(false)}
-            maxWidth="xs"
-            fullWidth
-          >
-            <DialogTitle>{t("listingControl.putOnSale", { defaultValue: "Put on Sale" })}</DialogTitle>
-            <DialogContent dividers>
-              <Typography variant="body2" sx={{ mb: 2 }}>
-                {t("listingControl.setSalePriceDesc", { defaultValue: "Set a special sale price for this vehicle." })}
-              </Typography>
-              <TextField
-                autoFocus
-                label={t("form.salePrice", { defaultValue: "Sale Price" })}
-                value={salePrice}
-                onChange={(e) => setSalePrice(e.target.value)}
-                fullWidth
-                type="number"
-                inputProps={{ min: 1 }}
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setSaleOpen(false)} disabled={busy}>
-                {t("common.cancel")}
-              </Button>
-              <Button
-                variant="contained"
-                onClick={submitSale}
-                disabled={busy}
-                color="error"
-              >
-                {busy ? (
-                  <CircularProgress size={18} color="inherit" />
-                ) : (
-                  t("listingControl.applySale", { defaultValue: "Apply Sale" })
-                )}
-              </Button>
-            </DialogActions>
-          </Dialog>
-        </>
-      )}
-
-      <ConfirmDialog
-        open={deleteOpen}
-        onClose={() => setDeleteOpen(false)}
-        onConfirm={submitDelete}
-        title={t("listingControl.deleteListing")}
-        message={t("listing.deleteConfirm")}
-        confirmText={t("common.delete")}
-        cancelText={t("common.cancel")}
-        loading={busy}
-        severity="error"
-      />
+          <ListingOwnerActions
+            enabled
+            listingId={listing.id}
+            sellerId={listing.sellerId}
+            status={listing.status}
+            price={listing.price}
+            isOnSale={listing.isOnSale}
+            salePrice={listing.salePrice}
+            isSold={listing.isSold}
+            iconButtonSx={{
+              backgroundColor: "rgba(255,255,255,0.85)",
+              backdropFilter: "blur(6px)",
+              border: "1px solid rgba(0,0,0,0.08)",
+              boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
+              "&:hover": { backgroundColor: "rgba(255,255,255,1)" },
+            }}
+            onAfterAction={onRefresh}
+          />
+        </Box>
+      ) : null}
     </Card>
   );
 };

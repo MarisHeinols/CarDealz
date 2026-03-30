@@ -1,4 +1,5 @@
 import { Stack, Typography, LinearProgress, Box } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 type MarketRange = {
   min: number;
@@ -10,20 +11,26 @@ type Props = {
   marketRange: MarketRange;
 };
 
-const getLabel = (value: number) => {
-  if (value < 33) return "Good Deal";
-  if (value < 66) return "Fair Price";
-  return "Above Market";
-};
-
-const getColor = (value: number): "success" | "warning" | "error" => {
-  if (value < 33) return "success";
-  if (value < 66) return "warning";
-  return "error";
+const getVerdict = (
+  price: number,
+  marketRange: MarketRange,
+): {
+  rating: "good" | "fair" | "above_market";
+  color: "success" | "warning" | "error";
+} => {
+  if (price < marketRange.min) return { rating: "good", color: "success" };
+  if (price > marketRange.max)
+    return { rating: "above_market", color: "error" };
+  return { rating: "fair", color: "warning" };
 };
 
 const MarketValueBar = ({ price, marketRange }: Props) => {
-  if (typeof price !== "number" || !marketRange || (marketRange.min === 0 && marketRange.max === 0)) {
+  const { t } = useTranslation();
+  if (
+    typeof price !== "number" ||
+    !marketRange ||
+    (marketRange.min === 0 && marketRange.max === 0)
+  ) {
     return null;
   }
 
@@ -31,13 +38,20 @@ const MarketValueBar = ({ price, marketRange }: Props) => {
   const percentage = range > 0 ? ((price - marketRange.min) / range) * 100 : 50;
 
   const value = Math.max(0, Math.min(100, percentage));
-  const color = getColor(value);
-  const label = getLabel(value);
+  const { rating, color } = getVerdict(price, marketRange);
+  const label =
+    rating === "good"
+      ? t("carValues.deal_good", { defaultValue: "Good Deal" })
+      : rating === "above_market"
+        ? t("carValues.deal_above_market", { defaultValue: "Above Market" })
+        : t("carValues.deal_fair", { defaultValue: "Fair Price" });
 
   return (
     <Stack spacing={1} mt={3}>
       <Stack direction="row" justifyContent="space-between">
-        <Typography variant="subtitle2">Market Value</Typography>
+        <Typography variant="subtitle2">
+          {t("carValues.marketValueEstimate", { defaultValue: "Market Value" })}
+        </Typography>
         <Typography
           variant="subtitle2"
           color={`${color}.main`}

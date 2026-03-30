@@ -36,6 +36,7 @@ export function isListingImage(value: any): value is ListingImage {
     value !== null &&
     typeof value.id === "string" &&
     typeof value.url === "string" &&
+    (value.thumbnailUrl === undefined || typeof value.thumbnailUrl === "string") &&
     (value.isPrimary === undefined || typeof value.isPrimary === "boolean")
   );
 }

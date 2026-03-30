@@ -1,0 +1,25 @@
+rules_version = '2';
+
+// Craft rules based on data in your Firestore database
+// allow write: if firestore.get(
+//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Car Listings images folder
+    match /listings/{imageId} {
+      // Anyone viewing the website can see the car images
+      allow read: if true;
+      
+      // Only authenticated users can upload new images.
+      // Must be an image file and under 2MB (we compress them to ~500KB locally)
+      allow write: if request.auth != null 
+                   && request.resource.contentType.matches('image/.*')
+                   && request.resource.size < 2 * 1024 * 1024;
+    }
+    
+    // Default fallback: block everything else securely
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
