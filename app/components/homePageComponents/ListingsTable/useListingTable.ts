@@ -69,6 +69,14 @@ export function useListingsTable(
       )
         return false;
 
+      if (
+        filters.model &&
+        filters.model.trim() !== "all" &&
+        filters.model.trim() !== "" &&
+        l.model.toLowerCase() !== filters.model.trim().toLowerCase()
+      )
+        return false;
+
       if (filters.year !== "all" && l.year !== Number(filters.year))
         return false;
 

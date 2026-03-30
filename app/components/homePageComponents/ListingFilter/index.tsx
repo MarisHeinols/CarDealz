@@ -131,6 +131,7 @@ const ListingsFilters = ({
         {/* Model */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Autocomplete
+            freeSolo
             options={models}
             disabled={!filters.brand || filters.brand === "all"}
             loading={modelsLoading}

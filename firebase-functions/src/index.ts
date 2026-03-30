@@ -37,7 +37,7 @@ const LEGACY_USERS_COLLECTION = "users";
 export const verifyDealerAccount = onCall(
   { 
     region: "europe-west1", 
-    cors: ["http://localhost:5173", "https://baltic-auto.net"], 
+    cors: true, 
     invoker: "public" 
   },
   async (request: CallableRequest) => {
@@ -396,7 +396,7 @@ function containsProfanity(v: string): boolean {
 export const createLeadSecure = onCall(
   {
     region: "europe-west1",
-    cors: ["http://localhost:5173", "https://baltic-auto.net"],
+    cors: true,
     invoker: "public",
   },
   async (request: CallableRequest) => {
@@ -666,8 +666,8 @@ export const onLeadCreated = onDocumentCreated(
     try {
       const db = admin.firestore();
       
-      // 1. Get Dealer Info
-      const dealerSnap = await db.doc(`users/${dealerId}`).get();
+      // 1. Get Dealer Info from privateUsers
+      const dealerSnap = await db.doc(`privateUsers/${dealerId}`).get();
       const dealerData = dealerSnap.data();
       const dealerEmail = dealerData?.email;
 

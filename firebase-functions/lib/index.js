@@ -64,7 +64,7 @@ const PRIVATE_USERS_COLLECTION = "privateUsers";
 const LEGACY_USERS_COLLECTION = "users";
 exports.verifyDealerAccount = (0, https_1.onCall)({
     region: "europe-west1",
-    cors: ["http://localhost:5173", "https://baltic-auto.net"],
+    cors: true,
     invoker: "public"
 }, async (request) => {
     if (!request.data)
@@ -374,7 +374,7 @@ function containsProfanity(v) {
 }
 exports.createLeadSecure = (0, https_1.onCall)({
     region: "europe-west1",
-    cors: ["http://localhost:5173", "https://baltic-auto.net"],
+    cors: true,
     invoker: "public",
 }, async (request) => {
     if (!request.data)
@@ -602,8 +602,8 @@ exports.onLeadCreated = (0, firestore_1.onDocumentCreated)({
     const { dealerId, listingId, buyerName, buyerEmail, message, preferredContactMethod } = data;
     try {
         const db = admin.firestore();
-        // 1. Get Dealer Info
-        const dealerSnap = await db.doc(`users/${dealerId}`).get();
+        // 1. Get Dealer Info from privateUsers
+        const dealerSnap = await db.doc(`privateUsers/${dealerId}`).get();
         const dealerData = dealerSnap.data();
         const dealerEmail = dealerData?.email;
         if (!dealerEmail) {

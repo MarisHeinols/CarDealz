@@ -21,6 +21,13 @@ export const filterListings = (
     }
 
     if (filters.brand !== "all" && l.make !== filters.brand) return false;
+    if (
+      filters.model &&
+      filters.model.trim() !== "all" &&
+      filters.model.trim() !== "" &&
+      l.model.toLowerCase() !== filters.model.trim().toLowerCase()
+    )
+      return false;
     if (filters.year !== "all" && String(l.year) !== filters.year) return false;
     if (
       filters.conditionTier !== "all" &&
