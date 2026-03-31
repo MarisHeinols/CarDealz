@@ -298,6 +298,12 @@ export const lt = {
       loadingModels: "Kraunami modeliai…",
       loadingCities: "Kraunami miestai…",
     },
+    search: {
+      noResults: {
+        title: "Nieko nerasta.",
+        subtitle: "Štai skelbimai, kurie vis tiek gali jus sudominti.",
+      },
+    },
     details: {
       vin: "VIN",
       ta: "TA",
@@ -520,6 +526,7 @@ export const lt = {
         fetchingProfile: "Gaunamas profilis.",
         notPublished: "Dar nepaskelbta",
         notPublishedDesc: "Ši įmonė dar neišsaugojo savo parduotuvės nustatymų.",
+        showListings: "Rodyti skelbimus",
       },
     },
     featureCategories: {

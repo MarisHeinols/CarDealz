@@ -318,6 +318,12 @@ export const lv = {
       loadingModels: "Ielādē modeļus…",
       loadingCities: "Ielādē pilsētas…",
     },
+    search: {
+      noResults: {
+        title: "Nekas netika atrasts.",
+        subtitle: "Šeit ir sludinājumi, kas joprojām varētu jūs interesēt.",
+      },
+    },
     details: {
       vin: "VIN",
       ta: "TA",
@@ -480,11 +486,11 @@ export const lv = {
         },
         whyBuy: {
           title: "KĀPĒC PIRKT ŠEIT?",
-          i1: "Pilns sortiments no pārbaudītiem dīleriem",
+          i1: "Verificētu dīleru sludinājumi",
           i2: "AI pamatotas 'Labs darījums' nozīmītes",
           i3: "Izcelti populārāko auto sludinājumi",
           i4: "Tieša un droša saziņa ar dīleriem",
-          i5: "Nekādu krāpnieku, tikai reāls biznesa sortiments",
+          i5: "Uzticami auto piedāvājums no verificētiem dīleriem",
         },
         cta: "Skatīt sortimentu",
       },
@@ -931,6 +937,7 @@ export const lv = {
     },
     store: {
       inventory: "Mūsu piedāvājums",
+      showListings: "Rādīt sludinājumus",
       search_and_filter: "Meklēšana un filtri",
       sort_date: "Kārtot: Jaunākie",
       filters: {

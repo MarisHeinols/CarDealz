@@ -298,6 +298,12 @@ export const et = {
       loadingModels: "Mudelite laadimine…",
       loadingCities: "Linnade laadimine…",
     },
+    search: {
+      noResults: {
+        title: "Midagi ei leitud.",
+        subtitle: "Siin on kuulutused, mis võivad sind siiski huvitada.",
+      },
+    },
     details: {
       vin: "VIN",
       ta: "ÜV",
@@ -449,11 +455,11 @@ export const et = {
         },
         whyBuy: {
           title: "MIKS OSTA SIIT?",
-          i1: "Täielik valik kinnitatud müüjatelt",
+          i1: "Verifitseeritud dīlerite kuulutused",
           i2: "AI-põhised 'Hea pakkumine' märgid",
           i3: "Turuülesed populaarsed esiletõstud",
           i4: "Otse- ja turvaline kontakt müüjatega",
-          i5: "Päris ettevõtted, ei mingeid pettusi",
+          i5: "Usaldusväärne autopakkumine verifitseeritud dīleritelt",
         },
         cta: "Sirvi valikut",
       },
@@ -520,6 +526,7 @@ export const et = {
         fetchingProfile: "Profiili ja seadete laadimine.",
         notPublished: "Pood pole veel avaldatud",
         notPublishedDesc: "Sel ettevõttel pole veel poe seadeid salvestatud.",
+        showListings: "Näita kuulutusi",
       },
     },
     featureCategories: {

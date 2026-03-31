@@ -8,6 +8,7 @@ import {
   Stack,
   LinearProgress,
   alpha,
+  Divider,
 } from "@mui/material";
 import { useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -45,7 +46,12 @@ const Listings = () => {
     currentPage,
     pageCount,
     setCurrentPage,
-  } = usePaginatedListings(10, { make: filters.brand, model: filters.model }, sortKey, sortDir);
+  } = usePaginatedListings(
+    10,
+    { make: filters.brand, model: filters.model },
+    sortKey,
+    sortDir,
+  );
   const [searchParams, setSearchParams] = useSearchParams();
   const sellerFilter = searchParams.get("seller");
   const prefs = useUserPreferences();
@@ -102,7 +108,8 @@ const Listings = () => {
           py: { xs: 4, md: 6 },
           px: 3,
           borderRadius: 4,
-          background: (theme) => `linear-gradient(180deg, ${alpha(theme.palette.primary.main, 0.05)} 0%, ${alpha(theme.palette.background.paper, 0.01)} 100%)`,
+          background: (theme) =>
+            `linear-gradient(180deg, ${alpha(theme.palette.primary.main, 0.05)} 0%, ${alpha(theme.palette.background.paper, 0.01)} 100%)`,
           border: "1px solid rgba(0,0,0,0.06)",
           mb: 4,
           position: "relative",
@@ -110,7 +117,7 @@ const Listings = () => {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          textAlign: "center"
+          textAlign: "center",
         }}
       >
         <Typography
@@ -118,14 +125,15 @@ const Listings = () => {
           sx={{
             fontWeight: 900,
             fontSize: { xs: "1.75rem", sm: "2.25rem", md: "2.75rem" },
-            background: (theme) => `linear-gradient(135deg, ${theme.palette.text.primary} 30%, ${theme.palette.primary.main} 100%)`,
+            background: (theme) =>
+              `linear-gradient(135deg, ${theme.palette.text.primary} 30%, ${theme.palette.primary.main} 100%)`,
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
             mb: 1.5,
             lineHeight: 1.2,
             letterSpacing: "-0.03em",
             maxWidth: "800px",
-            mx: "auto"
+            mx: "auto",
           }}
         >
           {t("seo.homeTitle")}
@@ -214,12 +222,49 @@ const Listings = () => {
           <LinearProgress />
         </Box>
       ) : null}
-      <ListingsTable
-        rows={table.rows}
-        sortKey={table.sortKey}
-        sortDir={table.sortDir}
-        onSort={table.toggleSort}
-      />
+
+      {table.total === 0 && table.suggestedRows.length > 0 ? (
+        <Box
+          sx={{
+            mt: 2,
+            p: 3,
+            borderRadius: 2,
+            border: "1px solid",
+            borderColor: "divider",
+            bgcolor: "background.paper",
+          }}
+        >
+          <Stack spacing={1}>
+            <Typography fontWeight={800}>
+              {t("search.noResults.title", {
+                defaultValue: "Nothing was found.",
+              })}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {t("search.noResults.subtitle", {
+                defaultValue:
+                  "Here are listings that still might interest you.",
+              })}
+            </Typography>
+          </Stack>
+
+          <Divider sx={{ my: 2 }} />
+
+          <ListingsTable
+            rows={table.suggestedRows}
+            sortKey={table.sortKey}
+            sortDir={table.sortDir}
+            onSort={table.toggleSort}
+          />
+        </Box>
+      ) : (
+        <ListingsTable
+          rows={table.rows}
+          sortKey={table.sortKey}
+          sortDir={table.sortDir}
+          onSort={table.toggleSort}
+        />
+      )}
 
       <div className={styles.footer}>
         <Typography variant="body2">

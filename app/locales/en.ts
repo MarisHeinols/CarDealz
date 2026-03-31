@@ -362,6 +362,12 @@ export const en = {
       loadingModels: "Loading Models…",
       loadingCities: "Loading Cities…",
     },
+    search: {
+      noResults: {
+        title: "Nothing was found.",
+        subtitle: "Here are listings that still might interest you.",
+      },
+    },
     details: {
       vin: "VIN",
       ta: "TA",
@@ -496,11 +502,11 @@ export const en = {
         },
         whyBuy: {
           title: "WHY BUY HERE?",
-          i1: "Full inventory from verified dealers",
+          i1: "Verified dealer listings",
           i2: "AI-powered Good Deal badges",
           i3: "Market-wide Trending highlights",
           i4: "Direct secure contact with dealers",
-          i5: "No scams, only real business inventory",
+          i5: "Trusted car inventory from verified dealers",
         },
         cta: "Browse Inventory",
       },
@@ -967,6 +973,7 @@ export const en = {
     },
     store: {
       inventory: "Our Inventory",
+      showListings: "Show listings",
       search_and_filter: "Search & Filters",
       sort_date: "Sort: Date Uploaded",
       filters: {

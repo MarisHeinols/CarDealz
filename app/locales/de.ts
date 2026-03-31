@@ -285,6 +285,12 @@ export const de = {
       loadingModels: "Modelle laden…",
       loadingCities: "Städte laden…",
     },
+    search: {
+      noResults: {
+        title: "Nichts gefunden.",
+        subtitle: "Hier sind Inserate, die Sie trotzdem interessieren könnten.",
+      },
+    },
     details: {
       vin: "VIN",
       ta: "TÜV",
@@ -435,12 +441,12 @@ export const de = {
           desc: "Beste Deals finden und Händler mit einem Klick kontaktieren.",
         },
         whyBuy: {
-          title: "WARUM BEI UNS KAUFEN?",
-          i1: "Bestand von echten Händlern",
+          title: "WARUM HIER KAUFEN?",
+          i1: "Inserate von verifizierten Händlern",
           i2: "AI-basierte 'Good Deal' Abzeichen",
           i3: "Marktweite Trend-Highlights",
           i4: "Direkter sicherer Kontakt",
-          i5: "Kein Betrug, nur Profis",
+          i5: "Zuverlässige Fahrzeuge von verifizierten Händlern",
         },
         cta: "Bestand ansehen",
       },
@@ -507,6 +513,7 @@ export const de = {
         fetchingProfile: "Hole Profil-Daten.",
         notPublished: "Noch nicht veröffentlicht",
         notPublishedDesc: "Dieses Unternehmen hat noch keine Store-Einstellungen gespeichert.",
+        showListings: "Angebote anzeigen",
       },
     },
     dashboard: {

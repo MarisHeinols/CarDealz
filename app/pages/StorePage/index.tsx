@@ -209,6 +209,7 @@ function IndividualProfileListings({
 export default function StorePage({ handle }: { handle: string }) {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
+  const inventoryAnchorId = "store-inventory";
   const [ownerId, setOwnerId] = useState<string | null>(null);
   const [loadingStore, setLoadingStore] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -475,12 +476,17 @@ export default function StorePage({ handle }: { handle: string }) {
           <StoreInfo
             listingsCount={listingStats.listingsCount}
             viewsCount={listingStats.viewsCount}
+            onShowListings={() => {
+              const el = document.getElementById(inventoryAnchorId);
+              if (!el) return;
+              el.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
           />
           <StoreMap />
         </Box>
 
         {/* Inventory Section — Search & Filter */}
-        <Box sx={{ mt: 5 }}>
+        <Box id={inventoryAnchorId} sx={{ mt: 5, scrollMarginTop: 96 }}>
           <Box sx={{ mt: 1 }}>
             <Accordion
               defaultExpanded={false}
@@ -531,11 +537,52 @@ export default function StorePage({ handle }: { handle: string }) {
                 {t("store.inventory")}
               </Typography>
 
-              <StoreListingsGrid
-                listings={table.rows}
-                isOwner={isOwner && viewerVerified}
-                onRefresh={owner.refresh}
-              />
+              {table.total === 0 && table.suggestedRows.length > 0 ? (
+                <Box
+                  sx={{
+                    p: 3,
+                    borderRadius: 2,
+                    border: "1px solid",
+                    borderColor: "divider",
+                    bgcolor: theme?.primary || "background.paper",
+                    color: theme?.isTextLight ? "white" : "inherit",
+                  }}
+                >
+                  <Stack spacing={1}>
+                    <Typography fontWeight={800} sx={{ color: "inherit" }}>
+                      {t("search.noResults.title", {
+                        defaultValue: "Nothing was found.",
+                      })}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        opacity: 0.9,
+                        color: "inherit",
+                      }}
+                    >
+                      {t("search.noResults.subtitle", {
+                        defaultValue:
+                          "Here are listings that still might interest you.",
+                      })}
+                    </Typography>
+                  </Stack>
+
+                  <Divider sx={{ my: 2, borderColor: "divider" }} />
+
+                  <StoreListingsGrid
+                    listings={table.suggestedRows}
+                    isOwner={isOwner && viewerVerified}
+                    onRefresh={owner.refresh}
+                  />
+                </Box>
+              ) : (
+                <StoreListingsGrid
+                  listings={table.rows}
+                  isOwner={isOwner && viewerVerified}
+                  onRefresh={owner.refresh}
+                />
+              )}
 
               <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
                 <Pagination

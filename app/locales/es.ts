@@ -298,6 +298,12 @@ export const es = {
       loadingModels: "Cargando modelos…",
       loadingCities: "Cargando ciudades…",
     },
+    search: {
+      noResults: {
+        title: "No se encontró nada.",
+        subtitle: "Aquí tienes anuncios que aún podrían interesarte.",
+      },
+    },
     details: {
       vin: "VIN",
       ta: "ITV",
@@ -449,11 +455,11 @@ export const es = {
         },
         whyBuy: {
           title: "¿POR QUÉ COMPRAR AQUÍ?",
-          i1: "Stock completo de concesionarios reales",
+          i1: "Anuncios de vendedores verificados",
           i2: "Etiquetas 'Buena oferta' por IA",
           i3: "Tendencias de mercado destacadas",
           i4: "Contacto directo y seguro",
-          i5: "Sin fraudes, solo vendedores profesionales",
+          i5: "Inventario de coches fiable de concesionarios verificados",
         },
         cta: "Buscar inventario",
       },
@@ -520,6 +526,7 @@ export const es = {
         fetchingProfile: "Recuperando perfil…",
         notPublished: "Aún no publicada",
         notPublishedDesc: "Esta empresa no ha guardado sus ajustes de tienda aún.",
+        showListings: "Ver anuncios",
       },
     },
     featureCategories: {

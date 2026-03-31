@@ -12,11 +12,25 @@ type Props = {
   reviewStats?: { avg: number; count: number } | null;
   listingsCount?: number;
   viewsCount?: number;
+  onShowListings?: () => void;
 };
 
-const DAYS_OF_WEEK = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+const DAYS_OF_WEEK = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+];
 
-const StoreInfo = ({ reviewStats, listingsCount, viewsCount }: Props) => {
+const StoreInfo = ({
+  reviewStats,
+  listingsCount,
+  viewsCount,
+  onShowListings,
+}: Props) => {
   const { t } = useTranslation();
   const storeSettings = useStorefrontSettings();
   const theme = storeSettings.theme;
@@ -41,7 +55,9 @@ const StoreInfo = ({ reviewStats, listingsCount, viewsCount }: Props) => {
 
     for (const day of DAYS_OF_WEEK) {
       // Keys in workTime might be capitalized from DB, normalize to lower for lookup
-      const wt = workTime[day] || (workTime as any)[day.charAt(0).toUpperCase() + day.slice(1)];
+      const wt =
+        workTime[day] ||
+        (workTime as any)[day.charAt(0).toUpperCase() + day.slice(1)];
       if (!wt) continue;
 
       if (!currentGroup) {
@@ -51,7 +67,8 @@ const StoreInfo = ({ reviewStats, listingsCount, viewsCount }: Props) => {
         const prevWt = currentGroup.wt;
         const isSame =
           prevWt.isClosed === wt.isClosed &&
-          (wt.isClosed || (prevWt.open === wt.open && prevWt.close === wt.close));
+          (wt.isClosed ||
+            (prevWt.open === wt.open && prevWt.close === wt.close));
 
         if (isSame) {
           currentGroup.endDay = day;
@@ -70,8 +87,17 @@ const StoreInfo = ({ reviewStats, listingsCount, viewsCount }: Props) => {
     <Paper sx={{ p: 3, bgcolor: theme.primary, color: onCard.text }}>
       <Stack spacing={2}>
         <Stack spacing={1}>
-          <Typography variant="body2" sx={{ color: onCard.text, display: "flex", alignItems: "center", gap: 1 }}>
-            <LocationOnIcon fontSize="small" sx={{ opacity: 0.8 }} /> {location.adress || t("listing.noAddress")}
+          <Typography
+            variant="body2"
+            sx={{
+              color: onCard.text,
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
+            <LocationOnIcon fontSize="small" sx={{ opacity: 0.8 }} />{" "}
+            {location.adress || t("listing.noAddress")}
           </Typography>
 
           <Box
@@ -84,22 +110,32 @@ const StoreInfo = ({ reviewStats, listingsCount, viewsCount }: Props) => {
           >
             <AccessTimeIcon fontSize="small" />
             <Box>
-              <Typography variant="body2" fontWeight={600} sx={{ color: "inherit" }}>
+              <Typography
+                variant="body2"
+                fontWeight={600}
+                sx={{ color: "inherit" }}
+              >
                 {t("listing.hours")}
               </Typography>
               {workGroups ? (
                 workGroups.map((g, idx) => {
                   const startTrans = t(`days.${g.startDay}`);
                   const endTrans = t(`days.${g.endDay}`);
-                  const dayLabel = g.startDay === g.endDay ? startTrans : `${startTrans}-${endTrans}`;
-                  
+                  const dayLabel =
+                    g.startDay === g.endDay
+                      ? startTrans
+                      : `${startTrans}-${endTrans}`;
+
                   return (
                     <Typography
                       key={idx}
                       variant="caption"
                       sx={{ display: "block" }}
                     >
-                      {dayLabel}: {g.wt.isClosed ? t("common.closed") : `${g.wt.open} - ${g.wt.close}`}
+                      {dayLabel}:{" "}
+                      {g.wt.isClosed
+                        ? t("common.closed")
+                        : `${g.wt.open} - ${g.wt.close}`}
                     </Typography>
                   );
                 })
@@ -109,21 +145,51 @@ const StoreInfo = ({ reviewStats, listingsCount, viewsCount }: Props) => {
             </Box>
           </Box>
 
-          <Typography variant="body2" sx={{ color: onCard.text, display: "flex", alignItems: "center", gap: 1 }}>
-            <PhoneIcon fontSize="small" sx={{ opacity: 0.8 }} /> {contact.phone || t("listing.noPhone")}
+          <Typography
+            variant="body2"
+            sx={{
+              color: onCard.text,
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
+            <PhoneIcon fontSize="small" sx={{ opacity: 0.8 }} />{" "}
+            {contact.phone || t("listing.noPhone")}
           </Typography>
 
-          <Typography variant="body2" sx={{ color: onCard.text, display: "flex", alignItems: "center", gap: 1 }}>
-            <EmailIcon fontSize="small" sx={{ opacity: 0.8 }} /> {contact.email || t("listing.noEmail")}
+          <Typography
+            variant="body2"
+            sx={{
+              color: onCard.text,
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
+            <EmailIcon fontSize="small" sx={{ opacity: 0.8 }} />{" "}
+            {contact.email || t("listing.noEmail")}
           </Typography>
 
           {contact.website && (
-            <Typography variant="body2" sx={{ color: onCard.text, display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: onCard.text,
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+              }}
+            >
               <LanguageIcon fontSize="small" sx={{ opacity: 0.8 }} />
-              <a 
-                href={contact.website.startsWith("http") ? contact.website : `https://${contact.website}`} 
-                target="_blank" 
-                rel="noreferrer" 
+              <a
+                href={
+                  contact.website.startsWith("http")
+                    ? contact.website
+                    : `https://${contact.website}`
+                }
+                target="_blank"
+                rel="noreferrer"
                 style={{ color: "inherit", textDecoration: "underline" }}
               >
                 {contact.website.replace(/^https?:\/\//, "")}
@@ -135,6 +201,8 @@ const StoreInfo = ({ reviewStats, listingsCount, viewsCount }: Props) => {
         <Button
           variant="contained"
           fullWidth
+          onClick={onShowListings}
+          disabled={!onShowListings}
           sx={{
             bgcolor: theme.accent || theme.primary,
             "&:hover": {
@@ -143,7 +211,7 @@ const StoreInfo = ({ reviewStats, listingsCount, viewsCount }: Props) => {
             },
           }}
         >
-          {t("listing.contactSeller")}
+          {t("store.showListings", { defaultValue: "Show listings" })}
         </Button>
 
         <Divider />
@@ -163,7 +231,8 @@ const StoreInfo = ({ reviewStats, listingsCount, viewsCount }: Props) => {
           </Typography>
           {reviewStats ? (
             <Typography variant="body2" sx={{ color: onCard.text }}>
-              <strong>{reviewStats.count}</strong> {t("businesses.table.reviews").toLowerCase()}
+              <strong>{reviewStats.count}</strong>{" "}
+              {t("businesses.table.reviews").toLowerCase()}
             </Typography>
           ) : null}
         </Stack>
