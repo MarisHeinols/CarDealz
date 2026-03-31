@@ -38,6 +38,13 @@ import {
 } from "~/services/listingsCache";
 import ConfirmDialog from "../../shared/ConfirmDialog";
 
+const conditionTierColorMap = {
+  new: "primary",
+  slightly_used: "info",
+  first_payment: "info",
+  used: "info",
+} as const;
+
 const ListingsTable = ({
   rows,
   sortKey,
@@ -164,14 +171,6 @@ const ListingsTable = ({
                   <Typography variant="body2" fontWeight={600}>
                     {l.make}
                   </Typography>
-                  {l.isDealer && (
-                    <Chip
-                      label={t("listing.dealer")}
-                      size="small"
-                      variant="levelHigh"
-                      sx={{ fontSize: "0.65rem", height: 20 }}
-                    />
-                  )}
                   {l.isSold && (
                     <Chip
                       label={t("sellerCard.status_sold")}
@@ -195,14 +194,11 @@ const ListingsTable = ({
                     defaultValue: l.conditionTier,
                   })}
                   size="small"
-                  variant={
-                    l.conditionTier === "new"
-                      ? "levelHigh"
-                      : l.conditionTier === "slightly_used" ||
-                          l.conditionTier === "first_payment"
-                        ? "levelMedium"
-                        : "levelLow"
-                  }
+                  sx={{
+                    bgcolor: l.conditionTier === "new" ? "#7a0081" : "#0288d1",
+                    color: "#fff",
+                    fontWeight: 600,
+                  }}
                 />
               </TableCell>
 

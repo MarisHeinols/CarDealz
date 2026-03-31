@@ -861,6 +861,7 @@ export const en = {
       email: "Email: {{email}}",
       phone: "Phone: {{phone}}",
       preferred_contact_method: "Preferred: {{method}}",
+      deleted_success: "Lead deleted successfully.",
     },
     lead: {
       contactDealer: "Contact dealer",

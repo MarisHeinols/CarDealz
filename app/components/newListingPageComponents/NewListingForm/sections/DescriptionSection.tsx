@@ -8,7 +8,7 @@ interface Props {
   setListing: React.Dispatch<React.SetStateAction<CarListingDetailsJson>>;
 }
 
-export default function DescriptionSection({ listing, setListing }: Props) {
+function DescriptionSection({ listing, setListing }: Props) {
   const { t } = useTranslation();
   return (
     <TextField
@@ -24,3 +24,7 @@ export default function DescriptionSection({ listing, setListing }: Props) {
     />
   );
 }
+
+export default React.memo(DescriptionSection, (prev, next) => {
+  return prev.listing.description === next.listing.description;
+});

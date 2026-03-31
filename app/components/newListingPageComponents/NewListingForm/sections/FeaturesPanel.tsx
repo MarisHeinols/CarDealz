@@ -9,9 +9,7 @@ import {
   Checkbox,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import {
-  CAR_FEATURE_GROUPS,
-} from "~/constants/carConstants";
+import { CAR_FEATURE_GROUPS } from "~/constants/carConstants";
 import type { CarListingDetailsJson, CarFeature } from "~/types/types";
 import { useTranslation } from "react-i18next";
 import { featureDefinitions } from "~/components/listingPageComponents/SpecSheet/featureLabels";
@@ -21,7 +19,7 @@ interface Props {
   setListing: React.Dispatch<React.SetStateAction<CarListingDetailsJson>>;
 }
 
-export default function FeaturesPanel({ listing, setListing }: Props) {
+function FeaturesPanel({ listing, setListing }: Props) {
   const { t } = useTranslation();
 
   const toggleFeature = (feature: CarFeature) => {
@@ -53,7 +51,9 @@ export default function FeaturesPanel({ listing, setListing }: Props) {
         <Accordion key={group.title}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography fontWeight={600}>
-              {t(`featureCategories.${groupKey}`, { defaultValue: group.title })}
+              {t(`featureCategories.${groupKey}`, {
+                defaultValue: group.title,
+              })}
             </Typography>
           </AccordionSummary>
           <AccordionDetails>
@@ -66,7 +66,9 @@ export default function FeaturesPanel({ listing, setListing }: Props) {
                     onChange={() => toggleFeature(feature)}
                   />
                 }
-                label={t(`features.${feature}`, { defaultValue: featureDefinitions[feature]?.label || feature })}
+                label={t(`features.${feature}`, {
+                  defaultValue: featureDefinitions[feature]?.label || feature,
+                })}
               />
             ))}
           </AccordionDetails>
@@ -75,3 +77,10 @@ export default function FeaturesPanel({ listing, setListing }: Props) {
     </Box>
   );
 }
+
+export default React.memo(FeaturesPanel, (prev, next) => {
+  return (
+    prev.listing.features.length === next.listing.features.length &&
+    prev.listing.features.every((f, i) => f === next.listing.features[i])
+  );
+});

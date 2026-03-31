@@ -46,12 +46,7 @@ const Listings = () => {
     currentPage,
     pageCount,
     setCurrentPage,
-  } = usePaginatedListings(
-    10,
-    { make: filters.brand, model: filters.model },
-    sortKey,
-    sortDir,
-  );
+  } = usePaginatedListings(10, { make: filters.brand, model: filters.model });
   const [searchParams, setSearchParams] = useSearchParams();
   const sellerFilter = searchParams.get("seller");
   const prefs = useUserPreferences();
@@ -97,7 +92,6 @@ const Listings = () => {
     onSort: (key, dir) => {
       setSortKey(key);
       setSortDir(dir);
-      setCurrentPage(1);
     },
   });
 

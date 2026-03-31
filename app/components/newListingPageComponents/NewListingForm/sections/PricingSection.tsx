@@ -30,7 +30,7 @@ const DEAL_COLOR = {
   above_market: "error",
 } as const;
 
-export default function PricingSection({ listing, setListing }: Props) {
+function PricingSection({ listing, setListing }: Props) {
   const { t } = useTranslation();
   const [estimating, setEstimating] = useState(false);
   const [aiResult, setAiResult] = useState<MarketValuationResult | null>(null);
@@ -185,3 +185,12 @@ export default function PricingSection({ listing, setListing }: Props) {
     </Grid>
   );
 }
+
+export default React.memo(PricingSection, (prev, next) => {
+  return (
+    prev.listing.price === next.listing.price &&
+    prev.listing.selfCost === next.listing.selfCost &&
+    prev.listing.make === next.listing.make &&
+    prev.listing.model === next.listing.model
+  );
+});

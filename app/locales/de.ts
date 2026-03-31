@@ -650,8 +650,9 @@ export const de = {
       loading_leads: "Lade Anfragen...",
       no_leads_yet: "Noch keine Anfragen.",
       email: "E-Mail: {{email}}",
-      phone: "Tel: {{phone}}",
-      preferred_contact_method: "Kontaktwunsch: {{method}}",
+      phone: "Telefon: {{phone}}",
+      preferred_contact_method: "Bevorzugt: {{method}}",
+      deleted_success: "Anfrage erfolgreich gelöscht.",
     },
     lead: {
       contactDealer: "Händler kontaktieren",

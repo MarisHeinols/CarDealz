@@ -20,11 +20,7 @@ interface Props {
   setListing: React.Dispatch<React.SetStateAction<CarListingDetailsJson>>;
 }
 
-export default function ImagesSection({
-  images,
-  setImages,
-  setListing,
-}: Props) {
+function ImagesSection({ images, setImages, setListing }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [snackbar, setSnackbar] = useState<{
@@ -243,3 +239,5 @@ export default function ImagesSection({
     </Box>
   );
 }
+
+export default React.memo(ImagesSection);

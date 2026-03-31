@@ -74,24 +74,26 @@ export async function getPaginatedListings(
 ): Promise<PaginatedListingsResult> {
   const listingsRef = collection(db, "listings");
 
+  // We intentionally paginate by `createdAt` only.
+  // Using additional `orderBy` fields (or ordering by other fields) with multiple `where` clauses
+  // quickly requires composite indexes and breaks the UI with "query requires an index".
+  // The UI already applies sorting on the current page client-side.
+  const firestoreSortBy = "createdAt";
+  const firestoreSortDir: "asc" | "desc" = "desc";
+
   const constraints: QueryConstraint[] = [
     where("deleted", "==", false),
     where("isSold", "==", false),
     where("status", "==", "published"),
-    orderBy(sortBy, sortDir)
+    orderBy(firestoreSortBy, firestoreSortDir)
   ];
 
   if (filters?.make && filters.make !== "all") {
     constraints.push(where("make", "==", filters.make));
   }
 
-  // Note: if sortBy is not 'createdAt', we usually still want 'createdAt' as a tie-breaker
-  if (sortBy !== "createdAt") {
-    constraints.push(orderBy("createdAt", "desc"));
-  }
-
   // Note: Firestore requires specific indexes for complex queries.
-  // We'll stick to basic ones for now to avoid setup errors.
+  // We keep the Firestore query simple to avoid index setup errors.
 
   const countQuery = query(listingsRef, ...constraints);
   const countSnapshot = await getCountFromServer(countQuery);

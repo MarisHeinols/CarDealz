@@ -16,11 +16,11 @@ import { useAppSelector } from "~/redux/hooks";
 import { useTheme } from "@mui/material/styles";
 import type { StoreTheme } from "~/redux/slices/storeSettingsSlice";
 
-const conditionTierVariantMap = {
-  new: "levelHigh",
-  slightly_used: "levelMedium",
-  first_payment: "levelMedium",
-  used: "levelLow",
+const conditionTierStyleMap = {
+  new: { bgcolor: "#7a0081", color: "#fff" }, // Purple
+  slightly_used: { bgcolor: "#0288d1", color: "#fff" }, // Blue
+  first_payment: { bgcolor: "#0288d1", color: "#fff" }, // Blue
+  used: { bgcolor: "#0288d1", color: "#fff" }, // Blue
 } as const;
 
 interface Props {
@@ -103,13 +103,14 @@ const ListingCard = ({
           <Chip
             label={t(`carValues.condition_${listing.conditionTier}`)}
             size="small"
-            variant={conditionTierVariantMap[listing.conditionTier]}
             sx={{
               position: "absolute",
               top: 12,
               left: 12,
-              backdropFilter: "blur(4px)",
-              boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
+              boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
+              bgcolor: conditionTierStyleMap[listing.conditionTier].bgcolor,
+              color: conditionTierStyleMap[listing.conditionTier].color,
+              fontWeight: 600,
             }}
           />
 

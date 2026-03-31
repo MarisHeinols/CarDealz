@@ -31,7 +31,7 @@ interface Props {
   setListing: React.Dispatch<React.SetStateAction<CarListingDetailsJson>>;
 }
 
-export default function BasicInfoSection({ listing, setListing }: Props) {
+function BasicInfoSection({ listing, setListing }: Props) {
   const { t } = useTranslation();
   const { city, country } = parseLocation(listing.location || "");
   const [geoLoading, setGeoLoading] = useState(false);
@@ -153,10 +153,12 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
               {...params}
               label={
                 !listing.make
-                  ? t("form.select_make_first", { defaultValue: "Select maker first" })
+                  ? t("form.select_make_first", {
+                      defaultValue: "Select maker first",
+                    })
                   : modelsLoading
-                  ? t("form.loadingModels")
-                  : t("form.model")
+                    ? t("form.loadingModels")
+                    : t("form.model")
               }
               fullWidth
               InputProps={{
@@ -291,10 +293,12 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
               <TextField
                 {...params}
                 label={
-                  !country 
-                    ? t("form.select_country_first", { defaultValue: "Select country first" })
-                    : citiesLoading 
-                      ? t("form.loadingCities") 
+                  !country
+                    ? t("form.select_country_first", {
+                        defaultValue: "Select country first",
+                      })
+                    : citiesLoading
+                      ? t("form.loadingCities")
                       : t("form.city")
                 }
                 placeholder={t("form.cityPlaceholder")}
@@ -322,15 +326,19 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
             }
             sx={{ height: 56, whiteSpace: "nowrap" }}
           >
-            {geoLoading ? t("form.detecting") : t("common.useMyLocation", { defaultValue: "Use my location" })}
+            {geoLoading
+              ? t("form.detecting")
+              : t("common.useMyLocation", { defaultValue: "Use my location" })}
           </Button>
         </Stack>
-        
+
         {/* Full Address */}
         <TextField
           fullWidth
           label={t("fields.address", { defaultValue: "Full Address" })}
-          placeholder={t("form.addressPlaceholder", { defaultValue: "e.g. Brīvības iela 123" })}
+          placeholder={t("form.addressPlaceholder", {
+            defaultValue: "e.g. Brīvības iela 123",
+          })}
           value={listing.address || ""}
           onChange={handleChange("address")}
           disabled={!country}
@@ -398,3 +406,22 @@ export default function BasicInfoSection({ listing, setListing }: Props) {
     </Grid>
   );
 }
+
+export default React.memo(BasicInfoSection, (prev, next) => {
+  // Only re-render if BasicInfo fields changed
+  return (
+    prev.listing.make === next.listing.make &&
+    prev.listing.model === next.listing.model &&
+    prev.listing.year === next.listing.year &&
+    prev.listing.mileage === next.listing.mileage &&
+    prev.listing.conditionTier === next.listing.conditionTier &&
+    prev.listing.vin === next.listing.vin &&
+    prev.listing.ta === next.listing.ta &&
+    prev.listing.plateNumber === next.listing.plateNumber &&
+    prev.listing.status === next.listing.status &&
+    prev.listing.location === next.listing.location &&
+    prev.listing.address === next.listing.address &&
+    prev.listing.color === next.listing.color &&
+    prev.listing.interiorColor === next.listing.interiorColor
+  );
+});

@@ -729,7 +729,8 @@ export const es = {
       no_leads_yet: "Sin leads aún.",
       email: "Correo: {{email}}",
       phone: "Tel: {{phone}}",
-      preferred_contact_method: "Contacto: {{method}}",
+      preferred_contact_method: "Preferido: {{method}}",
+      deleted_success: "Lead eliminado con éxito.",
     },
     lead: {
       contactDealer: "Contactar concesionario",

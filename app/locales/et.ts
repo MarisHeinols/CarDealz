@@ -732,7 +732,8 @@ export const et = {
       no_leads_yet: "Päringuid veel pole.",
       email: "E-post: {{email}}",
       phone: "Telefon: {{phone}}",
-      preferred_contact_method: "Eelistus: {{method}}",
+      preferred_contact_method: "Eelistatud: {{method}}",
+      deleted_success: "Päring edukalt kustutatud.",
     },
     lead: {
       contactDealer: "Võta dīleriga ühendust",

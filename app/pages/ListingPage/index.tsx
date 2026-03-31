@@ -355,17 +355,6 @@ const ListingPage = ({ id }: Props) => {
                 variant="levelNeutral"
                 sx={{ px: 0.5 }}
               />
-
-              <Chip
-                label={
-                  car.seller?.isDealer
-                    ? t("listing.dealer")
-                    : t("listing.privateSeller")
-                }
-                size="small"
-                variant={car.seller?.isDealer ? "levelHigh" : "levelLow"}
-                sx={{ px: 0.5 }}
-              />
             </Stack>
 
             <Divider />

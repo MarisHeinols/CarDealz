@@ -831,6 +831,7 @@ export const lv = {
       email: "E-pasts: {{email}}",
       phone: "Telefons: {{phone}}",
       preferred_contact_method: "Vēlamais: {{method}}",
+      deleted_success: "Pieteikums veiksmīgi izdzēsts.",
       deletedListing: "Dzēsts sludinājums",
       chip_deleted: "Sludinājums dzēsts",
       chip_sold: "Auto pārdots",

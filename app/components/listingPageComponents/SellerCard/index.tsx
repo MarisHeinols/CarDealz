@@ -185,13 +185,6 @@ const SellerCard = ({ seller, sellerId, listingId, compact }: Props) => {
           <Typography variant={compact ? "subtitle1" : "h6"} fontWeight={600}>
             {seller.name}
           </Typography>
-          {seller.isDealer && (
-            <Chip
-              label={t("listing.dealer")}
-              size="small"
-              variant="levelHigh"
-            />
-          )}
         </Stack>
 
         <Divider />

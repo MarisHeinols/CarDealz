@@ -24,7 +24,7 @@ export default function BusinessAnalytics() {
     setLoading(true);
     Promise.all([
       getListingsByOwner(user.uid, { includeSold: true }),
-      getLeadsByDealer(user.uid)
+      getLeadsByDealer(user.uid),
     ])
       .then(([dataLists, dataLeads]) => {
         setListings(dataLists);
@@ -39,14 +39,22 @@ export default function BusinessAnalytics() {
   }, [user]);
 
   // Active listings vs Sold listings
-  const { activeListings, soldListings } = useMemo(() => ({
-    activeListings: listings.filter((l) => !l.isSold),
-    soldListings: listings.filter((l) => l.isSold)
-  }), [listings]);
+  const { activeListings, soldListings } = useMemo(
+    () => ({
+      activeListings: listings.filter(
+        (l) => !l.isSold && l.status === "published",
+      ),
+      soldListings: listings.filter((l) => l.isSold),
+    }),
+    [listings],
+  );
 
   // Calc top metrics
   const totalListings = activeListings.length;
-  const totalViews = useMemo(() => listings.reduce((sum, l) => sum + (l.viewCount || 0), 0), [listings]);
+  const totalViews = useMemo(
+    () => listings.reduce((sum, l) => sum + (l.viewCount || 0), 0),
+    [listings],
+  );
 
   // Pie chart data: Active listings Brand distribution
   const pieData = useMemo(() => {
@@ -63,8 +71,10 @@ export default function BusinessAnalytics() {
   const conditionCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     activeListings.forEach((l) => {
-      const cond = l.conditionTier 
-        ? t(`carValues.condition_${l.conditionTier}`, { defaultValue: l.conditionTier })
+      const cond = l.conditionTier
+        ? t(`carValues.condition_${l.conditionTier}`, {
+            defaultValue: l.conditionTier,
+          })
         : t("common.no_data");
       counts[cond] = (counts[cond] || 0) + 1;
     });
@@ -91,19 +101,31 @@ export default function BusinessAnalytics() {
   }, [activeListings]);
 
   // Scatter data: Price vs Mileage
-  const scatterData = useMemo(() => activeListings.map((l) => [l.mileage, l.price]), [activeListings]);
+  const scatterData = useMemo(
+    () => activeListings.map((l) => [l.mileage, l.price]),
+    [activeListings],
+  );
 
   // Heatmap: Months Cars Sold
   const { monthsStr, yearsStr, heatmapData, maxSalesInMonth } = useMemo(() => {
     const months = [
-      t("months.jan"), t("months.feb"), t("months.mar"), t("months.apr"),
-      t("months.may"), t("months.jun"), t("months.jul"), t("months.aug"),
-      t("months.sep"), t("months.oct"), t("months.nov"), t("months.dec"),
+      t("months.jan"),
+      t("months.feb"),
+      t("months.mar"),
+      t("months.apr"),
+      t("months.may"),
+      t("months.jun"),
+      t("months.jul"),
+      t("months.aug"),
+      t("months.sep"),
+      t("months.oct"),
+      t("months.nov"),
+      t("months.dec"),
     ];
-    
+
     const soldCounts: Record<string, Record<number, number>> = {};
     const years = new Set<string>();
-    
+
     soldListings.forEach((l) => {
       if (l.soldAt) {
         const d = new Date(l.soldAt);
@@ -116,13 +138,14 @@ export default function BusinessAnalytics() {
         }
       }
     });
-    
+
     const sortedYears = Array.from(years).sort();
-    if (sortedYears.length === 0) sortedYears.push(new Date().getFullYear().toString());
-    
+    if (sortedYears.length === 0)
+      sortedYears.push(new Date().getFullYear().toString());
+
     const data: [number, number, number][] = [];
     let max = 0;
-    
+
     sortedYears.forEach((y, yIdx) => {
       for (let mIdx = 0; mIdx < 12; mIdx++) {
         const count = soldCounts[y]?.[mIdx] || 0;
@@ -130,8 +153,13 @@ export default function BusinessAnalytics() {
         data.push([mIdx, yIdx, count]);
       }
     });
-    
-    return { monthsStr: months, yearsStr: sortedYears, heatmapData: data, maxSalesInMonth: max };
+
+    return {
+      monthsStr: months,
+      yearsStr: sortedYears,
+      heatmapData: data,
+      maxSalesInMonth: max,
+    };
   }, [soldListings, t]);
 
   // What Brands have most cells (sells):
@@ -158,7 +186,12 @@ export default function BusinessAnalytics() {
   }, [listings]);
 
   // --- LEADS INTELLIGENCE METRICS ---
-  const { sortedLeadMonths, leadsLineValues, topLeadModels, priceVsLeadsScatter } = useMemo(() => {
+  const {
+    sortedLeadMonths,
+    leadsLineValues,
+    topLeadModels,
+    priceVsLeadsScatter,
+  } = useMemo(() => {
     const listingsMap = new Map<string, CarListingSummary>();
     listings.forEach((l) => listingsMap.set(l.id, l));
 
@@ -188,7 +221,10 @@ export default function BusinessAnalytics() {
       .slice(0, 10);
 
     // 3. Leads vs Price Correlation
-    const leadsAggByListing: Record<string, { price: number; leads: number; name: string }> = {};
+    const leadsAggByListing: Record<
+      string,
+      { price: number; leads: number; name: string }
+    > = {};
     leads.forEach((ld) => {
       const listing = listingsMap.get(ld.listingId);
       if (listing && typeof listing.price === "number") {
@@ -202,9 +238,18 @@ export default function BusinessAnalytics() {
         leadsAggByListing[ld.listingId].leads += 1;
       }
     });
-    const pVsLScatter = Object.values(leadsAggByListing).map((v) => [v.price, v.leads, v.name]);
+    const pVsLScatter = Object.values(leadsAggByListing).map((v) => [
+      v.price,
+      v.leads,
+      v.name,
+    ]);
 
-    return { sortedLeadMonths: sLeadMonths, leadsLineValues: lLineValues, topLeadModels: tLeadModels, priceVsLeadsScatter: pVsLScatter };
+    return {
+      sortedLeadMonths: sLeadMonths,
+      leadsLineValues: lLineValues,
+      topLeadModels: tLeadModels,
+      priceVsLeadsScatter: pVsLScatter,
+    };
   }, [listings, leads]);
 
   // Styling helpers
@@ -218,7 +263,10 @@ export default function BusinessAnalytics() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: theme.palette.mode === "dark" ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)",
+        backgroundColor:
+          theme.palette.mode === "dark"
+            ? "rgba(255,255,255,0.02)"
+            : "rgba(0,0,0,0.02)",
         borderRadius: 2,
         mt: 2,
       }}
@@ -314,33 +362,35 @@ export default function BusinessAnalytics() {
             <Typography variant="h6" fontWeight={800} gutterBottom>
               {t("dashboard.analytics.brand_dist")}
             </Typography>
-            {pieData.length === 0 ? renderNoData() : (
-            <ReactECharts
-              option={{
-                tooltip: { trigger: "item" },
-                legend: { top: "bottom", textStyle: { color: textColor } },
-                series: [
-                  {
-                    name: t("table.make"),
-                    type: "pie",
-                    radius: ["40%", "70%"],
-                    avoidLabelOverlap: false,
-                    itemStyle: {
-                      borderRadius: 10,
-                      borderColor: theme.palette.background.paper,
-                      borderWidth: 2,
+            {pieData.length === 0 ? (
+              renderNoData()
+            ) : (
+              <ReactECharts
+                option={{
+                  tooltip: { trigger: "item" },
+                  legend: { top: "bottom", textStyle: { color: textColor } },
+                  series: [
+                    {
+                      name: t("table.make"),
+                      type: "pie",
+                      radius: ["40%", "70%"],
+                      avoidLabelOverlap: false,
+                      itemStyle: {
+                        borderRadius: 10,
+                        borderColor: theme.palette.background.paper,
+                        borderWidth: 2,
+                      },
+                      label: { show: false, position: "center" },
+                      emphasis: {
+                        label: { show: true, fontSize: 20, fontWeight: "bold" },
+                      },
+                      labelLine: { show: false },
+                      data: pieData,
                     },
-                    label: { show: false, position: "center" },
-                    emphasis: {
-                      label: { show: true, fontSize: 20, fontWeight: "bold" },
-                    },
-                    labelLine: { show: false },
-                    data: pieData,
-                  },
-                ],
-              }}
-              style={{ height: "320px" }}
-            />
+                  ],
+                }}
+                style={{ height: "320px" }}
+              />
             )}
           </Paper>
         </Grid>
@@ -356,43 +406,45 @@ export default function BusinessAnalytics() {
             <Typography variant="h6" fontWeight={800} gutterBottom>
               {t("dashboard.analytics.cond_dist")}
             </Typography>
-            {Object.keys(conditionCounts).length === 0 ? renderNoData() : (
-            <ReactECharts
-              option={{
-                tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
-                grid: {
-                  left: "3%",
-                  right: "4%",
-                  bottom: "3%",
-                  containLabel: true,
-                },
-                xAxis: {
-                  type: "category",
-                  data: Object.keys(conditionCounts),
-                  axisLabel: { color: textColor },
-                  axisLine: { lineStyle: { color: axisLineColor } },
-                },
-                yAxis: {
-                  type: "value",
-                  axisLabel: { color: textColor },
-                  splitLine: {
-                    lineStyle: { color: axisLineColor, type: "dashed" },
+            {Object.keys(conditionCounts).length === 0 ? (
+              renderNoData()
+            ) : (
+              <ReactECharts
+                option={{
+                  tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+                  grid: {
+                    left: "3%",
+                    right: "4%",
+                    bottom: "3%",
+                    containLabel: true,
                   },
-                },
-                series: [
-                  {
-                    data: Object.values(conditionCounts),
-                    type: "bar",
-                    barWidth: "40%",
-                    itemStyle: {
-                      color: theme.palette.primary.main,
-                      borderRadius: [4, 4, 0, 0],
+                  xAxis: {
+                    type: "category",
+                    data: Object.keys(conditionCounts),
+                    axisLabel: { color: textColor },
+                    axisLine: { lineStyle: { color: axisLineColor } },
+                  },
+                  yAxis: {
+                    type: "value",
+                    axisLabel: { color: textColor },
+                    splitLine: {
+                      lineStyle: { color: axisLineColor, type: "dashed" },
                     },
                   },
-                ],
-              }}
-              style={{ height: "320px" }}
-            />
+                  series: [
+                    {
+                      data: Object.values(conditionCounts),
+                      type: "bar",
+                      barWidth: "40%",
+                      itemStyle: {
+                        color: theme.palette.primary.main,
+                        borderRadius: [4, 4, 0, 0],
+                      },
+                    },
+                  ],
+                }}
+                style={{ height: "320px" }}
+              />
             )}
           </Paper>
         </Grid>
@@ -408,59 +460,63 @@ export default function BusinessAnalytics() {
             <Typography variant="h6" fontWeight={800} gutterBottom>
               {t("dashboard.analytics.growth")}
             </Typography>
-            {sortedMonths.length === 0 ? renderNoData() : (
-            <ReactECharts
-              option={{
-                tooltip: { trigger: "axis" },
-                grid: {
-                  left: "3%",
-                  right: "4%",
-                  bottom: "3%",
-                  containLabel: true,
-                },
-                xAxis: {
-                  type: "category",
-                  boundaryGap: false,
-                  data: sortedMonths,
-                  axisLabel: { color: textColor },
-                  axisLine: { lineStyle: { color: axisLineColor } },
-                },
-                yAxis: {
-                  type: "value",
-                  axisLabel: { color: textColor },
-                  splitLine: {
-                    lineStyle: { color: axisLineColor, type: "dashed" },
+            {sortedMonths.length === 0 ? (
+              renderNoData()
+            ) : (
+              <ReactECharts
+                option={{
+                  tooltip: { trigger: "axis" },
+                  grid: {
+                    left: "3%",
+                    right: "4%",
+                    bottom: "3%",
+                    containLabel: true,
                   },
-                },
-                series: [
-                  {
-                    name: t("dashboard.analytics.vehicles_added", { defaultValue: "Added" }),
-                    type: "line",
-                    data: lineValues,
-                    smooth: true,
-                    lineStyle: {
-                      width: 3,
-                      color: theme.palette.secondary.main,
+                  xAxis: {
+                    type: "category",
+                    boundaryGap: false,
+                    data: sortedMonths,
+                    axisLabel: { color: textColor },
+                    axisLine: { lineStyle: { color: axisLineColor } },
+                  },
+                  yAxis: {
+                    type: "value",
+                    axisLabel: { color: textColor },
+                    splitLine: {
+                      lineStyle: { color: axisLineColor, type: "dashed" },
                     },
-                    itemStyle: { color: theme.palette.secondary.main },
-                    areaStyle: {
-                      color: {
-                        type: "linear",
-                        x: 0,
-                        y: 0,
-                        x2: 0,
-                        y2: 1,
-                        colorStops: [
-                          { offset: 0, color: theme.palette.secondary.light },
-                          { offset: 1, color: "rgba(255,255,255,0)" },
-                        ],
+                  },
+                  series: [
+                    {
+                      name: t("dashboard.analytics.vehicles_added", {
+                        defaultValue: "Added",
+                      }),
+                      type: "line",
+                      data: lineValues,
+                      smooth: true,
+                      lineStyle: {
+                        width: 3,
+                        color: theme.palette.secondary.main,
+                      },
+                      itemStyle: { color: theme.palette.secondary.main },
+                      areaStyle: {
+                        color: {
+                          type: "linear",
+                          x: 0,
+                          y: 0,
+                          x2: 0,
+                          y2: 1,
+                          colorStops: [
+                            { offset: 0, color: theme.palette.secondary.light },
+                            { offset: 1, color: "rgba(255,255,255,0)" },
+                          ],
+                        },
                       },
                     },
-                  },
-                ],
-              }}
-              style={{ height: "320px" }}
-            />
+                  ],
+                }}
+                style={{ height: "320px" }}
+              />
             )}
           </Paper>
         </Grid>
@@ -476,51 +532,55 @@ export default function BusinessAnalytics() {
             <Typography variant="h6" fontWeight={800} gutterBottom>
               {t("dashboard.analytics.price_mileage")}
             </Typography>
-            {scatterData.length === 0 ? renderNoData() : (
-            <ReactECharts
-              option={{
-                tooltip: {
-                  trigger: "item",
-                  formatter: (params: any) =>
-                    params?.data ? `${t("table.mileage")}: ${params.data[0]} km<br/>${t("table.price")}: €${params.data[1]}` : "",
-                },
-                grid: {
-                  left: "3%",
-                  right: "8%",
-                  bottom: "3%",
-                  containLabel: true,
-                },
-                xAxis: {
-                  type: "value",
-                  name: `${t("table.mileage")} (km)`,
-                  nameLocation: "middle",
-                  nameGap: 30,
-                  axisLabel: { color: textColor },
-                  splitLine: { show: false },
-                  axisLine: { lineStyle: { color: axisLineColor } },
-                },
-                yAxis: {
-                  type: "value",
-                  name: `${t("table.price")} (€)`,
-                  axisLabel: { color: textColor },
-                  splitLine: {
-                    lineStyle: { color: axisLineColor, type: "dashed" },
+            {scatterData.length === 0 ? (
+              renderNoData()
+            ) : (
+              <ReactECharts
+                option={{
+                  tooltip: {
+                    trigger: "item",
+                    formatter: (params: any) =>
+                      params?.data
+                        ? `${t("table.mileage")}: ${params.data[0]} km<br/>${t("table.price")}: €${params.data[1]}`
+                        : "",
                   },
-                },
-                series: [
-                  {
-                    type: "scatter",
-                    symbolSize: 10,
-                    data: scatterData,
-                    itemStyle: {
-                      color: theme.palette.info.main,
-                      opacity: 0.7,
+                  grid: {
+                    left: "3%",
+                    right: "8%",
+                    bottom: "3%",
+                    containLabel: true,
+                  },
+                  xAxis: {
+                    type: "value",
+                    name: `${t("table.mileage")} (km)`,
+                    nameLocation: "middle",
+                    nameGap: 30,
+                    axisLabel: { color: textColor },
+                    splitLine: { show: false },
+                    axisLine: { lineStyle: { color: axisLineColor } },
+                  },
+                  yAxis: {
+                    type: "value",
+                    name: `${t("table.price")} (€)`,
+                    axisLabel: { color: textColor },
+                    splitLine: {
+                      lineStyle: { color: axisLineColor, type: "dashed" },
                     },
                   },
-                ],
-              }}
-              style={{ height: "320px" }}
-            />
+                  series: [
+                    {
+                      type: "scatter",
+                      symbolSize: 10,
+                      data: scatterData,
+                      itemStyle: {
+                        color: theme.palette.info.main,
+                        opacity: 0.7,
+                      },
+                    },
+                  ],
+                }}
+                style={{ height: "320px" }}
+              />
             )}
           </Paper>
         </Grid>
@@ -542,51 +602,53 @@ export default function BusinessAnalytics() {
             <Typography variant="h6" fontWeight={800} gutterBottom>
               {t("dashboard.analytics.heatmap")}
             </Typography>
-            { heatmapData.length === 0 ? renderNoData(350) : (
-            <ReactECharts
-              option={{
-                tooltip: { position: "top" },
-                grid: { height: "60%", top: "10%" },
-                xAxis: {
-                  type: "category",
-                  data: monthsStr,
-                  splitArea: { show: true },
-                  axisLabel: { color: textColor },
-                },
-                yAxis: {
-                  type: "category",
-                  data: yearsStr,
-                  splitArea: { show: true },
-                  axisLabel: { color: textColor },
-                },
-                visualMap: {
-                  min: 0,
-                  max: Math.max(maxSalesInMonth, 5),
-                  calculable: true,
-                  orient: "horizontal",
-                  left: "center",
-                  bottom: "0%",
-                  inRange: {
-                    color: ["#f2f8ff", theme.palette.success.main],
+            {heatmapData.length === 0 ? (
+              renderNoData(350)
+            ) : (
+              <ReactECharts
+                option={{
+                  tooltip: { position: "top" },
+                  grid: { height: "60%", top: "10%" },
+                  xAxis: {
+                    type: "category",
+                    data: monthsStr,
+                    splitArea: { show: true },
+                    axisLabel: { color: textColor },
                   },
-                },
-                series: [
-                  {
-                    name: t("dashboard.analytics.vehicles_sold"),
-                    type: "heatmap",
-                    data: heatmapData,
-                    label: { show: true, color: "#fff", fontWeight: "bold" },
-                    emphasis: {
-                      itemStyle: {
-                        shadowBlur: 10,
-                        shadowColor: "rgba(0, 0, 0, 0.5)",
-                      },
+                  yAxis: {
+                    type: "category",
+                    data: yearsStr,
+                    splitArea: { show: true },
+                    axisLabel: { color: textColor },
+                  },
+                  visualMap: {
+                    min: 0,
+                    max: Math.max(maxSalesInMonth, 5),
+                    calculable: true,
+                    orient: "horizontal",
+                    left: "center",
+                    bottom: "0%",
+                    inRange: {
+                      color: ["#f2f8ff", theme.palette.success.main],
                     },
                   },
-                ],
-              }}
-              style={{ height: "350px", width: "100%" }}
-            />
+                  series: [
+                    {
+                      name: t("dashboard.analytics.vehicles_sold"),
+                      type: "heatmap",
+                      data: heatmapData,
+                      label: { show: true, color: "#fff", fontWeight: "bold" },
+                      emphasis: {
+                        itemStyle: {
+                          shadowBlur: 10,
+                          shadowColor: "rgba(0, 0, 0, 0.5)",
+                        },
+                      },
+                    },
+                  ],
+                }}
+                style={{ height: "350px", width: "100%" }}
+              />
             )}
           </Paper>
         </Grid>
@@ -604,44 +666,46 @@ export default function BusinessAnalytics() {
             <Typography variant="h6" fontWeight={800} gutterBottom>
               {t("dashboard.analytics.top_sold_brands")}
             </Typography>
-            {topSoldBrands.length === 0 ? renderNoData() : (
-            <ReactECharts
-              option={{
-                tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
-                grid: {
-                  left: "3%",
-                  right: "4%",
-                  bottom: "3%",
-                  containLabel: true,
-                },
-                xAxis: {
-                  type: "category",
-                  data: topSoldBrands.map((b) => b[0]),
-                  axisLabel: { color: textColor, rotate: 45 },
-                  axisLine: { lineStyle: { color: axisLineColor } },
-                },
-                yAxis: {
-                  type: "value",
-                  axisLabel: { color: textColor },
-                  splitLine: {
-                    lineStyle: { color: axisLineColor, type: "dashed" },
+            {topSoldBrands.length === 0 ? (
+              renderNoData()
+            ) : (
+              <ReactECharts
+                option={{
+                  tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+                  grid: {
+                    left: "3%",
+                    right: "4%",
+                    bottom: "3%",
+                    containLabel: true,
                   },
-                },
-                series: [
-                  {
-                    name: t("dashboard.analytics.vehicles_sold"),
-                    data: topSoldBrands.map((b) => b[1]),
-                    type: "bar",
-                    barWidth: "50%",
-                    itemStyle: {
-                      color: theme.palette.success.light,
-                      borderRadius: [4, 4, 0, 0],
+                  xAxis: {
+                    type: "category",
+                    data: topSoldBrands.map((b) => b[0]),
+                    axisLabel: { color: textColor, rotate: 45 },
+                    axisLine: { lineStyle: { color: axisLineColor } },
+                  },
+                  yAxis: {
+                    type: "value",
+                    axisLabel: { color: textColor },
+                    splitLine: {
+                      lineStyle: { color: axisLineColor, type: "dashed" },
                     },
                   },
-                ],
-              }}
-              style={{ height: "320px" }}
-            />
+                  series: [
+                    {
+                      name: t("dashboard.analytics.vehicles_sold"),
+                      data: topSoldBrands.map((b) => b[1]),
+                      type: "bar",
+                      barWidth: "50%",
+                      itemStyle: {
+                        color: theme.palette.success.light,
+                        borderRadius: [4, 4, 0, 0],
+                      },
+                    },
+                  ],
+                }}
+                style={{ height: "320px" }}
+              />
             )}
           </Paper>
         </Grid>
@@ -657,47 +721,49 @@ export default function BusinessAnalytics() {
             <Typography variant="h6" fontWeight={800} gutterBottom>
               {t("dashboard.analytics.top_viewed_models")}
             </Typography>
-            {topViewedModels.length === 0 ? renderNoData() : (
-            <ReactECharts
-              option={{
-                tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
-                grid: {
-                  left: "3%",
-                  right: "8%",
-                  bottom: "3%",
-                  containLabel: true,
-                },
-                xAxis: {
-                  type: "value",
-                  axisLabel: { color: textColor },
-                  splitLine: {
-                    lineStyle: { color: axisLineColor, type: "dashed" },
+            {topViewedModels.length === 0 ? (
+              renderNoData()
+            ) : (
+              <ReactECharts
+                option={{
+                  tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+                  grid: {
+                    left: "3%",
+                    right: "8%",
+                    bottom: "3%",
+                    containLabel: true,
                   },
-                },
-                yAxis: {
-                  type: "category",
-                  data: topViewedModels.map((m) => m[0]).reverse(), // Reverse for top-down display
-                  axisLabel: {
-                    color: textColor,
-                    width: 120,
-                    overflow: "truncate",
-                  },
-                  axisLine: { lineStyle: { color: axisLineColor } },
-                },
-                series: [
-                  {
-                    name: t("businesses.table.views"),
-                    data: topViewedModels.map((m) => m[1]).reverse(),
-                    type: "bar",
-                    itemStyle: {
-                      color: theme.palette.secondary.main,
-                      borderRadius: [0, 4, 4, 0],
+                  xAxis: {
+                    type: "value",
+                    axisLabel: { color: textColor },
+                    splitLine: {
+                      lineStyle: { color: axisLineColor, type: "dashed" },
                     },
                   },
-                ],
-              }}
-              style={{ height: "320px" }}
-            />
+                  yAxis: {
+                    type: "category",
+                    data: topViewedModels.map((m) => m[0]).reverse(), // Reverse for top-down display
+                    axisLabel: {
+                      color: textColor,
+                      width: 120,
+                      overflow: "truncate",
+                    },
+                    axisLine: { lineStyle: { color: axisLineColor } },
+                  },
+                  series: [
+                    {
+                      name: t("businesses.table.views"),
+                      data: topViewedModels.map((m) => m[1]).reverse(),
+                      type: "bar",
+                      itemStyle: {
+                        color: theme.palette.secondary.main,
+                        borderRadius: [0, 4, 4, 0],
+                      },
+                    },
+                  ],
+                }}
+                style={{ height: "320px" }}
+              />
             )}
           </Paper>
         </Grid>
@@ -707,10 +773,12 @@ export default function BusinessAnalytics() {
       <Grid container spacing={3} sx={{ mt: 1, mb: 1 }}>
         <Grid size={{ xs: 12 }}>
           <Typography variant="h5" fontWeight={900}>
-            {t("dashboard.analytics.leads_intelligence", { defaultValue: "Leads Intelligence" })}
+            {t("dashboard.analytics.leads_intelligence", {
+              defaultValue: "Leads Intelligence",
+            })}
           </Typography>
         </Grid>
-        
+
         <Grid size={{ xs: 12, md: 6 }}>
           <Paper
             sx={{
@@ -720,61 +788,67 @@ export default function BusinessAnalytics() {
             }}
           >
             <Typography variant="h6" fontWeight={800} gutterBottom>
-              {t("dashboard.analytics.leads_time", { defaultValue: "Leads Over Time" })}
+              {t("dashboard.analytics.leads_time", {
+                defaultValue: "Leads Over Time",
+              })}
             </Typography>
-            {sortedLeadMonths.length === 0 ? renderNoData() : (
-            <ReactECharts
-              option={{
-                tooltip: { trigger: "axis" },
-                grid: {
-                  left: "3%",
-                  right: "4%",
-                  bottom: "3%",
-                  containLabel: true,
-                },
-                xAxis: {
-                  type: "category",
-                  boundaryGap: false,
-                  data: sortedLeadMonths,
-                  axisLabel: { color: textColor },
-                  axisLine: { lineStyle: { color: axisLineColor } },
-                },
-                yAxis: {
-                  type: "value",
-                  axisLabel: { color: textColor },
-                  splitLine: {
-                    lineStyle: { color: axisLineColor, type: "dashed" },
+            {sortedLeadMonths.length === 0 ? (
+              renderNoData()
+            ) : (
+              <ReactECharts
+                option={{
+                  tooltip: { trigger: "axis" },
+                  grid: {
+                    left: "3%",
+                    right: "4%",
+                    bottom: "3%",
+                    containLabel: true,
                   },
-                },
-                series: [
-                  {
-                    name: t("dashboard.tabs.leads", { defaultValue: "Leads" }),
-                    type: "line",
-                    data: leadsLineValues,
-                    smooth: true,
-                    lineStyle: {
-                      width: 3,
-                      color: theme.palette.warning.main,
+                  xAxis: {
+                    type: "category",
+                    boundaryGap: false,
+                    data: sortedLeadMonths,
+                    axisLabel: { color: textColor },
+                    axisLine: { lineStyle: { color: axisLineColor } },
+                  },
+                  yAxis: {
+                    type: "value",
+                    axisLabel: { color: textColor },
+                    splitLine: {
+                      lineStyle: { color: axisLineColor, type: "dashed" },
                     },
-                    itemStyle: { color: theme.palette.warning.main },
-                    areaStyle: {
-                      color: {
-                        type: "linear",
-                        x: 0,
-                        y: 0,
-                        x2: 0,
-                        y2: 1,
-                        colorStops: [
-                          { offset: 0, color: theme.palette.warning.light },
-                          { offset: 1, color: "rgba(255,255,255,0)" },
-                        ],
+                  },
+                  series: [
+                    {
+                      name: t("dashboard.tabs.leads", {
+                        defaultValue: "Leads",
+                      }),
+                      type: "line",
+                      data: leadsLineValues,
+                      smooth: true,
+                      lineStyle: {
+                        width: 3,
+                        color: theme.palette.warning.main,
+                      },
+                      itemStyle: { color: theme.palette.warning.main },
+                      areaStyle: {
+                        color: {
+                          type: "linear",
+                          x: 0,
+                          y: 0,
+                          x2: 0,
+                          y2: 1,
+                          colorStops: [
+                            { offset: 0, color: theme.palette.warning.light },
+                            { offset: 1, color: "rgba(255,255,255,0)" },
+                          ],
+                        },
                       },
                     },
-                  },
-                ],
-              }}
-              style={{ height: "320px" }}
-            />
+                  ],
+                }}
+                style={{ height: "320px" }}
+              />
             )}
           </Paper>
         </Grid>
@@ -788,49 +862,53 @@ export default function BusinessAnalytics() {
             }}
           >
             <Typography variant="h6" fontWeight={800} gutterBottom>
-              {t("dashboard.analytics.leads_by_model", { defaultValue: "Most Inquired Models" })}
+              {t("dashboard.analytics.leads_by_model", {
+                defaultValue: "Most Inquired Models",
+              })}
             </Typography>
-            {topLeadModels.length === 0 ? renderNoData() : (
-            <ReactECharts
-              option={{
-                tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
-                grid: {
-                  left: "3%",
-                  right: "4%",
-                  bottom: "3%",
-                  containLabel: true,
-                },
-                xAxis: {
-                  type: "value",
-                  axisLabel: { color: textColor },
-                  splitLine: {
-                    lineStyle: { color: axisLineColor, type: "dashed" },
+            {topLeadModels.length === 0 ? (
+              renderNoData()
+            ) : (
+              <ReactECharts
+                option={{
+                  tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+                  grid: {
+                    left: "3%",
+                    right: "4%",
+                    bottom: "3%",
+                    containLabel: true,
                   },
-                },
-                yAxis: {
-                  type: "category",
-                  data: topLeadModels.map((m) => m[0]).reverse(),
-                  axisLabel: {
-                    color: textColor,
-                    width: 120,
-                    overflow: "truncate",
+                  xAxis: {
+                    type: "value",
+                    axisLabel: { color: textColor },
+                    splitLine: {
+                      lineStyle: { color: axisLineColor, type: "dashed" },
+                    },
                   },
-                  axisLine: { lineStyle: { color: axisLineColor } },
-                },
+                  yAxis: {
+                    type: "category",
+                    data: topLeadModels.map((m) => m[0]).reverse(),
+                    axisLabel: {
+                      color: textColor,
+                      width: 120,
+                      overflow: "truncate",
+                    },
+                    axisLine: { lineStyle: { color: axisLineColor } },
+                  },
                   series: [
                     {
                       name: t("dashboard.analytics.leads"),
                       data: topLeadModels.map((m) => m[1]).reverse(),
-                    type: "bar",
-                    itemStyle: {
-                      color: theme.palette.warning.main,
-                      borderRadius: [0, 4, 4, 0],
+                      type: "bar",
+                      itemStyle: {
+                        color: theme.palette.warning.main,
+                        borderRadius: [0, 4, 4, 0],
+                      },
                     },
-                  },
-                ],
-              }}
-              style={{ height: "320px" }}
-            />
+                  ],
+                }}
+                style={{ height: "320px" }}
+              />
             )}
           </Paper>
         </Grid>
@@ -844,53 +922,58 @@ export default function BusinessAnalytics() {
             }}
           >
             <Typography variant="h6" fontWeight={800} gutterBottom>
-              {t("dashboard.analytics.price_leads_scatter", { defaultValue: "Vehicle Price vs. Lead Volume" })}
+              {t("dashboard.analytics.price_leads_scatter", {
+                defaultValue: "Vehicle Price vs. Lead Volume",
+              })}
             </Typography>
-            {priceVsLeadsScatter.length === 0 ? renderNoData(350) : (
-            <ReactECharts
-              option={{
-                tooltip: {
-                  trigger: "item",
-                  formatter: (params: any) =>
-                    `<strong>${params.data[2]}</strong><br/>${t("table.price")}: €${params.data[0]}<br/>${t("dashboard.analytics.leads")}: ${params.data[1]}`,
-                },
-                grid: {
-                  left: "3%",
-                  right: "8%",
-                  bottom: "3%",
-                  containLabel: true,
-                },
-                xAxis: {
-                  type: "value",
-                  name: `${t("table.price")} (€)`,
-                  nameLocation: "middle",
-                  nameGap: 30,
-                  axisLabel: { color: textColor },
-                  splitLine: { show: false },
-                  axisLine: { lineStyle: { color: axisLineColor } },
-                },
-                yAxis: {
-                  type: "value",
-                  name: t("dashboard.analytics.total_leads"),
-                  axisLabel: { color: textColor },
-                  splitLine: {
-                    lineStyle: { color: axisLineColor, type: "dashed" },
+            {priceVsLeadsScatter.length === 0 ? (
+              renderNoData(350)
+            ) : (
+              <ReactECharts
+                option={{
+                  tooltip: {
+                    trigger: "item",
+                    formatter: (params: any) =>
+                      `<strong>${params.data[2]}</strong><br/>${t("table.price")}: €${params.data[0]}<br/>${t("dashboard.analytics.leads")}: ${params.data[1]}`,
                   },
-                },
-                series: [
-                  {
-                    type: "scatter",
-                    symbolSize: (data: any) => Math.min(Math.max(data[1] * 8, 12), 40),
-                    data: priceVsLeadsScatter,
-                    itemStyle: {
-                      color: theme.palette.warning.dark,
-                      opacity: 0.7,
+                  grid: {
+                    left: "3%",
+                    right: "8%",
+                    bottom: "3%",
+                    containLabel: true,
+                  },
+                  xAxis: {
+                    type: "value",
+                    name: `${t("table.price")} (€)`,
+                    nameLocation: "middle",
+                    nameGap: 30,
+                    axisLabel: { color: textColor },
+                    splitLine: { show: false },
+                    axisLine: { lineStyle: { color: axisLineColor } },
+                  },
+                  yAxis: {
+                    type: "value",
+                    name: t("dashboard.analytics.total_leads"),
+                    axisLabel: { color: textColor },
+                    splitLine: {
+                      lineStyle: { color: axisLineColor, type: "dashed" },
                     },
                   },
-                ],
-              }}
-              style={{ height: "350px", width: "100%" }}
-            />
+                  series: [
+                    {
+                      type: "scatter",
+                      symbolSize: (data: any) =>
+                        Math.min(Math.max(data[1] * 8, 12), 40),
+                      data: priceVsLeadsScatter,
+                      itemStyle: {
+                        color: theme.palette.warning.dark,
+                        opacity: 0.7,
+                      },
+                    },
+                  ],
+                }}
+                style={{ height: "350px", width: "100%" }}
+              />
             )}
           </Paper>
         </Grid>

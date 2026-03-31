@@ -8,7 +8,7 @@ interface Props {
   setListing: React.Dispatch<React.SetStateAction<CarListingDetailsJson>>;
 }
 
-export default function SpecsSection({ listing, setListing }: Props) {
+function SpecsSection({ listing, setListing }: Props) {
   const { t } = useTranslation();
 
   const handleChange =
@@ -68,8 +68,12 @@ export default function SpecsSection({ listing, setListing }: Props) {
           value={listing.transmission}
           onChange={handleChange("transmission")}
         >
-          <MenuItem value="automatic">{t("carValues.transmission_automatic")}</MenuItem>
-          <MenuItem value="manual">{t("carValues.transmission_manual")}</MenuItem>
+          <MenuItem value="automatic">
+            {t("carValues.transmission_automatic")}
+          </MenuItem>
+          <MenuItem value="manual">
+            {t("carValues.transmission_manual")}
+          </MenuItem>
         </TextField>
       </Grid>
       <Grid size={{ xs: 6 }}>
@@ -89,3 +93,13 @@ export default function SpecsSection({ listing, setListing }: Props) {
     </Grid>
   );
 }
+
+export default React.memo(SpecsSection, (prev, next) => {
+  return (
+    prev.listing.fuelType === next.listing.fuelType &&
+    prev.listing.horsepower === next.listing.horsepower &&
+    prev.listing.displacement === next.listing.displacement &&
+    prev.listing.transmission === next.listing.transmission &&
+    prev.listing.drivetrain === next.listing.drivetrain
+  );
+});

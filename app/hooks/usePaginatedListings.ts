@@ -3,13 +3,9 @@ import type { DocumentSnapshot } from "firebase/firestore";
 import type { CarListingSummary } from "~/types/types";
 import { getPaginatedListings } from "~/services/listingsService";
 
-export type SortDir = "asc" | "desc";
-
 export function usePaginatedListings(
   pageSize: number = 10, 
-  filters?: Partial<CarListingSummary>, 
-  sortBy: string = "createdAt",
-  sortDir: SortDir = "desc"
+  filters?: Partial<CarListingSummary>
 ) {
   const [listings, setListings] = useState<CarListingSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +24,7 @@ export function usePaginatedListings(
     setError(null);
     try {
       const cursor = cursorsRef.current[page - 1] || null;
-      const result = await getPaginatedListings(pageSize, cursor, filters, sortBy, sortDir);
+      const result = await getPaginatedListings(pageSize, cursor, filters);
       
       setListings(result.listings);
       setTotalCount(result.totalCount);
@@ -45,7 +41,7 @@ export function usePaginatedListings(
       setLoading(false);
       setRefreshing(false);
     }
-  }, [pageSize, JSON.stringify(filters), sortBy, sortDir]);
+  }, [pageSize, JSON.stringify(filters)]);
 
   // Reset when filters or sorting change
   useEffect(() => {
@@ -54,7 +50,7 @@ export function usePaginatedListings(
     setTotalCount(0);
     setCurrentPage(1);
     cursorsRef.current = [null];
-  }, [JSON.stringify(filters), pageSize, sortBy, sortDir]);
+  }, [JSON.stringify(filters), pageSize]);
 
   useEffect(() => {
     fetchPage(currentPage);
